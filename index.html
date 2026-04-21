@@ -3443,16 +3443,23 @@
 
                 <!-- Export -->
                 <div id="pso-export" style="display:none">
-                  <div
-                    style="background:#fff;border:1px solid var(--border);border-radius:var(--rad);padding:15px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;box-shadow:var(--shad)">
-                    <div>
-                      <div style="font-size:14px;font-weight:700;color:var(--text)"><i class="bi bi-box-arrow-down"></i>
-                        Export Results</div>
-                      <div style="font-size:12px;color:var(--text3);margin-top:3px">Download both courses as CSV files
-                        in a ZIP</div>
+                  <div style="background:#fff;border:1px solid var(--border);border-radius:var(--rad);padding:15px;box-shadow:var(--shad)">
+                    <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:12px">
+                      <div>
+                        <div style="font-size:14px;font-weight:700;color:var(--text)"><i class="bi bi-box-arrow-down"></i> Export Results</div>
+                        <div style="font-size:12px;color:var(--text3);margin-top:3px" id="pso-export-desc">Download results as Excel</div>
+                      </div>
+                      <div style="display:flex;gap:8px;flex-wrap:wrap">
+                        <button class="btn btn-success btn-lg" onclick="psoExportExcel()"><i class="bi bi-file-earmark-excel-fill"></i> <span id="pso-export-btn-lbl">Download Excel</span></button>
+                        <button class="btn btn-info btn-lg" onclick="psoExportZip()"><i class="bi bi-file-zip-fill"></i> CSV ZIP</button>
+                      </div>
                     </div>
-                    <button class="btn btn-success btn-lg" onclick="psoExportZip()"><i class="bi bi-file-zip-fill"></i>
-                      Download ZIP</button>
+                    <!-- Per-course copy row -->
+                    <div id="pso-copy-row" style="display:flex;gap:8px;flex-wrap:wrap;border-top:1px solid var(--border);padding-top:10px">
+                      <span style="font-size:12px;color:var(--text2);font-weight:600;align-self:center"><i class="bi bi-clipboard"></i> Copy to clipboard:</span>
+                      <button class="btn btn-default btn-sm" id="pso-copy1-btn" onclick="psoCopyResult(1)" style="display:none"><i class="bi bi-clipboard"></i> Copy Course #1</button>
+                      <button class="btn btn-default btn-sm" id="pso-copy2-btn" onclick="psoCopyResult(2)" style="display:none"><i class="bi bi-clipboard"></i> Copy Course #2</button>
+                    </div>
                   </div>
                 </div>
 
@@ -3810,6 +3817,34 @@
                 </div>
               </div>
             </div>
+            <!-- Course Filter Panel (shown after reg dump loaded) -->
+            <div id="reg-course-panel" style="display:none;margin-bottom:14px;background:var(--card-head);border:1px solid var(--border);border-radius:var(--rad);padding:12px 14px">
+              <div style="display:flex;align-items:flex-start;gap:10px;flex-wrap:wrap">
+                <label style="font-size:12px;font-weight:700;color:var(--text2);white-space:nowrap;padding-top:6px"><i class="bi bi-funnel-fill" style="color:var(--purple);margin-right:4px"></i>Filter by Course ID:</label>
+                <div style="flex:1;min-width:240px">
+                  <!-- Trigger button -->
+                  <div id="reg-course-trigger" onclick="toggleRegCourseDropdown()" style="cursor:pointer;padding:5px 10px;border:1px solid var(--border2);border-radius:var(--rad);font-size:13px;background:var(--input-bg);color:var(--text);display:flex;align-items:center;justify-content:space-between;user-select:none">
+                    <span id="reg-course-trigger-label" style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">— All Courses (no filter) —</span>
+                    <i class="bi bi-chevron-down" id="reg-course-chevron" style="margin-left:8px;font-size:11px;color:var(--text3);flex-shrink:0;transition:transform .2s"></i>
+                  </div>
+                  <!-- Dropdown panel -->
+                  <div id="reg-course-dropdown" style="display:none;position:relative;z-index:200;background:var(--card-bg);border:1px solid var(--border2);border-radius:var(--rad);margin-top:3px;box-shadow:var(--shad2);max-height:240px;overflow-y:auto">
+                    <!-- Search + actions -->
+                    <div style="padding:7px 8px;border-bottom:1px solid var(--border);position:sticky;top:0;background:var(--card-bg);z-index:1">
+                      <input id="reg-course-search" type="text" placeholder="Search course ID…" oninput="filterRegCourseList()" style="width:100%;padding:4px 8px;border:1px solid var(--border2);border-radius:var(--rad);font-size:12px;background:var(--input-bg);color:var(--text)">
+                      <div style="display:flex;gap:6px;margin-top:5px">
+                        <button onclick="regCourseSelectAll()" class="btn btn-xs btn-default" style="font-size:11px;padding:2px 8px">Select All</button>
+                        <button onclick="regCourseSelectNone()" class="btn btn-xs btn-default" style="font-size:11px;padding:2px 8px">Clear All</button>
+                      </div>
+                    </div>
+                    <!-- Checkbox list -->
+                    <div id="reg-course-list" style="padding:4px 0"></div>
+                  </div>
+                </div>
+                <span id="reg-course-count" style="font-size:11px;color:var(--text3);padding-top:6px"></span>
+              </div>
+            </div>
+
             <div style="display:flex;align-items:center;gap:12px;margin-bottom:15px;flex-wrap:wrap">
               <button class="btn-run" id="reg-run-btn" onclick="runRegCheck()" disabled><i
                   class="bi bi-play-circle-fill"></i> Run Registration Check</button>
@@ -5765,11 +5800,152 @@
         }
       }
 
+      // ── Reg Checker: multi-select course filter state ──
+      let _regCourseAll = [];          // sorted unique course IDs
+      let _regCourseSelected = new Set();
+      let _regCourseFindCol = null;
+      let _regCourseCounts = {};       // { courseId: count } — built once, reused everywhere
+      let _regCourseRowMap = new Map();// courseId → [rows] — built once for fast filter
+
+      function buildRegCourseDropdown() {
+        if (!toolData.reg) return;
+        const regRows = toolData.reg.rows;
+        const regCols = toolData.reg.cols;
+        const findCol = (cols, name) => cols.find(c => c.toLowerCase().replace(/[\s_]/g, '') === name.toLowerCase().replace(/[\s_]/g, '')) || null;
+        _regCourseFindCol = findCol(regCols, 'new_courseid') || findCol(regCols, 'courseid') || findCol(regCols, 'courseId') || findCol(regCols, 'course_id');
+        if (_regCourseFindCol) {
+          // Single pass: build count map AND row-bucket map simultaneously
+          _regCourseCounts = {};
+          _regCourseRowMap = new Map();
+          for (let i = 0; i < regRows.length; i++) {
+            const cid = String(regRows[i][_regCourseFindCol] || '').trim();
+            if (!cid) continue;
+            _regCourseCounts[cid] = (_regCourseCounts[cid] || 0) + 1;
+            if (!_regCourseRowMap.has(cid)) _regCourseRowMap.set(cid, []);
+            _regCourseRowMap.get(cid).push(regRows[i]);
+          }
+          _regCourseAll = Object.keys(_regCourseCounts).sort();
+          _regCourseSelected = new Set();
+          // Auto-select if assignment dump has exactly 1 course
+          if (store) {
+            const dumpCourses = new Set();
+            for (let i = 0; i < store.rowCount; i++) {
+              const cid = getStr('new_courseid', i) || '';
+              if (cid) dumpCourses.add(cid.trim());
+            }
+            if (dumpCourses.size === 1) {
+              const only = [...dumpCourses][0];
+              if (_regCourseAll.includes(only)) _regCourseSelected.add(only);
+            }
+          }
+          $('reg-course-count').textContent = `${_regCourseAll.length} unique course${_regCourseAll.length !== 1 ? 's' : ''} in reg dump`;
+          $('reg-course-panel').style.display = 'block';
+          renderRegCourseList('');
+          updateRegCourseTrigger();
+        } else {
+          $('reg-course-panel').style.display = 'none';
+        }
+        onRegCourseChange();
+      }
+
+      function renderRegCourseList(searchTerm) {
+        if (!toolData.reg) return;
+        const regRows = toolData.reg.rows;
+        const term = searchTerm.toLowerCase().trim();
+        const filtered = term ? _regCourseAll.filter(c => c.toLowerCase().includes(term)) : _regCourseAll;
+        const list = $('reg-course-list');
+        list.innerHTML = filtered.map(cid => {
+          const cnt = _regCourseCounts[cid] || 0;   // O(1) lookup — no row scan
+          const checked = _regCourseSelected.has(cid);
+          return `<label style="display:flex;align-items:center;gap:8px;padding:5px 10px;cursor:pointer;font-size:12px;border-bottom:1px solid var(--card-border);transition:background .1s" onmouseover="this.style.background='var(--card-head)'" onmouseout="this.style.background=''">
+            <input type="checkbox" value="${escHtml2(cid)}" ${checked ? 'checked' : ''} onchange="regCourseToggle(this)" style="accent-color:var(--purple);cursor:pointer;flex-shrink:0">
+            <span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${escHtml2(cid)}">${escHtml2(cid)}</span>
+            <span style="font-size:11px;color:var(--text3);flex-shrink:0">${cnt.toLocaleString()}</span>
+          </label>`;
+        }).join('') || `<div style="padding:10px;font-size:12px;color:var(--text3);text-align:center">No courses match</div>`;
+      }
+
+      function regCourseToggle(cb) {
+        const val = cb.value;
+        if (cb.checked) _regCourseSelected.add(val); else _regCourseSelected.delete(val);
+        updateRegCourseTrigger();
+        onRegCourseChange();
+      }
+
+      function regCourseSelectAll() {
+        _regCourseAll.forEach(c => _regCourseSelected.add(c));
+        renderRegCourseList($('reg-course-search') ? $('reg-course-search').value : '');
+        updateRegCourseTrigger(); onRegCourseChange();
+      }
+
+      function regCourseSelectNone() {
+        _regCourseSelected.clear();
+        renderRegCourseList($('reg-course-search') ? $('reg-course-search').value : '');
+        updateRegCourseTrigger(); onRegCourseChange();
+      }
+
+      function filterRegCourseList() {
+        const term = $('reg-course-search') ? $('reg-course-search').value : '';
+        renderRegCourseList(term);
+      }
+
+      function updateRegCourseTrigger() {
+        const lbl = $('reg-course-trigger-label');
+        if (!lbl) return;
+        const n = _regCourseSelected.size;
+        if (n === 0) {
+          lbl.textContent = '— All Courses (no filter) —';
+          lbl.style.color = 'var(--text3)';
+        } else if (n === 1) {
+          lbl.textContent = [..._regCourseSelected][0];
+          lbl.style.color = 'var(--purple)';
+        } else {
+          lbl.textContent = `${n} courses selected`;
+          lbl.style.color = 'var(--purple)';
+        }
+      }
+
+      function toggleRegCourseDropdown() {
+        const dd = $('reg-course-dropdown');
+        const ch = $('reg-course-chevron');
+        if (!dd) return;
+        const open = dd.style.display !== 'none';
+        dd.style.display = open ? 'none' : 'block';
+        if (ch) ch.style.transform = open ? '' : 'rotate(180deg)';
+        if (!open) { const s = $('reg-course-search'); if (s) { s.value = ''; filterRegCourseList(); s.focus(); } }
+      }
+
+      // Close dropdown when clicking outside
+      document.addEventListener('click', function(e) {
+        const panel = $('reg-course-panel');
+        if (panel && !panel.contains(e.target)) {
+          const dd = $('reg-course-dropdown');
+          const ch = $('reg-course-chevron');
+          if (dd) dd.style.display = 'none';
+          if (ch) ch.style.transform = '';
+        }
+      });
+
+      function onRegCourseChange() {
+        if (!toolData.reg) return;
+        const totalRows = toolData.reg.rows.length;
+        if (_regCourseSelected.size === 0 || !_regCourseFindCol) {
+          $('reg-run-hint').textContent = `${totalRows.toLocaleString()} rows will be checked (all courses)`;
+        } else {
+          // Sum counts from prebuilt map — O(selected) not O(rows)
+          let cnt = 0;
+          _regCourseSelected.forEach(c => { cnt += (_regCourseCounts[c] || 0); });
+          const label = _regCourseSelected.size === 1 ? `course "${[..._regCourseSelected][0]}"` : `${_regCourseSelected.size} selected courses`;
+          $('reg-run-hint').textContent = `${cnt.toLocaleString()} rows for ${label} will be checked`;
+        }
+      }
+
       function checkToolReady(changedKey) {
         // Registration check
         if (store && toolData.reg) {
           $('reg-run-btn').disabled = false;
           $('reg-run-hint').textContent = `${toolData.reg.rows.length.toLocaleString()} reg rows ready`;
+          buildRegCourseDropdown();
           $('score-ref-box').classList.add('loaded');
           $('score-ref-ico').innerHTML = '<i class="bi bi-database-fill"></i>';
           $('score-ref-ico').style.color = 'var(--accent)';
@@ -5792,7 +5968,7 @@
           $('score-ref-ico').style.color = 'var(--accent)';
           $('score-ref-t').textContent = '✓ Assignment dump loaded';
           $('score-ref-sub').textContent = `${store.rowCount.toLocaleString()} rows · ${origCols.length} cols`;
-          if (toolData.reg) { $('reg-run-btn').disabled = false; $('reg-run-hint').textContent = 'Both files ready'; }
+          if (toolData.reg) { $('reg-run-btn').disabled = false; buildRegCourseDropdown(); }
         }
       }
 
@@ -5808,13 +5984,30 @@
         btn.disabled = true; btn.innerHTML = '<i class="bi bi-hourglass-split"></i> Checking…';
 
         await delay(20);
-        const regRows = toolData.reg.rows;
+        const regAllRows = toolData.reg.rows;
         const regCols = toolData.reg.cols;
 
         // Detect column names (case-insensitive)
         const findCol = (cols, name) => cols.find(c => c.toLowerCase().replace(/[\s_]/g, '') === name.toLowerCase().replace(/[\s_]/g, '')) || null;
         const emailCol = findCol(regCols, 'emailid') || findCol(regCols, 'email') || findCol(regCols, 'emailId');
         const courseCol = findCol(regCols, 'new_courseid') || findCol(regCols, 'courseid') || findCol(regCols, 'courseId') || findCol(regCols, 'course_id');
+
+        // Apply multi-course filter using prebuilt row-bucket map — no full scan needed
+        const hasFilter = _regCourseSelected.size > 0 && courseCol;
+        let regRows;
+        if (hasFilter) {
+          // Concatenate only the pre-bucketed arrays for selected courses
+          regRows = [];
+          _regCourseSelected.forEach(c => {
+            const bucket = _regCourseRowMap.get(c);
+            if (bucket) for (let k = 0; k < bucket.length; k++) regRows.push(bucket[k]);
+          });
+          const label = _regCourseSelected.size === 1 ? `"${[..._regCourseSelected][0]}"` : `${_regCourseSelected.size} courses`;
+          toast(`Filtering to ${label} — ${regRows.length.toLocaleString()} rows`, 'i', 2500);
+          await delay(20);
+        } else {
+          regRows = regAllRows;
+        }
 
         if (!emailCol) { toast('Registration file missing EmailId column', 'e', 5000); btn.disabled = false; btn.innerHTML = '<i class="bi bi-play-circle-fill"></i> Run Registration Check'; return; }
 
@@ -5860,9 +6053,13 @@
         const warnCount = results.filter(r => r.statusClass === 't-warn').length;
 
         // Summary cards
-        $('reg-summary').innerHTML = `
+        const filterDesc = hasFilter
+          ? (_regCourseSelected.size === 1 ? [..._regCourseSelected][0] : `${_regCourseSelected.size} courses`)
+          : null;
+        const courseFilterLabel = filterDesc ? `<div style="text-align:center;margin-bottom:8px;font-size:12px;color:var(--purple);font-weight:700"><i class="bi bi-funnel-fill"></i> Filtered: ${escHtml2(filterDesc)}</div>` : '';
+        $('reg-summary').innerHTML = `${courseFilterLabel}
     <div class="chk-card ${missing === 0 ? 'ok' : 'err'}"><div class="chk-val">${results.length.toLocaleString()}</div><div class="chk-lbl">Total Checked</div></div>
-    <div class="chk-card ok"><div class="chk-val">${found.toLocaleString()}</div><div class="chk-lbl">Found</div></div>
+    <div class="chk-card ok"><div class="chk-val">${found.toLocaleString()}</div><div class="chk-lbl">Found in Dump</div></div>
     <div class="chk-card ${missing > 0 ? 'err' : 'ok'}"><div class="chk-val">${missing.toLocaleString()}</div><div class="chk-lbl">Missing</div></div>
     <div class="chk-card ${warnCount > 0 ? 'warn' : 'ok'}"><div class="chk-val">${warnCount.toLocaleString()}</div><div class="chk-lbl">Course Mismatch</div></div>
   `;
@@ -5873,7 +6070,8 @@
         } else {
           $('reg-empty').style.display = 'none';
           $('reg-results').style.display = 'block';
-          $('reg-result-label').innerHTML = `<span style="color:var(--danger)"><i class="bi bi-exclamation-triangle-fill"></i> ${missing.toLocaleString()} missing rows</span>`;
+          const courseTags = hasFilter ? [..._regCourseSelected].map(c => `<span style="margin-left:4px;padding:2px 7px;background:var(--purple);color:#fff;border-radius:10px;font-size:11px">${escHtml2(c)}</span>`).join('') : '';
+          $('reg-result-label').innerHTML = `<span style="color:var(--danger)"><i class="bi bi-exclamation-triangle-fill"></i> ${missing.toLocaleString()} missing rows</span>${courseTags}`;
 
           // Build table header
           const extraCols = regCols.filter(c => c !== emailCol && c !== courseCol).slice(0, 5);
@@ -6395,17 +6593,258 @@
       function psoDlv(id) { document.getElementById(id) && document.getElementById(id).classList.remove('drag'); }
       function psoDrop(e, n, type) { e.preventDefault(); const z = 'pso-uz' + n + (type === 'map' ? 'm' : 's'); document.getElementById(z) && document.getElementById(z).classList.remove('drag'); const f = e.dataTransfer.files[0]; if (f) { if (type === 'map') psoMapUp(n, { files: [f] }); else psoStuUp(n, { files: [f] }); } }
       function psoSdot(n, s, state) { const el = document.getElementById('pso-sd' + n + s); if (el) { el.className = 'sdot'; if (state) el.classList.add(state); } }
-      function psoBadge(n) { const el = document.getElementById('pso-badge' + n); if (!el) return; const cid = PSO.courseId[n - 1], map = PSO.mapData[n - 1], stu = PSO.stuData[n - 1]; if (cid && map && stu) { el.textContent = 'Ready'; el.style.background = 'rgba(0,166,90,.3)'; } else if (cid && map) { el.textContent = 'Awaiting Scores'; } else if (map) { el.textContent = 'Select Course ID'; } else { el.textContent = 'Not Configured'; } }
+      function psoBadge(n) { const el = document.getElementById('pso-badge' + n); if (!el) return; const cid = PSO.courseId[n - 1], map = PSO.mapData[n - 1], stu = PSO.stuData[n - 1]; if (cid && map && stu) { el.textContent = cid; el.style.background = 'rgba(0,166,90,.4)'; el.style.color = '#fff'; el.title = 'Course: ' + cid; } else if (cid && map) { el.textContent = 'Awaiting Scores'; el.style.background = ''; el.style.color = ''; el.title = ''; } else if (map) { el.textContent = 'Select Course ID'; el.style.background = ''; el.style.color = ''; el.title = ''; } else { el.textContent = 'Not Configured'; el.style.background = ''; el.style.color = ''; el.title = ''; } }
       function psoParseFile(file) { return new Promise((res, rej) => { if (file.name.toLowerCase().endsWith('.csv')) { Papa.parse(file, { header: true, skipEmptyLines: true, complete: r => res({ columns: r.meta.fields || [], rows: r.data }), error: rej }); } else { const rd = new FileReader(); rd.onload = e => { try { const wb = XLSX.read(new Uint8Array(e.target.result), { type: 'array' }); const ws = wb.Sheets[wb.SheetNames[0]]; const json = XLSX.utils.sheet_to_json(ws, { raw: false, defval: '' }); res({ columns: json.length ? Object.keys(json[0]) : [], rows: json }); } catch (err) { rej(err); } }; rd.onerror = rej; rd.readAsArrayBuffer(file); } }); }
-      async function psoMapUp(n, input) { const file = input.files[0]; if (!file) return; try { const data = await psoParseFile(file); PSO.mapData[n - 1] = data; document.getElementById('pso-uz' + n + 'm').classList.add('loaded'); document.getElementById('pso-map' + n + 'fn').textContent = file.name; psoSdot(n, 'm', 'done'); const cc = data.columns.find(c => /course.?id/i.test(c)) || data.columns[0]; const ids = [...new Set(data.rows.map(r => String(r[cc] || '').trim()).filter(Boolean))]; const sel = document.getElementById('pso-csel' + n); sel.innerHTML = '<option value="">-- Select --</option>' + ids.map(id => '<option value="' + id + '">' + id + '</option>').join(''); psoBadge(n); toast('Mapping: ' + ids.length + ' courses', 's'); } catch (e) { toast('Error: ' + e.message, 'e'); } }
+      async function psoMapUp(n, input) { const file = input.files[0]; if (!file) return; try { const data = await psoParseFile(file); PSO.mapData[n - 1] = data; document.getElementById('pso-uz' + n + 'm').classList.add('loaded'); document.getElementById('pso-map' + n + 'fn').textContent = file.name; psoSdot(n, 'm', 'done'); const cc = data.columns.find(c => /course.?id/i.test(c)) || data.columns[0]; const ids = [...new Set(data.rows.map(r => String(r[cc] || '').trim()).filter(Boolean))]; const sel = document.getElementById('pso-csel' + n); sel.innerHTML = '<option value="">— Select Course ID —</option>' + ids.map(id => '<option value="' + escHtml(id) + '">' + escHtml(id) + '</option>').join(''); if (ids.length === 1) { sel.value = ids[0]; psoOnCourseSelect(n); } psoBadge(n); toast('Mapping loaded: ' + ids.length + ' course' + (ids.length !== 1 ? 's' : ''), 's'); } catch (e) { toast('Error: ' + e.message, 'e'); } }
       async function psoStuUp(n, input) { const file = input.files[0]; if (!file) return; try { showOv('Loading Score Dump', 'Reading...', '20'); await delay(20); const data = await psoParseFile(file); data.name = file.name; PSO.stuData[n - 1] = data; hideOv(); document.getElementById('pso-uz' + n + 's').classList.add('loaded'); document.getElementById('pso-stu' + n + 'fn').textContent = file.name; psoSdot(n, 's', 'done'); psoBadge(n); psoCheckReady(n); toast('Scores: ' + data.rows.length.toLocaleString() + ' rows', 's'); } catch (e) { hideOv(); toast('Error: ' + e.message, 'e'); } }
       function psoOnCourseSelect(n) { PSO.courseId[n - 1] = document.getElementById('pso-csel' + n).value || null; psoSdot(n, 'c', PSO.courseId[n - 1] ? 'done' : ''); psoBadge(n); psoCheckReady(n); }
       function psoCheckReady(n) { psoSdot(n, 'r', (PSO.mapData[n - 1] && PSO.stuData[n - 1] && PSO.courseId[n - 1]) ? 'act' : ''); }
-      async function psoRunAnalysis() { const r1 = PSO.mapData[0] && PSO.stuData[0] && PSO.courseId[0]; const r2 = PSO.mapData[1] && PSO.stuData[1] && PSO.courseId[1]; if (!r1 && !r2) { toast('Configure at least one course', 'w'); return; } showOv('Running Analysis', 'Starting...', 5); await delay(30); let tM = 0, tW = 0, bR = false; if (r1) { pOv(20, 'Processing #1...'); await delay(20); PSO.results[0] = psoProcess(1); tM += Object.keys(PSO.results[0].renamedMap).length; tW += PSO.results[0].weeksCreated.length; if (PSO.results[0].bestScoreCol) bR = true; psoSdot(1, 'r', 'done'); } if (r2) { pOv(60, 'Processing #2...'); await delay(20); PSO.results[1] = psoProcess(2); tM += Object.keys(PSO.results[1].renamedMap).length; tW += PSO.results[1].weeksCreated.length; if (PSO.results[1].bestScoreCol) bR = true; psoSdot(2, 'r', 'done'); } pOv(90, 'Rendering...'); await delay(20); document.getElementById('pso-k-courses').textContent = (r1 ? 1 : 0) + (r2 ? 1 : 0); document.getElementById('pso-k-mapped').textContent = tM; document.getElementById('pso-k-weeks').textContent = tW; document.getElementById('pso-k-best').textContent = bR ? 'Yes' : 'No'; document.getElementById('pso-s-txt').textContent = 'Analysis complete'; document.getElementById('pso-results').style.display = 'block'; document.getElementById('pso-export').style.display = 'block'; if (r1 && PSO.results[0]) psoRenderResult(1, PSO.results[0], PSO.courseId[0]); if (r2 && PSO.results[1]) psoRenderResult(2, PSO.results[1], PSO.courseId[1]); hideOv(); toast('Analysis complete', 's'); }
-      function psoProcess(n) { const mapData = PSO.mapData[n - 1], stuData = PSO.stuData[n - 1], courseId = PSO.courseId[n - 1], scoreChoice = PSO.scoreChoice; const cc = mapData.columns.find(c => /course.?id/i.test(c)) || mapData.columns[0]; const row = mapData.rows.find(r => String(r[cc] || '').trim().toLowerCase() === courseId.trim().toLowerCase()); if (!row) return { columns: stuData.columns, rows: stuData.rows, renamedMap: {}, weeksCreated: [], bestScoreCol: null, mappingIdCount: 0, diag: { matchCount: 0, mappedCols: [] } }; const weekCols = mapData.columns.filter(c => /^week\s*\d+$/i.test(c)); const assignCols = mapData.columns.filter(c => /assign/i.test(c) && !/score|avg|total/i.test(c)); const idToLabel = {}; const weekToLabels = {}; weekCols.forEach(wc => { const wn = parseInt(String(wc).match(/\d+/) || [0]); if (!wn) return; const acs = assignCols.filter(ac => parseInt(String(ac).match(/\d+/) || [0]) === wn); const lbls = []; acs.forEach(ac => { const ls = String(row[wc] || '').split(/[,;\n]+/).map(s => s.trim()).filter(Boolean); const ids = String(row[ac] || '').split(/[,;\n]+/).map(s => s.trim()).filter(Boolean); ls.forEach((l, i) => { if (ids[i]) { idToLabel[ids[i]] = l; lbls.push(l); } }); }); if (lbls.length) weekToLabels[wc] = [...new Set(lbls)]; }); const newCols = [], renamedMap = {}; const seen = {}; stuData.columns.forEach(col => { const m = String(col).match(/\((\d+)\)\s*$|#(\d+)|_(\d+)$|\s(\d+)$/); const nid = m ? m[1] || m[2] || m[3] || m[4] : null; if (nid && idToLabel[nid]) { const tgt = idToLabel[nid]; seen[tgt] = (seen[tgt] || 0) + 1; const fn = seen[tgt] > 1 ? tgt + '_' + seen[tgt] : tgt; newCols.push(fn); renamedMap[col] = fn; } else newCols.push(col); }); const resultRows = stuData.rows.map(row => { const nr = {}; stuData.columns.forEach((col, i) => { nr[newCols[i]] = row[col]; }); return nr; }); const resultCols = [...newCols]; const weeksCreated = []; Object.entries(weekToLabels).forEach(([wc, labels]) => { const wName = wc.replace(/(Week)(\d+)/i, '$1 $2'); const avail = labels.filter(l => resultCols.includes(l)); if (avail.length) { resultRows.forEach(r => { let s = 0, cnt = 0; avail.forEach(l => { const v = parseFloat(r[l]); if (!isNaN(v)) { s += v; cnt++; } }); r[wName] = cnt > 0 ? Math.round(s / cnt) : 0; }); resultCols.push(wName); weeksCreated.push(wName); } }); let bestScoreCol = null; if (scoreChoice && PSO_CFG[scoreChoice]) { const { N: ni, K: ki } = PSO_CFG[scoreChoice]; const cn = 'Best Score (' + scoreChoice + 'W)'; const rel = weeksCreated.filter(w => { const m = w.match(/Week\s*(\d+)/i); return m && parseInt(m[1]) <= ni; }); if (rel.length >= ki) { resultRows.forEach(r => { const vals = rel.map(w => parseFloat(r[w]) || 0).sort((a, b) => b - a); r[cn] = Math.round((vals.slice(0, ki).reduce((a, b) => a + b, 0) / ki) * 100) / 100; }); resultCols.push(cn); bestScoreCol = cn; } } return { columns: resultCols, rows: resultRows, renamedMap, weeksCreated, bestScoreCol, mappingIdCount: Object.keys(idToLabel).length, diag: { matchCount: Object.keys(renamedMap).length, mappedCols: [] } }; }
-      function psoRenderResult(n, res, cid) { document.getElementById('pso-res' + n + 'title').textContent = cid + ' - ' + res.rows.length.toLocaleString() + ' rows'; const body = document.getElementById('pso-res' + n + 'body'); const mc = res.diag.matchCount, mt = res.mappingIdCount, pct = mt > 0 ? Math.round(mc / mt * 100) : 0; const pc = pct === 100 ? 'var(--green)' : pct > 80 ? 'var(--blue)' : 'var(--yellow)'; let html = '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px"><div style="background:#f9f9f9;border-radius:3px;padding:10px;text-align:center;border-bottom:3px solid ' + pc + '"><div style="font-size:20px;font-weight:700;color:' + pc + '">' + mc + '/' + mt + '</div><div style="font-size:10px;color:var(--text3);text-transform:uppercase">IDs Mapped (' + pct + '%)</div></div><div style="background:#f9f9f9;border-radius:3px;padding:10px;text-align:center"><div style="font-size:20px;font-weight:700">' + res.weeksCreated.length + '</div><div style="font-size:10px;color:var(--text3);text-transform:uppercase">Weeks</div></div><div style="background:#f9f9f9;border-radius:3px;padding:10px;text-align:center"><div style="font-size:20px;font-weight:700">' + (res.bestScoreCol ? 'Yes' : 'No') + '</div><div style="font-size:10px;color:var(--text3);text-transform:uppercase">Best Score</div></div></div>'; html += '<div style="overflow:auto;max-height:200px;border:1px solid var(--border);border-radius:var(--rad)"><table class="stbl"><thead><tr>' + res.columns.map(c => '<th>' + escHtml(c) + '</th>').join('') + '</tr></thead><tbody>' + res.rows.slice(0, 6).map(row => '<tr>' + res.columns.map(c => '<td>' + escHtml(String(row[c] || '')) + '</td>').join('') + '</tr>').join('') + '</tbody></table></div>'; body.innerHTML = html; }
-      async function psoExportZip() { if (!PSO.results[0] && !PSO.results[1]) { toast('No results', 'w'); return; } showOv('Building ZIP', 'Preparing...', 10); await delay(20); try { const zip = new JSZip();[0, 1].forEach(i => { const res = PSO.results[i]; if (!res) return; let csv = res.columns.join(',') + '\n'; res.rows.forEach(r => { csv += res.columns.map(c => '"' + String(r[c] || '').replace(/"/g, '""') + '"').join(',') + '\n'; }); zip.file((PSO.courseId[i] || 'Course' + (i + 1)) + '.csv', csv); }); pOv(80, 'Compressing...'); const blob = await zip.generateAsync({ type: 'blob', compression: 'DEFLATE', compressionOptions: { level: 5 } }); dlBlob(blob, 'NPTEL_PreScoring.zip'); hideOv(); toast('ZIP downloaded', 's'); } catch (e) { hideOv(); toast('Export failed: ' + e.message, 'e'); } }
-      function psoClearAll() { PSO.mapData = [null, null]; PSO.stuData = [null, null]; PSO.courseId = [null, null]; PSO.results = [null, null];[1, 2].forEach(n => { ['pso-uz' + n + 'm', 'pso-uz' + n + 's'].forEach(id => document.getElementById(id) && document.getElementById(id).classList.remove('loaded'));['pso-map' + n + 'fn', 'pso-stu' + n + 'fn'].forEach(id => { const el = document.getElementById(id); if (el) el.textContent = ''; }); const sel = document.getElementById('pso-csel' + n); if (sel) sel.innerHTML = '<option value="">-- Upload mapping --</option>';['m', 'c', 's', 'r'].forEach(s => psoSdot(n, s, '')); psoBadge(n); }); document.getElementById('pso-results').style.display = 'none'; document.getElementById('pso-export').style.display = 'none';['pso-k-courses', 'pso-k-mapped', 'pso-k-weeks'].forEach(id => { const el = document.getElementById(id); if (el) el.textContent = '0'; }); const kb = document.getElementById('pso-k-best'); if (kb) kb.textContent = '--'; toast('Cleared', 'i'); }
+      async function psoRunAnalysis() {
+        const r1 = PSO.mapData[0] && PSO.stuData[0] && PSO.courseId[0];
+        const r2 = PSO.mapData[1] && PSO.stuData[1] && PSO.courseId[1];
+        if (!r1 && !r2) { toast('Configure at least one course', 'w'); return; }
+        showOv('Running Analysis', 'Starting...', 5); await delay(30);
+        let tM = 0, tW = 0, bR = false;
+        if (r1) { pOv(20, 'Processing Course #1...'); await delay(20); PSO.results[0] = psoProcess(1); tM += Object.keys(PSO.results[0].renamedMap).length; tW += PSO.results[0].weeksCreated.length; if (PSO.results[0].bestScoreCol) bR = true; psoSdot(1, 'r', 'done'); }
+        if (r2) { pOv(60, 'Processing Course #2...'); await delay(20); PSO.results[1] = psoProcess(2); tM += Object.keys(PSO.results[1].renamedMap).length; tW += PSO.results[1].weeksCreated.length; if (PSO.results[1].bestScoreCol) bR = true; psoSdot(2, 'r', 'done'); }
+        pOv(90, 'Rendering...'); await delay(20);
+        document.getElementById('pso-k-courses').textContent = (r1 ? 1 : 0) + (r2 ? 1 : 0);
+        document.getElementById('pso-k-mapped').textContent = tM;
+        document.getElementById('pso-k-weeks').textContent = tW;
+        const bestEl = document.getElementById('pso-k-best');
+        bestEl.textContent = bR ? 'Yes' : (PSO.scoreChoice ? 'No' : '—');
+        bestEl.style.color = bR ? 'var(--green)' : '';
+        document.getElementById('pso-s-txt').textContent = 'Analysis complete';
+        document.getElementById('pso-results').style.display = 'block';
+        document.getElementById('pso-export').style.display = 'block';
+        const both = r1 && r2;
+        const btnLbl = document.getElementById('pso-export-btn-lbl'), expDesc = document.getElementById('pso-export-desc');
+        if (btnLbl) btnLbl.textContent = both ? 'Download Combined Excel' : 'Download Excel';
+        if (expDesc) expDesc.textContent = both ? 'Both courses in one Excel (two sheets) + formula reference' : 'Single course Excel with formula reference';
+        const c1btn = document.getElementById('pso-copy1-btn'), c2btn = document.getElementById('pso-copy2-btn');
+        if (c1btn) c1btn.style.display = (r1 && PSO.results[0]) ? '' : 'none';
+        if (c2btn) c2btn.style.display = (r2 && PSO.results[1]) ? '' : 'none';
+        if (r1 && PSO.results[0]) psoRenderResult(1, PSO.results[0], PSO.courseId[0]);
+        if (r2 && PSO.results[1]) psoRenderResult(2, PSO.results[1], PSO.courseId[1]);
+        hideOv(); toast('Analysis complete', 's');
+      }
+      function psoProcess(n) {
+        const mapData=PSO.mapData[n-1], stuData=PSO.stuData[n-1], courseId=PSO.courseId[n-1], scoreChoice=PSO.scoreChoice;
+        const cc = mapData.columns.find(c=>/course.?id/i.test(c)) || mapData.columns[0];
+        const mapRow = mapData.rows.find(r=>String(r[cc]||'').trim().toLowerCase()===courseId.trim().toLowerCase());
+        if (!mapRow) return {columns:stuData.columns,rows:stuData.rows.map(r=>Object.assign({},r)),renamedMap:{},renamedList:[],weeksCreated:[],bestScoreCol:null,mappingIdCount:0,formulaDesc:{},diag:{matchCount:0}};
+
+        // ── 1. Build id→label from mapping sheet ──
+        const weekCols  = mapData.columns.filter(c=>/^week\s*\d+$/i.test(c));
+        const assignCols= mapData.columns.filter(c=>/assign/i.test(c)&&!/score|avg|total/i.test(c));
+        const idToLabel={}, weekToLabels={};
+        weekCols.forEach(wc=>{
+          const wn=parseInt((String(wc).match(/\d+/)||[0])[0]); if(!wn) return;
+          const wName='Week '+wn;
+          const acs=assignCols.filter(ac=>parseInt((String(ac).match(/\d+/)||[0])[0])===wn);
+          const lbls=[];
+          acs.forEach(ac=>{
+            const ls=String(mapRow[wc]||'').split(/[,;\n]+/).map(s=>s.trim()).filter(Boolean);
+            const ids=String(mapRow[ac]||'').split(/[,;\n]+/).map(s=>s.trim()).filter(Boolean);
+            ls.forEach((l,i)=>{ if(ids[i]){idToLabel[ids[i]]=l; lbls.push(l);} });
+          });
+          if(lbls.length) weekToLabels[wName]=[...new Set(lbls)];
+        });
+
+        // ── 2. Rename score-dump columns ──
+        const newCols=[], renamedMap={}, renamedList=[], seen={};
+        stuData.columns.forEach(col=>{
+          const raw=String(col);
+          // match trailing numeric ID in various formats: (123), #123, _123, space+123
+          const m=raw.match(/\((\d+)\)\s*$|#(\d+)\s*$|_(\d+)\s*$|\s(\d+)\s*$/);
+          const nid=m?(m[1]||m[2]||m[3]||m[4]):null;
+          if(nid && idToLabel[nid]){
+            const tgt=idToLabel[nid];
+            seen[tgt]=(seen[tgt]||0)+1;
+            const fn=seen[tgt]>1?tgt+'_'+seen[tgt]:tgt;
+            newCols.push(fn); renamedMap[col]=fn;
+            renamedList.push({id:nid, original:col, renamed:fn});
+          } else newCols.push(col);
+        });
+
+        const resultRows=stuData.rows.map(row=>{ const nr={}; stuData.columns.forEach((col,i)=>{ nr[newCols[i]]=row[col]; }); return nr; });
+        const resultCols=[...newCols], weeksCreated=[], formulaDesc={};
+
+        // ── 3. Create Week columns — ROUND(SUM(cols)/N, 0) ──
+        Object.entries(weekToLabels).forEach(([wName,labels])=>{
+          const avail=labels.filter(l=>resultCols.includes(l));
+          if(avail.length){
+            resultRows.forEach(r=>{
+              let s=0; avail.forEach(l=>{ const v=parseFloat(r[l]); if(!isNaN(v)) s+=v; });
+              r[wName]=Math.round(s/avail.length); // integer — ROUND(SUM/N, 0)
+            });
+            resultCols.push(wName); weeksCreated.push(wName);
+            formulaDesc[wName]='ROUND(SUM('+avail.join(',')+')/'+ avail.length +',0)';
+          }
+        });
+
+        // ── 4. Best Score — ROUND(SUM(LARGE({w1,w2,...},{1,2,..,K}))/K, 2) ──
+        let bestScoreCol=null;
+        if(scoreChoice && PSO_CFG[scoreChoice]){
+          const {N:ni,K:ki}=PSO_CFG[scoreChoice];
+          const cn='Best Score ('+scoreChoice+'W-Best'+ki+')';
+          const rel=weeksCreated.filter(w=>{ const m=w.match(/Week\s*(\d+)/i); return m&&parseInt(m[1])<=ni; });
+          if(rel.length>0){
+            resultRows.forEach(r=>{
+              const vals=rel.map(w=>parseFloat(r[w])||0).sort((a,b)=>b-a);
+              const top=vals.slice(0,Math.min(ki,vals.length));
+              // pad with 0 if fewer weeks than K
+              while(top.length<ki) top.push(0);
+              r[cn]=+(top.reduce((a,b)=>a+b,0)/ki).toFixed(2);
+            });
+            resultCols.push(cn); bestScoreCol=cn;
+            const largeIdxArr=Array.from({length:ki},(_,i)=>i+1).join(',');
+            formulaDesc[cn]='ROUND(SUM(LARGE({'+rel.join(',')+'},{'+ largeIdxArr +'}))/'+ ki +',2)';
+          }
+        }
+        return {columns:resultCols,rows:resultRows,renamedMap,renamedList,weeksCreated,bestScoreCol,mappingIdCount:Object.keys(idToLabel).length,formulaDesc,diag:{matchCount:Object.keys(renamedMap).length}};
+      }
+      function psoRenderResult(n, res, cid) {
+        document.getElementById('pso-res'+n+'title').textContent = cid + ' — ' + res.rows.length.toLocaleString() + ' rows';
+        const body = document.getElementById('pso-res'+n+'body');
+        const mc=res.diag.matchCount, mt=res.mappingIdCount, pct=mt>0?Math.round(mc/mt*100):0;
+        const pc=pct===100?'var(--green)':pct>80?'var(--blue)':'var(--yellow)';
+        const fEntries=Object.entries(res.formulaDesc||{});
+
+        // ── KPI mini cards ──
+        let html='<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:10px">';
+        html+='<div style="background:#f9f9f9;border-radius:3px;padding:8px;text-align:center;border-bottom:3px solid '+pc+'"><div style="font-size:18px;font-weight:700;color:'+pc+'">'+mc+'/'+mt+'</div><div style="font-size:10px;color:var(--text3);text-transform:uppercase">IDs Mapped ('+pct+'%)</div></div>';
+        html+='<div style="background:#f9f9f9;border-radius:3px;padding:8px;text-align:center"><div style="font-size:18px;font-weight:700">'+res.weeksCreated.length+'</div><div style="font-size:10px;color:var(--text3);text-transform:uppercase">Weeks Created</div></div>';
+        html+='<div style="background:#f9f9f9;border-radius:3px;padding:8px;text-align:center;border-bottom:3px solid '+(res.bestScoreCol?'var(--green)':'var(--border)')+'"><div style="font-size:18px;font-weight:700;color:'+(res.bestScoreCol?'var(--green)':'var(--text3)')+'">'+(res.bestScoreCol?'Yes':'No')+'</div><div style="font-size:10px;color:var(--text3);text-transform:uppercase">Best Score</div></div>';
+        html+='</div>';
+
+        // ── Formula reference (inline, styled) ──
+        if(fEntries.length){
+          html+='<div style="margin-bottom:10px;padding:8px 10px;background:#f0f7ff;border-left:3px solid var(--blue);border-radius:2px;font-size:11px;line-height:1.7">';
+          html+='<b style="color:var(--blue)"><i class="bi bi-calculator-fill"></i> Formulas applied:</b><br>';
+          html+=fEntries.map(([k,v])=>'<span style="display:inline-block;min-width:80px;font-weight:700;color:var(--text)">'+escHtml(k)+'</span><span style="color:var(--text2);font-family:monospace;font-size:10px"> = '+escHtml(v)+'</span>').join('<br>');
+          html+='</div>';
+        }
+
+        // ── Mapped/Renamed IDs table ──
+        const rl=res.renamedList||[];
+        if(rl.length){
+          html+='<div style="margin-bottom:10px">';
+          html+='<div style="font-size:11px;font-weight:700;color:var(--text2);margin-bottom:4px"><i class="bi bi-arrow-left-right"></i> Column Renames ('+rl.length+' mapped)</div>';
+          html+='<div style="max-height:120px;overflow-y:auto;border:1px solid var(--border);border-radius:var(--rad)">';
+          html+='<table style="width:100%;border-collapse:collapse;font-size:11px"><thead><tr style="background:var(--card-head)"><th style="padding:4px 8px;text-align:left;border-bottom:1px solid var(--border)">ID</th><th style="padding:4px 8px;text-align:left;border-bottom:1px solid var(--border)">Original Column</th><th style="padding:4px 8px;text-align:left;border-bottom:1px solid var(--border)">→ Renamed To</th></tr></thead><tbody>';
+          html+=rl.map((r,i)=>'<tr style="background:'+(i%2===0?'#fff':'#f9f9f9')+'"><td style="padding:3px 8px;font-weight:700;color:var(--purple)">'+escHtml(r.id)+'</td><td style="padding:3px 8px;color:var(--text3);font-family:monospace;font-size:10px">'+escHtml(r.original)+'</td><td style="padding:3px 8px;color:var(--green);font-weight:600">'+escHtml(r.renamed)+'</td></tr>').join('');
+          html+='</tbody></table></div></div>';
+        }
+
+        // ── Data preview — ALL cols, full horizontal scroll ──
+        html+='<div style="font-size:11px;font-weight:700;color:var(--text2);margin-bottom:4px"><i class="bi bi-table"></i> Data Preview (first '+Math.min(8,res.rows.length)+' rows, '+res.columns.length+' columns)</div>';
+        html+='<div style="overflow:auto;max-height:220px;border:1px solid var(--border);border-radius:var(--rad);width:100%">';
+        html+='<table style="border-collapse:collapse;font-size:11px;white-space:nowrap;min-width:max-content"><thead><tr style="background:var(--card-head);position:sticky;top:0;z-index:1">';
+        html+=res.columns.map(c=>'<th style="padding:4px 8px;border:1px solid var(--border);font-weight:700;min-width:70px;cursor:default" title="'+escHtml(c)+'">'+escHtml(c)+'</th>').join('');
+        html+='</tr></thead><tbody>';
+        html+=res.rows.slice(0,8).map((row,i)=>'<tr style="background:'+(i%2===0?'#fff':'#f9f9f9')+'">'+ res.columns.map(c=>{const v=String(row[c]!==undefined?row[c]:''); return '<td style="padding:3px 8px;border:1px solid #eee;text-align:'+(isNaN(parseFloat(v))||v===''?'left':'right')+'">'+escHtml(v)+'</td>';}).join('') +'</tr>').join('');
+        html+='</tbody></table></div>';
+
+        body.innerHTML=html;
+      }
+      // Build data-only XLSX worksheet (clean header at row 1, no formula rows)
+      function psoBuildDataSheet(res) {
+        const aoa=[res.columns];
+        res.rows.forEach(r=>aoa.push(res.columns.map(c=>{
+          const v=r[c];
+          if(v===''||v===null||v===undefined) return '';
+          const n=parseFloat(v);
+          return !isNaN(n)?n:String(v);
+        })));
+        return XLSX.utils.aoa_to_sheet(aoa);
+      }
+
+      // Build formula-reference worksheet
+      function psoBuildFormulaSheet(res, cid) {
+        const fEntries=Object.entries(res.formulaDesc||{});
+        const rl=res.renamedList||[];
+        const aoa=[['Formula Reference — '+cid],[]];
+        if(fEntries.length){
+          aoa.push(['Column','Formula']);
+          fEntries.forEach(([k,v])=>aoa.push([k,v]));
+          aoa.push([]);
+        }
+        if(rl.length){
+          aoa.push(['ID','Original Column','Renamed To']);
+          rl.forEach(r=>aoa.push([r.id, r.original, r.renamed]));
+        }
+        return XLSX.utils.aoa_to_sheet(aoa);
+      }
+
+      async function psoExportExcel() {
+        const r1=PSO.results[0], r2=PSO.results[1];
+        if(!r1&&!r2){toast('No results to export','w');return;}
+        showOv('Building Excel','Preparing...',10); await delay(20);
+        try {
+          const wb=XLSX.utils.book_new();
+          if(r1){
+            const name1=(PSO.courseId[0]||'Course1').slice(0,28);
+            XLSX.utils.book_append_sheet(wb, psoBuildDataSheet(r1), name1);
+            XLSX.utils.book_append_sheet(wb, psoBuildFormulaSheet(r1,PSO.courseId[0]||'Course1'), (name1+' Formulas').slice(0,31));
+          }
+          if(r2){
+            const name2=(PSO.courseId[1]||'Course2').slice(0,28);
+            XLSX.utils.book_append_sheet(wb, psoBuildDataSheet(r2), name2);
+            XLSX.utils.book_append_sheet(wb, psoBuildFormulaSheet(r2,PSO.courseId[1]||'Course2'), (name2+' Formulas').slice(0,31));
+          }
+          pOv(80,'Writing file...');
+          const fname=(r1&&r2)?'NPTEL_PreScoring_Combined.xlsx':'NPTEL_PreScoring_'+(PSO.courseId[r1?0:1]||'Course')+'.xlsx';
+          XLSX.writeFile(wb,fname);
+          hideOv(); toast('Excel downloaded: '+fname,'s');
+        } catch(e){hideOv(); toast('Export failed: '+e.message,'e');}
+      }
+
+      async function psoExportZip() {
+        if (!PSO.results[0] && !PSO.results[1]) { toast('No results', 'w'); return; }
+        showOv('Building ZIP', 'Preparing...', 10); await delay(20);
+        try {
+          const zip = new JSZip();
+          [0,1].forEach(i => {
+            const res=PSO.results[i]; if (!res) return;
+            const fEntries=Object.entries(res.formulaDesc||{});
+            let csv='';
+            if (fEntries.length) { csv+='# Formula Reference\n'; fEntries.forEach(([k,v])=>{ csv+='# '+k+': '+v+'\n'; }); csv+='#\n'; }
+            csv+=res.columns.join(',')+'\n';
+            res.rows.forEach(r=>{ csv+=res.columns.map(c=>{ const v=String(r[c]!==undefined?r[c]:''); return (v.includes(',')||v.includes('"'))?'"'+v.replace(/"/g,'""')+'"':v; }).join(',')+'\n'; });
+            zip.file((PSO.courseId[i]||'Course'+(i+1))+'.csv', csv);
+          });
+          pOv(80,'Compressing...');
+          const blob = await zip.generateAsync({type:'blob',compression:'DEFLATE',compressionOptions:{level:5}});
+          dlBlob(blob,'NPTEL_PreScoring.zip'); hideOv(); toast('ZIP downloaded','s');
+        } catch(e) { hideOv(); toast('Export failed: '+e.message,'e'); }
+      }
+
+      function psoCopyResult(n) {
+        const res=PSO.results[n-1]; if (!res) { toast('No data for Course #'+n,'w'); return; }
+        const lines=[res.columns.join('\t')];
+        res.rows.forEach(r => lines.push(res.columns.map(c=>String(r[c]!==undefined?r[c]:'')).join('\t')));
+        navigator.clipboard.writeText(lines.join('\n'))
+          .then(()=>toast('Copied Course #'+n+' — '+res.rows.length.toLocaleString()+' rows','s'))
+          .catch(()=>toast('Copy failed','e'));
+      }
+
+      function psoClearAll() {
+        PSO.mapData=[null,null]; PSO.stuData=[null,null]; PSO.courseId=[null,null]; PSO.results=[null,null];
+        [1,2].forEach(n=>{
+          ['pso-uz'+n+'m','pso-uz'+n+'s'].forEach(id=>document.getElementById(id)&&document.getElementById(id).classList.remove('loaded'));
+          ['pso-map'+n+'fn','pso-stu'+n+'fn'].forEach(id=>{const el=document.getElementById(id);if(el)el.textContent='';});
+          const sel=document.getElementById('pso-csel'+n); if(sel) sel.innerHTML='<option value="">— Upload mapping to populate —</option>';
+          ['m','c','s','r'].forEach(s=>psoSdot(n,s,'')); psoBadge(n);
+        });
+        document.getElementById('pso-results').style.display='none';
+        document.getElementById('pso-export').style.display='none';
+        ['pso-k-courses','pso-k-mapped','pso-k-weeks'].forEach(id=>{const el=document.getElementById(id);if(el)el.textContent='0';});
+        const kb=document.getElementById('pso-k-best'); if(kb){kb.textContent='—';kb.style.color='';}
+        const c1=document.getElementById('pso-copy1-btn'),c2=document.getElementById('pso-copy2-btn');
+        if(c1)c1.style.display='none'; if(c2)c2.style.display='none';
+        toast('Cleared','i');
+      }
 
       // ═══════════════════════════════════════════════════════════════
       // PDF WATERMARK SYSTEM
