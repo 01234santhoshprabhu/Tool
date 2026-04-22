@@ -1945,6 +1945,29 @@
       display: block;
     }
 
+    /* Formula Rules tab — round-picker buttons */
+    .fml-rnd-btn {
+      border: 1px solid var(--border); border-right: none; background: #fff;
+      padding: 4px 11px; font-size: 13px; cursor: pointer; font-weight: 600;
+      color: var(--text2); transition: var(--tr); line-height: 1.4;
+    }
+    .fml-rnd-btn:first-child { border-radius: var(--rad) 0 0 var(--rad); }
+    .fml-rnd-btn.active { background: var(--purple); color: #fff; border-color: var(--purple); }
+    .fml-rnd-btn:hover:not(.active) { background: var(--body-bg); }
+
+    /* Formula Rules — course override row */
+    .fml-co-row {
+      display: grid; grid-template-columns: 160px 160px 110px 1fr 32px;
+      gap: 8px; align-items: center;
+      padding: 8px 10px; border: 1px solid var(--border); border-radius: var(--rad);
+      background: #fff; margin-bottom: 6px; font-size: 12px;
+    }
+    .fml-co-row:hover { background: #f9fbff; }
+    .fml-co-row select, .fml-co-row input[type=text] {
+      border: 1px solid var(--border); border-radius: var(--rad); padding: 4px 7px;
+      font-size: 12px; width: 100%; background: #fff;
+    }
+
     .dr-tbl {
       width: 100%;
       border-collapse: collapse;
@@ -3155,6 +3178,8 @@
         <span class="sb-sec-lbl nl" style="margin-top:6px">NPTEL Tools</span>
         <button class="nb" onclick="showPsoPage()"><i class="bi bi-grid-1x2-fill"></i><span
             class="nl">Manual/Programming</span></button>
+        <button class="nb" onclick="showPage('df')"><i class="bi bi-funnel-fill"></i><span
+            class="nl">Data Filter</span></button>
       </div>
 
       <div class="sb-foot">
@@ -3674,6 +3699,7 @@
           </div>
           <div class="box-body">
             <div class="al-tab-bar">
+              <button class="al-tab-btn" onclick="alTab('fmlrules')" style="border-top:2px solid var(--purple)"><i class="bi bi-function"></i> Formula Rules <span style="font-size:9px;background:var(--purple);color:#fff;border-radius:3px;padding:1px 5px;margin-left:3px;vertical-align:middle">NEW</span></button>
               <button class="al-tab-btn active" onclick="alTab('dur')"><i class="bi bi-grid-3x3-gap-fill"></i> Duration
                 Rules</button>
               <button class="al-tab-btn" onclick="alTab('formula')"><i class="bi bi-code-slash"></i> Custom
@@ -3682,6 +3708,64 @@
                 Overrides</button>
               <button class="al-tab-btn" onclick="alTab('output')"><i class="bi bi-layout-three-columns"></i> Output
                 Columns</button>
+            </div>
+
+            <!-- Pane: Formula Rules (PSO Week Formula Control) -->
+            <div class="al-pane" id="al-fmlrules">
+              <div class="callout callout-warning" style="margin-bottom:14px">
+                <strong><i class="bi bi-function"></i> PSO Week Formula Rules</strong><br>
+                Controls how week scores are computed in the <b>Manual/Programming</b> dashboard.
+                Set a global default, then override per course.
+              </div>
+
+              <!-- Global Default -->
+              <div style="background:#f4f6f9;border:1px solid var(--border);border-radius:var(--rad);padding:14px 16px;margin-bottom:16px">
+                <div style="font-size:12px;font-weight:700;color:var(--text2);margin-bottom:12px"><i class="bi bi-globe2"></i> Global Default <span style="font-weight:400;color:var(--text3)">(applies to all courses unless overridden)</span></div>
+                <div style="display:flex;flex-wrap:wrap;gap:16px;align-items:flex-end">
+                  <div>
+                    <label style="font-size:11px;font-weight:700;color:var(--text3);display:block;margin-bottom:4px">AGGREGATION</label>
+                    <select id="fml-global-aggr" onchange="alFmlUpdateGlobal()" style="border:1px solid var(--border);border-radius:var(--rad);padding:5px 10px;font-size:13px;background:#fff">
+                      <option value="avg">Average — SUM / N</option>
+                      <option value="sum">Sum — SUM only</option>
+                      <option value="max">Max — highest score</option>
+                      <option value="min">Min — lowest score</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label style="font-size:11px;font-weight:700;color:var(--text3);display:block;margin-bottom:4px">DECIMAL PLACES</label>
+                    <div style="display:flex;gap:0">
+                      <button class="fml-rnd-btn active" data-scope="global" data-v="0" onclick="alFmlSetRound('global',0,this)">0</button>
+                      <button class="fml-rnd-btn" data-scope="global" data-v="1" onclick="alFmlSetRound('global',1,this)">1</button>
+                      <button class="fml-rnd-btn" data-scope="global" data-v="2" onclick="alFmlSetRound('global',2,this)">2</button>
+                      <input id="fml-global-rnd-custom" type="number" min="0" max="6" placeholder="?" title="Custom decimal places"
+                        style="width:44px;border:1px solid var(--border);border-left:none;border-radius:0 var(--rad) var(--rad) 0;padding:4px 6px;font-size:13px;text-align:center"
+                        oninput="alFmlSetRoundCustom('global',this.value)">
+                    </div>
+                  </div>
+                  <div style="flex:1;min-width:200px">
+                    <label style="font-size:11px;font-weight:700;color:var(--text3);display:block;margin-bottom:4px">FORMULA PREVIEW</label>
+                    <code id="fml-global-preview" style="background:#fff;border:1px solid var(--border);border-radius:var(--rad);padding:5px 10px;display:block;font-size:12px;color:var(--purple)">ROUND(SUM(A1,…,AN)/N, 0)</code>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Per-Course Overrides -->
+              <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+                <div style="font-size:12px;font-weight:700;color:var(--text2)"><i class="bi bi-journals"></i> Per-Course Overrides</div>
+                <button class="btn btn-default btn-sm" onclick="alFmlAddCourseOverride()"><i class="bi bi-plus-circle"></i> Add Override</button>
+              </div>
+              <div id="fml-course-overrides">
+                <div id="fml-co-empty" style="text-align:center;padding:28px;color:var(--text3);font-size:12px">
+                  <i class="bi bi-bookmark-plus" style="font-size:20px;display:block;margin-bottom:8px;opacity:.4"></i>
+                  No course overrides yet. Global default applies to all courses.
+                </div>
+              </div>
+
+              <div style="margin-top:14px;display:flex;gap:8px">
+                <button class="btn btn-success btn-sm" onclick="alFmlSave()"><i class="bi bi-check2-circle"></i> Save Formula Rules</button>
+                <button class="btn btn-default btn-sm" onclick="alFmlReset()"><i class="bi bi-arrow-counterclockwise"></i> Reset to Defaults</button>
+                <span id="fml-rules-status" style="font-size:12px;line-height:30px;color:var(--green)"></span>
+              </div>
             </div>
 
             <!-- Pane 1 -->
@@ -3983,6 +4067,286 @@
         </div>
       </div><!-- /page-diff -->
 
+      <!-- ════ PAGE: DATA FILTER ════ -->
+      <div id="page-df" class="page-sec">
+        <style>
+        /* ── DataFilter scoped styles ── */
+        .df-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:14px;}
+        .df-stat{background:var(--card-bg);border:1px solid var(--card-border);border-radius:6px;
+          padding:14px 16px;position:relative;overflow:hidden;}
+        .df-stat::after{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:var(--_dc,var(--blue));}
+        .df-stat[data-a="blue"]{--_dc:var(--blue);}
+        .df-stat[data-a="purple"]{--_dc:var(--purple);}
+        .df-stat[data-a="yellow"]{--_dc:var(--yellow);}
+        .df-stat[data-a="red"]{--_dc:var(--red);}
+        .df-stat-val{font-size:22px;font-weight:700;font-family:var(--mono);color:var(--_dc,var(--blue));line-height:1.1;}
+        .df-stat-lbl{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.7px;color:var(--text2);margin-top:3px;}
+        .df-stat-bar{height:2px;background:var(--border);border-radius:1px;margin-top:8px;overflow:hidden;}
+        .df-stat-fill{height:100%;background:var(--_dc,var(--blue));border-radius:1px;transition:width .6s ease;}
+
+        .df-filter-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:8px 10px;}
+        .df-col-wrap{display:flex;flex-direction:column;gap:3px;}
+        .df-col-label{font-size:9.5px;font-weight:700;letter-spacing:.9px;text-transform:uppercase;
+          color:var(--text2);display:flex;align-items:center;gap:4px;overflow:hidden;}
+        .df-col-label span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+        .df-col-cnt{font-size:9px;color:var(--text3);background:var(--body-bg);padding:1px 5px;
+          border-radius:10px;font-family:var(--mono);flex-shrink:0;}
+
+        /* Text-search filter input */
+        .df-txt{width:100%;background:var(--input-bg);border:1.5px solid var(--border);
+          border-radius:var(--rad);color:var(--text);font-family:var(--font);font-size:12px;
+          padding:5px 8px;outline:none;transition:border-color var(--tr);}
+        .df-txt:focus{border-color:var(--blue);}
+        .df-txt::placeholder{color:var(--text3);}
+        .df-txt.df-active{border-color:var(--blue);background:rgba(60,141,188,.07);}
+
+        /* Multi-select trigger */
+        .df-ms-outer{position:relative;}
+        .df-ms-trig{width:100%;min-height:30px;background:var(--input-bg);border:1.5px solid var(--border);
+          border-radius:var(--rad);display:flex;align-items:center;gap:4px;
+          padding:3px 22px 3px 7px;cursor:pointer;user-select:none;position:relative;
+          transition:border-color var(--tr);}
+        .df-ms-trig:hover{border-color:var(--border2);}
+        .df-ms-trig.open,.df-ms-trig.df-active{border-color:var(--blue);}
+        .df-ms-trig.df-active{background:rgba(60,141,188,.07);}
+        .df-ms-trig::after{content:'';position:absolute;right:7px;top:50%;
+          transform:translateY(-50%);border:4px solid transparent;border-top:5px solid var(--text3);
+          transition:transform .16s;pointer-events:none;}
+        .df-ms-trig.open::after{transform:translateY(-65%) rotate(180deg);}
+        .df-ms-ph{font-size:12px;color:var(--text3);flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+        .df-ms-tags{display:flex;align-items:center;gap:3px;flex:1;overflow:hidden;flex-wrap:nowrap;}
+        .df-ms-tag{display:inline-flex;align-items:center;gap:2px;background:var(--blue);color:#fff;
+          font-size:10px;font-weight:600;padding:1px 5px;border-radius:3px;white-space:nowrap;flex-shrink:0;}
+        .df-ms-tag-x{background:none;border:none;color:rgba(255,255,255,.75);cursor:pointer;
+          font-size:10px;padding:0;line-height:1;}
+        .df-ms-tag-x:hover{color:#fff;}
+        .df-ms-more{font-size:10px;color:var(--text2);white-space:nowrap;flex-shrink:0;}
+
+        /* Dropdown panel — portals to body */
+        .df-ms-panel{position:fixed;z-index:99998;background:var(--card-bg);
+          border:1.5px solid var(--border2);border-radius:8px;
+          box-shadow:0 12px 40px rgba(0,0,0,.35);
+          display:none;flex-direction:column;min-width:200px;animation:dfPanelIn .13s ease;}
+        @keyframes dfPanelIn{from{opacity:0;transform:translateY(-3px)}to{opacity:1;transform:translateY(0)}}
+        .df-ms-srow{padding:6px 7px;border-bottom:1px solid var(--border);position:relative;}
+        .df-ms-sinp{width:100%;background:var(--body-bg);border:1px solid var(--border);
+          border-radius:var(--rad);color:var(--text);font-family:var(--font);font-size:11px;
+          padding:4px 7px 4px 22px;outline:none;}
+        .df-ms-sinp:focus{border-color:var(--blue);}
+        .df-ms-sico{position:absolute;left:13px;top:50%;transform:translateY(-50%);
+          color:var(--text3);pointer-events:none;font-size:11px;}
+        .df-ms-arow{display:flex;gap:4px;padding:4px 7px;border-bottom:1px solid var(--border);}
+        .df-ms-act{flex:1;padding:3px 5px;border-radius:4px;background:var(--body-bg);
+          border:1px solid var(--border);color:var(--text2);font-size:10px;font-weight:600;
+          cursor:pointer;transition:all var(--tr);font-family:var(--font);text-align:center;}
+        .df-ms-act:hover{border-color:var(--blue);color:var(--blue);}
+        .df-ms-cnt{font-size:9.5px;color:var(--text3);margin-left:auto;white-space:nowrap;
+          font-family:var(--mono);padding-right:2px;}
+        .df-ms-list{overflow-y:auto;max-height:200px;}
+        .df-ms-opt{display:flex;align-items:center;gap:7px;padding:0 9px;height:28px;
+          cursor:pointer;transition:background var(--tr);font-size:12px;}
+        .df-ms-opt:hover{background:var(--body-bg);}
+        .df-ms-opt.sel{background:rgba(60,141,188,.05);}
+        .df-ms-cb{width:13px;height:13px;border-radius:3px;border:1.5px solid var(--border2);
+          background:var(--body-bg);flex-shrink:0;display:flex;align-items:center;justify-content:center;
+          transition:all .12s;}
+        .df-ms-opt.sel .df-ms-cb{background:var(--blue);border-color:var(--blue);}
+        .df-ms-opt-txt{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex:1;}
+        .df-ms-empty{padding:14px;text-align:center;color:var(--text3);font-size:11px;}
+
+        /* Chips row */
+        .df-chips-row{display:none;padding:7px 14px;border-top:1px solid var(--border);
+          background:var(--card-head);border-radius:0 0 var(--rad) var(--rad);
+          flex-wrap:wrap;gap:5px;align-items:center;}
+        .df-chip{display:inline-flex;align-items:center;gap:3px;background:rgba(60,141,188,.12);
+          border:1px solid rgba(60,141,188,.2);color:var(--blue);font-size:11px;font-weight:600;
+          padding:2px 8px;border-radius:20px;}
+        .df-chip-x{background:none;border:none;color:inherit;cursor:pointer;font-size:13px;
+          padding:0;display:flex;align-items:center;}
+        .df-chip-x:hover{color:var(--red);}
+
+        /* Table */
+        .df-tbl-wrap{overflow-x:auto;}
+        .df-tbl{width:100%;border-collapse:collapse;font-size:12px;}
+        .df-tbl thead th{padding:8px 11px;text-align:left;font-size:9.5px;font-weight:700;
+          letter-spacing:.8px;text-transform:uppercase;color:var(--text2);
+          border-bottom:1px solid var(--border);white-space:nowrap;cursor:pointer;user-select:none;
+          position:sticky;top:0;background:var(--card-head);z-index:2;}
+        .df-tbl thead th:hover{color:var(--blue);}
+        .df-tbl thead th.df-sorted{color:var(--blue);}
+        .df-tbl tbody tr{border-bottom:1px solid var(--border);transition:background var(--tr);}
+        .df-tbl tbody tr:hover{background:var(--body-bg);}
+        .df-tbl tbody td{padding:7px 11px;max-width:200px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+
+        /* Pagination */
+        .df-pag{display:none;flex-wrap:wrap;align-items:center;justify-content:space-between;
+          gap:8px;padding:9px 14px;border-top:1px solid var(--border);
+          background:var(--card-head);border-radius:0 0 var(--rad) var(--rad);}
+        .df-pag-info{font-size:11px;color:var(--text2);}
+        .df-pag-btns{display:flex;gap:3px;flex-wrap:wrap;}
+        .df-pb{min-width:26px;height:26px;padding:0 5px;border-radius:4px;
+          border:1px solid var(--border);background:var(--card-bg);color:var(--text);
+          font-size:11px;font-family:var(--mono);display:inline-flex;align-items:center;
+          justify-content:center;cursor:pointer;transition:all var(--tr);}
+        .df-pb:hover:not(:disabled){border-color:var(--blue);color:var(--blue);}
+        .df-pb.df-cur{background:var(--blue);border-color:var(--blue);color:#fff;font-weight:700;}
+        .df-pb:disabled{opacity:.25;cursor:not-allowed;}
+        .df-pg-sz{background:var(--card-bg);border:1px solid var(--border);color:var(--text);
+          font-family:var(--font);font-size:11px;padding:3px 7px;border-radius:4px;outline:none;cursor:pointer;}
+        .df-empty{text-align:center;padding:48px 24px;color:var(--text2);}
+        .df-empty h3{font-size:13px;font-weight:700;margin-bottom:4px;}
+        .df-empty p{font-size:11.5px;}
+
+        /* Progress bar */
+        .df-prog-wrap{margin-top:12px;display:none;}
+        .df-prog-row{display:flex;justify-content:space-between;margin-bottom:4px;}
+        .df-prog-track{height:3px;background:var(--border);border-radius:2px;overflow:hidden;}
+        .df-prog-fill{height:100%;background:linear-gradient(90deg,var(--blue),var(--purple));
+          border-radius:2px;width:0;transition:width .18s;}
+
+        /* Drop zone */
+        .df-dz{border:2px dashed var(--border2);border-radius:8px;padding:44px 20px;
+          text-align:center;cursor:pointer;background:var(--body-bg);transition:all .2s;
+          display:flex;flex-direction:column;align-items:center;gap:8px;}
+        .df-dz:hover,.df-dz.over{border-color:var(--blue);background:rgba(60,141,188,.06);
+          box-shadow:0 0 24px rgba(60,141,188,.15);}
+        .df-dz-icon{width:52px;height:52px;border-radius:10px;background:rgba(60,141,188,.1);
+          border:1px solid rgba(60,141,188,.2);display:flex;align-items:center;justify-content:center;}
+        .df-dz-title{font-size:15px;font-weight:800;}
+        .df-dz-sub{font-size:12px;color:var(--text2);}
+        .df-dz-tags{display:flex;gap:6px;flex-wrap:wrap;justify-content:center;margin-top:3px;}
+        .df-dz-tag{padding:2px 9px;border-radius:20px;background:var(--border);
+          font-size:10px;font-weight:700;letter-spacing:.6px;color:var(--text2);
+          font-family:var(--mono);}
+
+        /* Top search */
+        .df-gsearch-wrap{position:relative;flex:1;min-width:140px;max-width:320px;}
+        .df-gsearch-wrap input{width:100%;background:var(--input-bg);border:1.5px solid var(--border);
+          border-radius:var(--rad);color:var(--text);font-family:var(--font);font-size:12px;
+          padding:5px 9px 5px 26px;outline:none;transition:border-color var(--tr);}
+        .df-gsearch-wrap input:focus{border-color:var(--blue);}
+        .df-gsearch-wrap input::placeholder{color:var(--text3);}
+        .df-gsearch-ico{position:absolute;left:8px;top:50%;transform:translateY(-50%);
+          color:var(--text3);pointer-events:none;font-size:12px;}
+        </style>
+
+        <!-- Upload -->
+        <div id="df-up-sec">
+          <div class="box box-info">
+            <div class="box-header">
+              <h3 class="box-title"><i class="bi bi-funnel-fill"></i> Data Filter
+                <span style="font-size:11px;font-weight:400;color:var(--text3);margin-left:8px">Up to 80 lakh rows · zero page freeze</span>
+              </h3>
+            </div>
+            <div class="box-body">
+              <label for="df-file-inp">
+                <div class="df-dz" id="df-dz">
+                  <div class="df-dz-icon">
+                    <i class="bi bi-cloud-upload-fill" style="font-size:22px;color:var(--blue)"></i>
+                  </div>
+                  <div class="df-dz-title">Drop file here or click to browse</div>
+                  <div class="df-dz-sub">Auto-detected columns · Dictionary-encoded · Worker-filtered</div>
+                  <div class="df-dz-tags"><span class="df-dz-tag">CSV</span><span class="df-dz-tag">XLSX</span><span class="df-dz-tag">XLS</span></div>
+                </div>
+              </label>
+              <input type="file" id="df-file-inp" accept=".csv,.xlsx,.xls" onchange="DF.handleFile(this.files[0])"/>
+              <div class="df-prog-wrap" id="df-pw">
+                <div class="df-prog-row">
+                  <span style="font-size:11.5px;font-weight:600" id="df-pl">Processing…</span>
+                  <span style="font-family:var(--mono);font-size:11px;color:var(--blue)" id="df-pp">0%</span>
+                </div>
+                <div class="df-prog-track"><div class="df-prog-fill" id="df-pf"></div></div>
+                <div style="font-size:10.5px;color:var(--text2);margin-top:3px" id="df-pd"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Dashboard -->
+        <div id="df-dash-sec" style="display:none">
+          <!-- Stats -->
+          <div class="df-stats" id="df-stats">
+            <div class="df-stat" data-a="blue">
+              <div class="df-stat-val" id="df-sv-tot">—</div>
+              <div class="df-stat-lbl">Total Records</div>
+              <div class="df-stat-bar"><div class="df-stat-fill" id="df-sp1" style="width:100%"></div></div>
+            </div>
+            <div class="df-stat" data-a="purple">
+              <div class="df-stat-val" id="df-sv-fil">—</div>
+              <div class="df-stat-lbl">Filtered Results</div>
+              <div class="df-stat-bar"><div class="df-stat-fill" id="df-sp2" style="width:0"></div></div>
+            </div>
+            <div class="df-stat" data-a="yellow">
+              <div class="df-stat-val" id="df-sv-col">—</div>
+              <div class="df-stat-lbl">Columns</div>
+              <div class="df-stat-bar"><div class="df-stat-fill" id="df-sp3" style="width:100%"></div></div>
+            </div>
+            <div class="df-stat" data-a="red">
+              <div class="df-stat-val" id="df-sv-exc">—</div>
+              <div class="df-stat-lbl">Excluded</div>
+              <div class="df-stat-bar"><div class="df-stat-fill" id="df-sp4" style="width:0"></div></div>
+            </div>
+          </div>
+
+          <!-- Filter card -->
+          <div class="box">
+            <div class="box-header" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px">
+              <h3 class="box-title" style="margin:0"><i class="bi bi-funnel"></i> Filters
+                <span class="label label-primary" id="df-fbadge" style="margin-left:6px;font-size:11px"></span>
+              </h3>
+              <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">
+                <div class="df-gsearch-wrap">
+                  <i class="bi bi-search df-gsearch-ico"></i>
+                  <input type="text" id="df-gsearch" placeholder="Search all columns…"/>
+                </div>
+                <button class="btn btn-default btn-sm" onclick="DF.reset()">
+                  <i class="bi bi-arrow-counterclockwise"></i> Reset
+                </button>
+                <button class="btn btn-success btn-sm" onclick="DF.exportCSV()" id="df-exp-btn" disabled>
+                  <i class="bi bi-download"></i> Export CSV
+                </button>
+                <button class="btn btn-primary btn-sm" onclick="DF.copyTable()" id="df-copy-btn" disabled>
+                  <i class="bi bi-clipboard"></i> <span id="df-copy-lbl">Copy</span>
+                </button>
+                <button class="btn btn-danger btn-sm" onclick="DF.clear()">
+                  <i class="bi bi-trash3"></i> Clear
+                </button>
+              </div>
+            </div>
+            <div class="box-body">
+              <div class="df-filter-grid" id="df-fg"></div>
+            </div>
+            <div class="df-chips-row" id="df-chips-row">
+              <span style="font-size:9.5px;font-weight:700;letter-spacing:.9px;text-transform:uppercase;color:var(--text3)">Active:</span>
+              <div id="df-chips-inner" style="display:flex;flex-wrap:wrap;gap:5px"></div>
+            </div>
+          </div>
+
+          <!-- Table card -->
+          <div class="box" style="overflow:hidden">
+            <div class="box-header" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px">
+              <h3 class="box-title" style="margin:0"><i class="bi bi-table"></i> Results
+                <span class="label label-default" id="df-tbadge" style="margin-left:6px;font-size:11px">0 rows</span>
+                <span id="df-filter-status" style="font-size:11px;color:var(--text3);margin-left:8px;font-weight:400"></span>
+              </h3>
+              <div style="display:flex;align-items:center;gap:6px">
+                <span style="font-size:11px;color:var(--text2)">Rows:</span>
+                <select class="df-pg-sz" onchange="DF.changePS(this.value)">
+                  <option>25</option><option>50</option><option>100</option><option>200</option><option>500</option>
+                </select>
+              </div>
+            </div>
+            <div class="df-tbl-wrap" id="df-tw">
+              <div class="df-empty"><h3>No data loaded</h3><p>Upload a file above</p></div>
+            </div>
+            <div class="df-pag" id="df-pag">
+              <div class="df-pag-info" id="df-pi"></div>
+              <div class="df-pag-btns" id="df-pb"></div>
+            </div>
+          </div>
+        </div>
+      </div><!-- /page-df -->
+
       <!-- ════ PAGE: ATTENDANCE DASHBOARD ════ -->
       <div id="page-att" class="page-sec">
         <div class="box box-primary">
@@ -4208,6 +4572,7 @@
         att: { el: 'page-att', title: 'Attendance Dashboard', bc: 'Attendance', nb: 2 },
         reg: { el: 'page-reg', title: 'Registration Checker', bc: 'Reg Checker', nb: 3 },
         diff: { el: 'page-diff', title: 'Score Diff', bc: 'Score Diff', nb: 4 },
+        df:   { el: 'page-df',   title: 'Data Filter', bc: 'Data Filter', nb: 6 },
       };
       const PAGES_EXTRA = {
       };
@@ -5362,6 +5727,162 @@
       }
 
       // ═══════════════════════════════════════════════════════════════
+      // FORMULA RULES — PSO week formula configuration
+      // ═══════════════════════════════════════════════════════════════
+      const AL_FORMULA_CFG = {
+        global: { aggr: 'avg', round: 0 },
+        courses: {}   // courseId → { aggr, round, excludeCols:[] }
+      };
+
+      // Get effective config for a course (falls back to global)
+      function psoGetFormulaCfg(courseId) {
+        const co = AL_FORMULA_CFG.courses[courseId ? courseId.trim() : ''];
+        return {
+          aggr:  (co && co.aggr)                ? co.aggr  : AL_FORMULA_CFG.global.aggr,
+          round: (co && co.round !== undefined) ? co.round : AL_FORMULA_CFG.global.round,
+          excludeCols: (co && co.excludeCols)   ? co.excludeCols : []
+        };
+      }
+
+      // ── Formula Rules UI ──────────────────────────────────────────
+      function alFmlUpdateGlobal() {
+        const sel = document.getElementById('fml-global-aggr');
+        if (sel) AL_FORMULA_CFG.global.aggr = sel.value;
+        alFmlUpdatePreview('global');
+      }
+
+      function alFmlSetRound(scope, val, btn) {
+        if (scope === 'global') {
+          AL_FORMULA_CFG.global.round = val;
+          document.querySelectorAll('.fml-rnd-btn[data-scope="global"]').forEach(b => b.classList.toggle('active', b === btn));
+          const cust = document.getElementById('fml-global-rnd-custom');
+          if (cust) cust.value = '';
+        } else {
+          // per-course
+          if (!AL_FORMULA_CFG.courses[scope]) AL_FORMULA_CFG.courses[scope] = { aggr: AL_FORMULA_CFG.global.aggr, round: AL_FORMULA_CFG.global.round, excludeCols: [] };
+          AL_FORMULA_CFG.courses[scope].round = val;
+          document.querySelectorAll(`.fml-rnd-btn[data-scope="${scope}"]`).forEach(b => b.classList.toggle('active', b === btn));
+          const cust = document.getElementById('fml-co-rnd-custom-' + scope);
+          if (cust) cust.value = '';
+        }
+        alFmlUpdatePreview(scope);
+      }
+
+      function alFmlSetRoundCustom(scope, rawVal) {
+        const v = parseInt(rawVal);
+        if (isNaN(v) || v < 0 || v > 10) return;
+        if (scope === 'global') {
+          AL_FORMULA_CFG.global.round = v;
+          document.querySelectorAll('.fml-rnd-btn[data-scope="global"]').forEach(b => b.classList.remove('active'));
+        } else {
+          if (!AL_FORMULA_CFG.courses[scope]) AL_FORMULA_CFG.courses[scope] = { aggr: AL_FORMULA_CFG.global.aggr, round: AL_FORMULA_CFG.global.round, excludeCols: [] };
+          AL_FORMULA_CFG.courses[scope].round = v;
+          document.querySelectorAll(`.fml-rnd-btn[data-scope="${scope}"]`).forEach(b => b.classList.remove('active'));
+        }
+        alFmlUpdatePreview(scope);
+      }
+
+      function alFmlUpdateAggrCourse(courseId, val) {
+        if (!AL_FORMULA_CFG.courses[courseId]) AL_FORMULA_CFG.courses[courseId] = { aggr: AL_FORMULA_CFG.global.aggr, round: AL_FORMULA_CFG.global.round, excludeCols: [] };
+        AL_FORMULA_CFG.courses[courseId].aggr = val;
+        alFmlUpdatePreview(courseId);
+      }
+
+      function alFmlUpdateExcludeCols(courseId, val) {
+        if (!AL_FORMULA_CFG.courses[courseId]) AL_FORMULA_CFG.courses[courseId] = { aggr: AL_FORMULA_CFG.global.aggr, round: AL_FORMULA_CFG.global.round, excludeCols: [] };
+        AL_FORMULA_CFG.courses[courseId].excludeCols = val.split(',').map(s => s.trim()).filter(Boolean);
+      }
+
+      function alFmlUpdatePreview(scope) {
+        const cfg = scope === 'global' ? AL_FORMULA_CFG.global : (AL_FORMULA_CFG.courses[scope] || AL_FORMULA_CFG.global);
+        const aggr = cfg.aggr, rnd = cfg.round !== undefined ? cfg.round : AL_FORMULA_CFG.global.round;
+        let inner;
+        if (aggr === 'avg')  inner = 'SUM(A1,…,AN)/N';
+        else if (aggr === 'sum')  inner = 'SUM(A1,…,AN)';
+        else if (aggr === 'max')  inner = 'MAX(A1,…,AN)';
+        else                      inner = 'MIN(A1,…,AN)';
+        const formula = 'ROUND(' + inner + ', ' + rnd + ')';
+        const el = document.getElementById(scope === 'global' ? 'fml-global-preview' : 'fml-co-preview-' + scope);
+        if (el) el.textContent = formula;
+      }
+
+      let _fmlCoCounter = 0;
+      function alFmlAddCourseOverride() {
+        const cid = prompt('Enter Course ID to override (e.g. noc26-ar04):');
+        if (!cid || !cid.trim()) return;
+        const key = cid.trim();
+        if (AL_FORMULA_CFG.courses[key]) { toast('Override for ' + key + ' already exists', 'w'); return; }
+        AL_FORMULA_CFG.courses[key] = { aggr: AL_FORMULA_CFG.global.aggr, round: AL_FORMULA_CFG.global.round, excludeCols: [] };
+        alFmlRenderOverrides();
+        toast('Override added: ' + key, 's');
+      }
+
+      function alFmlRemoveCourseOverride(key) {
+        delete AL_FORMULA_CFG.courses[key];
+        alFmlRenderOverrides();
+        toast('Override removed', 'i');
+      }
+
+      function alFmlRenderOverrides() {
+        const wrap = document.getElementById('fml-course-overrides');
+        const empty = document.getElementById('fml-co-empty');
+        if (!wrap) return;
+        const keys = Object.keys(AL_FORMULA_CFG.courses);
+        if (!keys.length) {
+          wrap.innerHTML = '<div id="fml-co-empty" style="text-align:center;padding:28px;color:var(--text3);font-size:12px"><i class="bi bi-bookmark-plus" style="font-size:20px;display:block;margin-bottom:8px;opacity:.4"></i>No course overrides yet. Global default applies to all courses.</div>';
+          return;
+        }
+        // Header row
+        let html = '<div style="display:grid;grid-template-columns:160px 160px 180px 1fr 32px;gap:8px;padding:0 10px 4px;font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.5px">'
+          + '<span>Course ID</span><span>Aggregation</span><span>Decimal Places</span><span>Exclude Cols (comma-sep)</span><span></span></div>';
+        keys.forEach(key => {
+          const co = AL_FORMULA_CFG.courses[key];
+          const rnd = co.round !== undefined ? co.round : AL_FORMULA_CFG.global.round;
+          const safeKey = key.replace(/[^a-zA-Z0-9_-]/g, '_');
+          html += `<div class="fml-co-row">
+            <span style="font-weight:700;color:var(--purple);font-size:11px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${escHtml(key)}">${escHtml(key)}</span>
+            <select onchange="alFmlUpdateAggrCourse('${escHtml(key)}',this.value)" style="border:1px solid var(--border);border-radius:var(--rad);padding:4px 7px;font-size:12px;width:100%">
+              <option value="avg" ${co.aggr==='avg'?'selected':''}>Average (SUM/N)</option>
+              <option value="sum" ${co.aggr==='sum'?'selected':''}>Sum total</option>
+              <option value="max" ${co.aggr==='max'?'selected':''}>Max score</option>
+              <option value="min" ${co.aggr==='min'?'selected':''}>Min score</option>
+            </select>
+            <div style="display:flex;gap:0">
+              <button class="fml-rnd-btn ${rnd===0?'active':''}" data-scope="${escHtml(key)}" data-v="0" onclick="alFmlSetRound('${escHtml(key)}',0,this)">0</button>
+              <button class="fml-rnd-btn ${rnd===1?'active':''}" data-scope="${escHtml(key)}" data-v="1" onclick="alFmlSetRound('${escHtml(key)}',1,this)">1</button>
+              <button class="fml-rnd-btn ${rnd===2?'active':''}" data-scope="${escHtml(key)}" data-v="2" onclick="alFmlSetRound('${escHtml(key)}',2,this)">2</button>
+              <input id="fml-co-rnd-custom-${escHtml(key)}" type="number" min="0" max="6" placeholder="?"
+                style="width:38px;border:1px solid var(--border);border-left:none;border-radius:0 var(--rad) var(--rad) 0;padding:4px 4px;font-size:12px;text-align:center"
+                oninput="alFmlSetRoundCustom('${escHtml(key)}',this.value)">
+            </div>
+            <input type="text" placeholder="e.g. A1, A3" value="${escHtml((co.excludeCols||[]).join(', '))}"
+              oninput="alFmlUpdateExcludeCols('${escHtml(key)}',this.value)"
+              style="border:1px solid var(--border);border-radius:var(--rad);padding:4px 7px;font-size:12px;width:100%">
+            <button onclick="alFmlRemoveCourseOverride('${escHtml(key)}')" style="border:none;background:none;color:var(--red);cursor:pointer;font-size:15px;padding:2px" title="Remove"><i class="bi bi-x-circle-fill"></i></button>
+          </div>`;
+        });
+        wrap.innerHTML = html;
+      }
+
+      function alFmlSave() {
+        const status = document.getElementById('fml-rules-status');
+        if (status) { status.textContent = '✓ Formula rules saved — will apply on next Run Analysis'; setTimeout(() => { if(status) status.textContent=''; }, 3500); }
+        toast('Formula rules saved', 's');
+      }
+
+      function alFmlReset() {
+        AL_FORMULA_CFG.global.aggr = 'avg';
+        AL_FORMULA_CFG.global.round = 0;
+        AL_FORMULA_CFG.courses = {};
+        const sel = document.getElementById('fml-global-aggr');
+        if (sel) sel.value = 'avg';
+        document.querySelectorAll('.fml-rnd-btn[data-scope="global"]').forEach((b, i) => b.classList.toggle('active', i === 0));
+        alFmlUpdatePreview('global');
+        alFmlRenderOverrides();
+        toast('Formula rules reset to defaults', 'i');
+      }
+
+      // ═══════════════════════════════════════════════════════════════
       // ASSIGNMENT LOGIC — state
       // ═══════════════════════════════════════════════════════════════
       const BUILTIN_RULES = { '4_4': 3, '8_8': 6, '12_12': 8, '4_8': 6, '8_12': 8, '16_16': 12 };
@@ -5382,7 +5903,7 @@
       // ── Tab switching ──
       function alTab(name) {
         document.querySelectorAll('.al-tab-btn').forEach((t, i) => {
-          t.classList.toggle('active', ['dur', 'formula', 'course', 'output'][i] === name);
+          t.classList.toggle('active', ['fmlrules','dur', 'formula', 'course', 'output'][i] === name);
         });
         document.querySelectorAll('.al-pane').forEach(p => p.classList.remove('active'));
         const pane = $(`al-${name}`); if (pane) pane.classList.add('active');
@@ -6699,16 +7220,32 @@
           return {columns:resultCols,rows:resultRows,renamedMap,renamedList,weeksCreated:[],bestScoreCol:null,mappingIdCount:Object.keys(idToLabel).length,formulaDesc:{},diag:{matchCount:Object.keys(renamedMap).length},scoreChoice:'rename'};
         }
 
-        // ── 4. Create Week columns — ROUND(SUM(cols)/N, 0) ──
+        // ── 4. Create Week columns using formula config from Assignment Logic ──
+        const fcfg = psoGetFormulaCfg(courseId);
+        const _aggr = fcfg.aggr;       // 'avg' | 'sum' | 'max' | 'min'
+        const _rnd  = fcfg.round;      // integer decimal places
+        const _excl = new Set((fcfg.excludeCols||[]).map(c=>c.toLowerCase().trim()));
+
         Object.entries(weekToLabels).forEach(([wName,labels])=>{
-          const avail=labels.filter(l=>resultCols.includes(l));
+          // Filter: column must exist in result + not in exclude list
+          const avail=labels.filter(l=>resultCols.includes(l) && !_excl.has(l.toLowerCase().trim()));
           if(avail.length){
             resultRows.forEach(r=>{
-              let s=0; avail.forEach(l=>{ const v=parseFloat(r[l]); if(!isNaN(v)) s+=v; });
-              r[wName]=Math.round(s/avail.length); // integer — ROUND(SUM/N, 0)
+              const vals=avail.map(l=>{ const v=parseFloat(r[l]); return isNaN(v)?0:v; });
+              let s;
+              if(_aggr==='sum')      s=vals.reduce((a,b)=>a+b,0);
+              else if(_aggr==='max') s=Math.max(...vals);
+              else if(_aggr==='min') s=Math.min(...vals);
+              else                   s=vals.reduce((a,b)=>a+b,0)/vals.length; // avg default
+              r[wName]=+s.toFixed(_rnd);
             });
             resultCols.push(wName); weeksCreated.push(wName);
-            formulaDesc[wName]='ROUND(SUM('+avail.join(',')+')/'+ avail.length +',0)';
+            // Build formula description matching the chosen aggregation
+            const inner = _aggr==='avg'  ? 'SUM('+avail.join(',')+')/'+avail.length
+                        : _aggr==='sum'  ? 'SUM('+avail.join(',')+')'
+                        : _aggr==='max'  ? 'MAX('+avail.join(',')+')'
+                        :                  'MIN('+avail.join(',')+')'  ;
+            formulaDesc[wName]='ROUND('+inner+','+_rnd+')';
           }
         });
 
@@ -6751,7 +7288,7 @@
         if(fEntries.length){
           html+='<div style="margin-bottom:10px;padding:8px 10px;background:#f0f7ff;border-left:3px solid var(--blue);border-radius:2px;font-size:11px;line-height:1.7">';
           html+='<b style="color:var(--blue)"><i class="bi bi-calculator-fill"></i> Formulas applied:</b><br>';
-          html+=fEntries.map(([k,v])=>'<span style="display:inline-block;min-width:90px;font-weight:700;color:var(--text)">'+escHtml(k)+'</span><span style="color:var(--text2);font-family:monospace;font-size:10px"> = '+escHtml(v)+'</span>').join('<br>');
+                    html+=fEntries.map(([k,v])=>'<span style="display:inline-block;min-width:90px;font-weight:700;color:var(--text)">'+escHtml(k)+'</span><span style="color:var(--text2);font-family:monospace;font-size:10px"> = '+escHtml(v)+'</span>').join('<br>');
           html+='</div>';
         }
 
@@ -6761,14 +7298,12 @@
           html+='<div style="margin-bottom:10px">';
           html+='<div style="font-size:11px;font-weight:700;color:var(--text2);margin-bottom:4px"><i class="bi bi-arrow-left-right"></i> Column Renames ('+rl.length+' mapped) — download uses renamed headers</div>';
           html+='<div style="max-height:110px;overflow-y:auto;border:1px solid var(--border);border-radius:var(--rad)">';
-          html+='<table style="width:100%;border-collapse:collapse;font-size:11px"><thead><tr style="background:var(--card-head);position:sticky;top:0"><th style="padding:4px 8px;text-align:left;border-bottom:1px solid var(--border)">ID</th><th style="padding:4px 8px;text-align:left;border-bottom:1px solid var(--border)">Original Column</th><th style="padding:4px 8px;text-align:left;border-bottom:1px solid var(--border)">→ Renamed To</th></tr></thead><tbody>';
+          html+='<table style="width:100%;border-collapse:collapse;font-size:11px"><thead><tr style="background:var(--card-head);position:sticky;top:0"><th style="padding:4px 8px;text-align:left;border-bottom:1px solid var(--border)">ID</th><th style="padding:4px 8px;text-align:left;border-bottom:1px solid var(--border)">Original Column</th><th style="padding:4px 8px;text-align:left;border-bottom:1px solid var(--border)">&#8594; Renamed To</th></tr></thead><tbody>';
           html+=rl.map((r,i)=>'<tr style="background:'+(i%2===0?'#fff':'#f9f9f9')+'"><td style="padding:3px 8px;font-weight:700;color:var(--purple)">'+escHtml(r.id)+'</td><td style="padding:3px 8px;color:var(--text3);font-family:monospace;font-size:10px">'+escHtml(r.original)+'</td><td style="padding:3px 8px;color:var(--green);font-weight:600">'+escHtml(r.renamed)+'</td></tr>').join('');
           html+='</tbody></table></div></div>';
         }
 
         body.innerHTML=html;
-        // ── Data preview rendered OUTSIDE the 2-col grid — appended after result panels ──
-        // Store result for preview rendering after both panels are done
         if(!window._psoPreviewPending) window._psoPreviewPending=[];
         window._psoPreviewPending.push({n,res});
       }
@@ -6795,18 +7330,16 @@
           const div = document.createElement('div');
           div.style.cssText = 'margin-bottom:16px;background:#fff;border:1px solid var(--border);border-radius:var(--rad);box-shadow:var(--shad);overflow:hidden';
 
-          // ── Header ──
           const hdr = document.createElement('div');
           hdr.style.cssText = 'background:linear-gradient(135deg,#3c8dbc,#2171a0);color:#fff;font-size:12px;font-weight:700;padding:8px 14px;display:flex;align-items:center;gap:8px';
           hdr.innerHTML = '<i class="bi bi-table"></i><span style="flex:1">' + escHtml(cid) + ' — Full Data Preview</span>'
-            + '<span style="font-size:11px;font-weight:400;opacity:.85">' + res.rows.length.toLocaleString() + ' rows &nbsp;·&nbsp; ' + exportCols.length + ' columns</span>';
+            + '<span style="font-size:11px;font-weight:400;opacity:.85">' + res.rows.length.toLocaleString() + ' rows &nbsp;&middot;&nbsp; ' + exportCols.length + ' columns</span>';
           div.appendChild(hdr);
 
-          // ── Search bar ──
           const searchBar = document.createElement('div');
           searchBar.style.cssText = 'padding:7px 12px;background:#f4f6f9;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:7px';
           searchBar.innerHTML = '<i class="bi bi-search" style="color:var(--text3);font-size:13px;flex-shrink:0"></i>'
-            + '<input id="pso-search-' + n + '" type="text" placeholder="Search User ID, Email, Name…" autocomplete="off"'
+            + '<input id="pso-search-' + n + '" type="text" placeholder="Search User ID, Email, Name&#8230;" autocomplete="off"'
             + ' style="flex:1;border:1px solid var(--border);border-radius:3px;padding:4px 9px;font-size:12px;outline:none;background:#fff;min-width:0"'
             + ' oninput="psoSearchPreviewDebounced(' + n + ',this.value)">'
             + '<span id="pso-search-count-' + n + '" style="font-size:11px;white-space:nowrap;min-width:80px;text-align:right;color:var(--text3)"></span>'
@@ -6814,7 +7347,6 @@
             + ' style="border:none;background:none;color:var(--text3);cursor:pointer;padding:2px 4px;font-size:14px;line-height:1;flex-shrink:0" title="Clear"><i class="bi bi-x-circle"></i></button>';
           div.appendChild(searchBar);
 
-          // ── Table wrapper ──
           const tblWrap = document.createElement('div');
           tblWrap.id = 'pso-tbl-wrap-' + n;
           tblWrap.style.cssText = 'overflow:auto;max-height:340px;width:100%';
@@ -6845,7 +7377,6 @@
         if (!q) {
           filtered = res.rows;
         } else {
-          // Search across first 5 cols (User ID, Email, Name typically)
           const sCols = exportCols.slice(0, Math.min(5, exportCols.length));
           filtered = res.rows.filter(row => sCols.some(col => String(row[col.dataKey] || '').toLowerCase().includes(q)));
         }
@@ -6880,14 +7411,13 @@
               const v = String(row[col.dataKey] !== undefined ? row[col.dataKey] : '');
               const isNum = v !== '' && !isNaN(parseFloat(v)) && isFinite(v);
               const cellBg = isOrig ? (i % 2 === 0 ? '#fffdf0' : '#fffbe6') : '';
-              return '<td style="padding:3px 10px;border:1px solid #eee;text-align:' + (isNum ? 'right' : 'left') + ';background:' + cellBg + '">' + (v === '' || v === '--' ? '<span style="color:#ccc">—</span>' : escHtml(v)) + '</td>';
+              return '<td style="padding:3px 10px;border:1px solid #eee;text-align:' + (isNum ? 'right' : 'left') + ';background:' + cellBg + '">' + (v === '' || v === '--' ? '<span style="color:#ccc">&#8212;</span>' : escHtml(v)) + '</td>';
             }).join('') + '</tr>';
           }).join('');
         }
         tbl += '</tbody></table>';
         tblWrap.innerHTML = tbl;
-        // Footer
-        if (rows.length > limit || rows.length < (window._psoPreviewDataMap[n] ? window._psoPreviewDataMap[n].res.rows.length : 0)) {
+        if (rows.length > limit) {
           const foot = document.createElement('div');
           foot.style.cssText = 'padding:5px 12px;font-size:11px;color:var(--text3);background:#f9f9f9;border-top:1px solid var(--border);display:flex;justify-content:space-between';
           foot.innerHTML = '<span>Showing <b>' + Math.min(showRows.length, limit).toLocaleString() + '</b> of <b>' + rows.length.toLocaleString() + '</b> rows</span>'
@@ -6896,15 +7426,11 @@
         }
       }
 
-      // Columns that should always be forced as text (no numeric coercion)
       const PSO_TEXT_COLS = /user.?id|email|name/i;
 
-      // Build the export column list:
-      // For Header Renamer mode: main cols + original cols appended side-by-side
-      // For all other modes: main cols only (no originals)
       function psoBuildExportLayout(res) {
         const mainCols = res.columns.map(c => ({ header: c, dataKey: c }));
-        if(res.scoreChoice === 'rename'){
+        if (res.scoreChoice === 'rename') {
           const rl = res.renamedList || [];
           const origAppend = rl.map(r => ({ header: r.original + ' [original]', dataKey: '__orig__' + r.renamed }));
           return { mainCols, origAppend };
@@ -6912,15 +7438,11 @@
         return { mainCols, origAppend: [] };
       }
 
-      // ── Build XLSX worksheet — AOA approach (10x faster than cell-by-cell) ──
       async function psoBuildDataSheetAsync(res, onProgress) {
         const { mainCols, origAppend } = psoBuildExportLayout(res);
         const allCols = [...mainCols, ...origAppend];
-        // Which column indices need text-forcing (User ID / Email / Name)
         const textCiSet = new Set();
         allCols.forEach((col, ci) => { if (PSO_TEXT_COLS.test(col.header)) textCiSet.add(ci); });
-
-        // Build array-of-arrays in 10K-row chunks — yields to browser between chunks
         const CHUNK = 10000;
         const aoa = [allCols.map(c => c.header)];
         for (let start = 0; start < res.rows.length; start += CHUNK) {
@@ -6933,13 +7455,9 @@
             }));
           }
           if (onProgress) onProgress(end / res.rows.length);
-          await delay(0); // yield — keeps browser responsive
+          await delay(0);
         }
-
-        // aoa_to_sheet is optimised in SheetJS — much faster than encode_cell loop
         const ws = XLSX.utils.aoa_to_sheet(aoa);
-
-        // Post-fix: re-tag text cols as type 's' so Excel doesn't coerce UUIDs to numbers
         if (textCiSet.size > 0) {
           const nRows = res.rows.length;
           textCiSet.forEach(ci => {
@@ -6959,30 +7477,27 @@
         const r1 = PSO.results[0], r2 = PSO.results[1];
         if (!r1 && !r2) { toast('No results to export', 'w'); return; }
         const totalRows = (r1 ? r1.rows.length : 0) + (r2 ? r2.rows.length : 0);
-        if (totalRows > 1048576) {
-          toast('Dataset exceeds Excel row limit (1M). Use CSV ZIP for full data.', 'w'); return;
-        }
-        showOv('Building Excel', 'Preparing…', 3); await delay(20);
+        if (totalRows > 1048576) { toast('Dataset exceeds Excel row limit (1M). Use CSV ZIP for full data.', 'w'); return; }
+        showOv('Building Excel', 'Preparing\u2026', 3); await delay(20);
         try {
           const wb = XLSX.utils.book_new();
           if (r1) {
-            pOv(5, 'Building Course #1 (' + r1.rows.length.toLocaleString() + ' rows)…'); await delay(0);
-            const ws1 = await psoBuildDataSheetAsync(r1, p => pOv(Math.round(5 + p * 40), 'Course #1: ' + Math.round(p * 100) + '%…'));
+            pOv(5, 'Building Course #1 (' + r1.rows.length.toLocaleString() + ' rows)\u2026'); await delay(0);
+            const ws1 = await psoBuildDataSheetAsync(r1, p => pOv(Math.round(5 + p * 40), 'Course #1: ' + Math.round(p * 100) + '%\u2026'));
             XLSX.utils.book_append_sheet(wb, ws1, (PSO.courseId[0] || 'Course1').slice(0, 31));
           }
           if (r2) {
-            pOv(50, 'Building Course #2 (' + r2.rows.length.toLocaleString() + ' rows)…'); await delay(0);
-            const ws2 = await psoBuildDataSheetAsync(r2, p => pOv(Math.round(50 + p * 40), 'Course #2: ' + Math.round(p * 100) + '%…'));
+            pOv(50, 'Building Course #2 (' + r2.rows.length.toLocaleString() + ' rows)\u2026'); await delay(0);
+            const ws2 = await psoBuildDataSheetAsync(r2, p => pOv(Math.round(50 + p * 40), 'Course #2: ' + Math.round(p * 100) + '%\u2026'));
             XLSX.utils.book_append_sheet(wb, ws2, (PSO.courseId[1] || 'Course2').slice(0, 31));
           }
-          pOv(93, 'Writing file…'); await delay(0);
+          pOv(93, 'Writing file\u2026'); await delay(0);
           const fname = (r1 && r2) ? 'NPTEL_PreScoring_Combined.xlsx' : 'NPTEL_PreScoring_' + (PSO.courseId[r1 ? 0 : 1] || 'Course') + '.xlsx';
           XLSX.writeFile(wb, fname);
           hideOv(); toast('Excel downloaded: ' + fname, 's');
         } catch (e) { hideOv(); toast('Export failed: ' + e.message, 'e'); }
       }
 
-      // Shared: build flat array of {header, dataKey} for export/copy
       function psoBuildFlatCols(res) {
         const { mainCols, origAppend } = psoBuildExportLayout(res);
         return [...mainCols, ...origAppend];
@@ -6990,7 +7505,7 @@
 
       async function psoExportZip() {
         if (!PSO.results[0] && !PSO.results[1]) { toast('No results', 'w'); return; }
-        showOv('Building CSV ZIP', 'Preparing…', 3); await delay(20);
+        showOv('Building CSV ZIP', 'Preparing\u2026', 3); await delay(20);
         try {
           const zip = new JSZip();
           const CHUNK = 10000;
@@ -7005,12 +7520,12 @@
                 parts.push(cols.map(c => csvCell(res.rows[ri][c.dataKey] !== undefined ? res.rows[ri][c.dataKey] : '')).join(',') + '\n');
               }
               const pct = Math.round(5 + i * 40 + (end / res.rows.length) * 38);
-              pOv(pct, 'Course #' + (i + 1) + ': ' + end.toLocaleString() + ' / ' + res.rows.length.toLocaleString() + ' rows…');
+              pOv(pct, 'Course #' + (i + 1) + ': ' + end.toLocaleString() + ' / ' + res.rows.length.toLocaleString() + ' rows\u2026');
               await delay(0);
             }
             zip.file((PSO.courseId[i] || 'Course' + (i + 1)) + '.csv', parts.join(''));
           }
-          pOv(88, 'Compressing…'); await delay(0);
+          pOv(88, 'Compressing\u2026'); await delay(0);
           const blob = await zip.generateAsync({ type: 'blob', compression: 'DEFLATE', compressionOptions: { level: 6 } });
           dlBlob(blob, 'NPTEL_PreScoring.zip'); hideOv(); toast('CSV ZIP downloaded', 's');
         } catch (e) { hideOv(); toast('Export failed: ' + e.message, 'e'); }
@@ -7022,34 +7537,764 @@
         const lines = [cols.map(c => c.header).join('\t')];
         res.rows.forEach(r => lines.push(cols.map(c => String(r[c.dataKey] !== undefined ? r[c.dataKey] : '')).join('\t')));
         navigator.clipboard.writeText(lines.join('\n'))
-          .then(() => toast('Copied Course #' + n + ' — ' + res.rows.length.toLocaleString() + ' rows (' + cols.length + ' cols)', 's'))
+          .then(() => toast('Copied Course #' + n + ' \u2014 ' + res.rows.length.toLocaleString() + ' rows (' + cols.length + ' cols)', 's'))
           .catch(() => toast('Copy failed', 'e'));
       }
 
       function psoClearAll() {
         PSO.mapData=[null,null]; PSO.stuData=[null,null]; PSO.courseId=[null,null]; PSO.results=[null,null];
         [1,2].forEach(n=>{
-          ['pso-uz'+n+'m','pso-uz'+n+'s'].forEach(id=>document.getElementById(id)&&document.getElementById(id).classList.remove('loaded'));
+          ['pso-uz'+n+'m','pso-uz'+n+'s'].forEach(id=>{const el=document.getElementById(id);if(el)el.classList.remove('loaded');});
           ['pso-map'+n+'fn','pso-stu'+n+'fn'].forEach(id=>{const el=document.getElementById(id);if(el)el.textContent='';});
-          const sel=document.getElementById('pso-csel'+n); if(sel) sel.innerHTML='<option value="">— Upload mapping to populate —</option>';
+          const sel=document.getElementById('pso-csel'+n); if(sel) sel.innerHTML='<option value="">-- Upload mapping to populate --</option>';
           ['m','c','s','r'].forEach(s=>psoSdot(n,s,'')); psoBadge(n);
         });
-        document.getElementById('pso-results').style.display='none';
-        document.getElementById('pso-export').style.display='none';
-        ['pso-k-courses','pso-k-mapped','pso-k-weeks'].forEach(id=>{const el=document.getElementById(id);if(el)el.textContent='0';});
-        const kb=document.getElementById('pso-k-best'); if(kb){kb.textContent='—';kb.style.color='';}
-        const c1=document.getElementById('pso-copy1-btn'),c2=document.getElementById('pso-copy2-btn');
-        if(c1)c1.style.display='none'; if(c2)c2.style.display='none';
-        toast('Cleared','i');
+        const rs=document.getElementById('pso-results'); if(rs)rs.style.display='none';
+        const ex=document.getElementById('pso-export'); if(ex)ex.style.display='none';
+        const fp=document.getElementById('pso-full-preview'); if(fp)fp.remove();
+        window._psoPreviewPending=[];
+        window._psoPreviewDataMap={};
+        document.querySelectorAll('.pso-pill').forEach((p,i)=>{p.classList.toggle('active',i===0);p.classList.toggle('btn-primary',i===0);p.classList.toggle('btn-default',i!==0);});
+        PSO.scoreChoice=null;
+        const sd=document.getElementById('pso-strat-desc');if(sd)sd.textContent='No best-score computation';
+        toast('PSO cleared','i');
       }
 
-      // ═══════════════════════════════════════════════════════════════
-      // PDF WATERMARK SYSTEM
-      // ═══════════════════════════════════════════════════════════════
+      // ══════════════════════════════════════════════════════════════
+      // DATA FILTER — optimised for 80L+ rows
+      // Dictionary-encoded column storage + Web Worker filtering
+      // ══════════════════════════════════════════════════════════════
+      const DF = (() => {
+        'use strict';
+        const dfEl = id => document.getElementById(id);
+        const dfEsc = s => String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+        const dfYield = () => new Promise(r => setTimeout(r, 0));
+        const MAX_DROPDOWN = 8000; // cols with more uniques → text-search only
 
+        /* ── State ── */
+        let store = null;      // {cols, n, colData:{col:{dict:string[], idx:Uint32Array, revMap:Map}}}
+        let filtered = null;   // Uint32Array of matching row indices
+        let fmap = {};         // col → {mode:'multi'|'text', sel:Set, txt:''}
+        let sortCol = null, sortDir = 1, pg = 1, ps = 25;
+        let debT = null, worker = null;
+        let panels = [];       // track portaled panels for cleanup
 
+        /* ── Progress helpers ── */
+        function dfProg(lbl, pct, detail) {
+          const pw = dfEl('df-pw'); if (!pw) return;
+          pw.style.display = 'block';
+          if (lbl != null) { const el = dfEl('df-pl'); if(el) el.textContent = lbl; }
+          if (pct != null) {
+            const pp = dfEl('df-pp'); if(pp) pp.textContent = pct + '%';
+            const pf = dfEl('df-pf'); if(pf) pf.style.width = pct + '%';
+          }
+          if (detail != null) { const pd = dfEl('df-pd'); if(pd) pd.textContent = detail; }
+        }
+        function dfProgHide() { const pw = dfEl('df-pw'); if(pw) pw.style.display = 'none'; }
+
+        /* ── Toast ── */
+        function dfToast(msg, type) { toast(msg, type || 's'); }
+
+        /* ── Web Worker: parse + index + filter + page + export all off main thread ── */
+        function buildWorker() {
+          const src = `
+'use strict';
+let store=null;
+self.onmessage=function(e){
+  const {type,payload}=e.data;
+  if(type==='LOAD_CSV'){
+    try{
+      self.postMessage({type:'PROGRESS',label:'Parsing CSV\u2026',pct:5,detail:'Running in background thread'});
+      const r=parseCSVToColArrays(payload.buffer);
+      if(!r.n){self.postMessage({type:'ERROR',msg:'No data rows found'});return;}
+      self.postMessage({type:'PROGRESS',label:'Building indexes\u2026',pct:22,detail:r.n.toLocaleString()+' rows \u00b7 '+r.headers.length+' columns'});
+      store=buildStoreFromCols(r.headers,r.colArrs,r.n);
+      const meta={cols:store.cols,n:store.n,colData:{}};
+      store.cols.forEach(c=>{meta.colData[c]={dict:store.colData[c].dict,revMap:store.colData[c].revMap};});
+      self.postMessage({type:'STORE_META',meta});
+    }catch(ex){self.postMessage({type:'ERROR',msg:ex.message});}
+  }
+  else if(type==='LOAD_COLS'){
+    try{
+      const {cols,colArrs,n}=payload;
+      self.postMessage({type:'PROGRESS',label:'Building indexes\u2026',pct:20,detail:n.toLocaleString()+' rows'});
+      store=buildStoreFromCols(cols,colArrs,n);
+      const meta={cols:store.cols,n:store.n,colData:{}};
+      store.cols.forEach(c=>{meta.colData[c]={dict:store.colData[c].dict,revMap:store.colData[c].revMap};});
+      self.postMessage({type:'STORE_META',meta});
+    }catch(ex){self.postMessage({type:'ERROR',msg:ex.message});}
+  }
+  else if(type==='FILTER'){
+    if(!store){self.postMessage({type:'RESULT',indices:new Uint32Array(0)});return;}
+    const r=doFilter(payload);
+    self.postMessage({type:'RESULT',indices:r},[r.buffer]);
+  }
+  else if(type==='GET_PAGE'){
+    if(!store){self.postMessage({type:'PAGE_DATA',rows:[]});return;}
+    const idx=payload.indices;
+    const rows=[];
+    for(let i=0;i<idx.length;i++){
+      const ri=idx[i];const row={};
+      store.cols.forEach(c=>{row[c]=store.colData[c].dict[store.colData[c].idx[ri]];});
+      rows.push(row);
+    }
+    self.postMessage({type:'PAGE_DATA',rows});
+  }
+  else if(type==='GET_SORT_IDX'){
+    if(!store){self.postMessage({type:'SORT_RESULT',indices:new Uint32Array(0)});return;}
+    const {indices,sortColName,sortDir}=payload;
+    const arr=new Uint32Array(indices);
+    if(sortColName&&store.colData[sortColName]){
+      const sd=store.colData[sortColName];const dir=sortDir||1;
+      arr.sort((a,b)=>{
+        const va=sd.dict[sd.idx[a]],vb=sd.dict[sd.idx[b]];
+        const na=+va,nb=+vb;
+        if(!isNaN(na)&&!isNaN(nb))return(na-nb)*dir;
+        return va<vb?-dir:va>vb?dir:0;
+      });
+    }
+    self.postMessage({type:'SORT_RESULT',indices:arr},[arr.buffer]);
+  }
+  else if(type==='GET_CSV'){
+    if(!store){self.postMessage({type:'CSV_DATA',csv:''});return;}
+    const {indices}=payload;
+    const csvCell=v=>{const s=String(v!=null?v:'');return(s.indexOf(',')>=0||s.indexOf('"')>=0||s.indexOf('\\n')>=0||s.indexOf('\\r')>=0)?'"'+s.replace(/"/g,'""')+'"':s;};
+    const lines=[store.cols.map(csvCell).join(',')];
+    for(let i=0;i<indices.length;i++){
+      const ri=indices[i];
+      lines.push(store.cols.map(c=>csvCell(store.colData[c].dict[store.colData[c].idx[ri]])).join(','));
+    }
+    self.postMessage({type:'CSV_DATA',csv:'\\uFEFF'+lines.join('\\r\\n')});
+  }
+  else if(type==='GET_COPY'){
+    if(!store){self.postMessage({type:'COPY_DATA',text:''});return;}
+    const {indices}=payload;
+    const lines=[store.cols.join('\\t')];
+    for(let i=0;i<indices.length;i++){
+      const ri=indices[i];
+      lines.push(store.cols.map(c=>String(store.colData[c].dict[store.colData[c].idx[ri]]??'')).join('\\t'));
+    }
+    self.postMessage({type:'COPY_DATA',text:lines.join('\\n')});
+  }
+};
+
+/* Fast column-oriented CSV parser — no row objects, minimal GC pressure */
+function parseCSVToColArrays(buffer){
+  const text=new TextDecoder().decode(buffer);
+  let pos=0,len=text.length;
+  const headers=[];
+  let field='',inQ=false;
+  /* header line */
+  outer:while(pos<len){
+    const ch=text[pos++];
+    if(inQ){
+      if(ch==='"'&&text[pos]==='"'){field+='"';pos++;}
+      else if(ch==='"'){inQ=false;}
+      else field+=ch;
+    }else if(ch==='"'){inQ=true;}
+    else if(ch===','){headers.push(field.trim());field='';}
+    else if(ch==='\\n'||(ch==='\\r'&&text[pos]==='\\n')){if(ch==='\\r')pos++;headers.push(field.trim());field='';break outer;}
+    else field+=ch;
+  }
+  if(!headers.length)return{headers:[],colArrs:[],n:0};
+  const nc=headers.length;
+  const colArrs=Array.from({length:nc},()=>[]);
+  let ci=0;field='';inQ=false;
+  /* data rows */
+  while(pos<len){
+    const ch=text[pos++];
+    if(inQ){
+      if(ch==='"'&&text[pos]==='"'){field+='"';pos++;}
+      else if(ch==='"'){inQ=false;}
+      else field+=ch;
+    }else if(ch==='"'){inQ=true;}
+    else if(ch===','){if(ci<nc)colArrs[ci].push(field);ci++;field='';}
+    else if(ch==='\\n'||(ch==='\\r'&&text[pos]==='\\n')){
+      if(ch==='\\r')pos++;
+      if(ci<nc)colArrs[ci].push(field);
+      else if(field&&ci===nc)colArrs[nc-1][colArrs[nc-1].length-1]+='\\n'+field;
+      ci=0;field='';
+    }else field+=ch;
+  }
+  if((field!==''||ci>0)&&ci<nc)colArrs[ci].push(field);
+  const n=colArrs[0]?colArrs[0].length:0;
+  return{headers,colArrs,n};
+}
+
+/* Build column-oriented dict-encoded store — runs entirely in worker */
+function buildStoreFromCols(cols,colArrs,n){
+  const colData={};
+  for(let ci=0;ci<cols.length;ci++){
+    const col=cols[ci];
+    const arr=colArrs[ci]||[];
+    if(ci%5===0)self.postMessage({type:'PROGRESS',label:'Indexing: '+col,pct:22+Math.round((ci/cols.length)*72),detail:(ci+1)+'/'+cols.length+' cols \u00b7 '+n.toLocaleString()+' rows'});
+    const dictMap=new Map();let dictSize=0;
+    const rawIdx=new Uint32Array(n);
+    for(let i=0;i<n;i++){
+      const v=arr[i]!=null?String(arr[i]):'';
+      let di=dictMap.get(v);
+      if(di===undefined){di=dictSize++;dictMap.set(v,di);}
+      rawIdx[i]=di;
+    }
+    const dict=[...dictMap.keys()].sort((a,b)=>{const na=+a,nb=+b;if(!isNaN(na)&&!isNaN(nb))return na-nb;return a<b?-1:a>b?1:0;});
+    /* adaptive typed array: Uint8/16/32 based on unique count */
+    const Typed=dictSize<=256?Uint8Array:dictSize<=65536?Uint16Array:Uint32Array;
+    const remap=new Uint32Array(dictSize);const revMap={};
+    dict.forEach((v,ni)=>{remap[dictMap.get(v)]=ni;revMap[v]=ni;});
+    const idx=new Typed(n);
+    for(let i=0;i<n;i++)idx[i]=remap[rawIdx[i]];
+    colData[col]={dict,idx,revMap};
+  }
+  self.postMessage({type:'PROGRESS',label:'Finalising\u2026',pct:96,detail:'Almost there!'});
+  return{cols,n,colData};
+}
+
+function doFilter({colFilters,textFilters,gs,sortColName,sortDir}){
+  if(!store||!store.n)return new Uint32Array(0);
+  const n=store.n;
+  const masks=colFilters.map(f=>{
+    const cd=store.colData[f.col];if(!cd)return null;
+    const mask=new Uint8Array(cd.dict.length);
+    f.vals.forEach(v=>{const di=cd.revMap[v];if(di!==undefined)mask[di]=1;});
+    return{idx:cd.idx,mask};
+  }).filter(Boolean);
+  const textF=textFilters.map(f=>({idx:store.colData[f.col].idx,dict:store.colData[f.col].dict,q:f.q.toLowerCase()}));
+  const gsLow=gs?gs.toLowerCase():'';
+  const gsCols=store.cols.map(c=>store.colData[c]);
+  const result=[];
+  for(let i=0;i<n;i++){
+    let ok=true;
+    for(let m=0;m<masks.length;m++){if(!masks[m].mask[masks[m].idx[i]]){ok=false;break;}}
+    if(ok&&textF.length){for(let t=0;t<textF.length;t++){if(!textF[t].dict[textF[t].idx[i]].toLowerCase().includes(textF[t].q)){ok=false;break;}}}
+    if(ok&&gsLow){let found=false;for(let c=0;c<gsCols.length;c++){if(gsCols[c].dict[gsCols[c].idx[i]].toLowerCase().includes(gsLow)){found=true;break;}}if(!found)ok=false;}
+    if(ok)result.push(i);
+  }
+  let out=new Uint32Array(result);
+  if(sortColName&&store.colData[sortColName]&&out.length>1){
+    const sd=store.colData[sortColName];const dir=sortDir||1;
+    out.sort((a,b)=>{const va=sd.dict[sd.idx[a]],vb=sd.dict[sd.idx[b]];const na=+va,nb=+vb;if(!isNaN(na)&&!isNaN(nb))return(na-nb)*dir;return va<vb?-dir:va>vb?dir:0;});
+  }
+  return out;
+}
+`;
+          try {
+            const blob = new Blob([src], {type:'application/javascript'});
+            const url  = URL.createObjectURL(blob);
+            const w    = new Worker(url);
+            URL.revokeObjectURL(url);
+            return w;
+          } catch(e) { console.error('Worker creation failed', e); return null; }
+        }
+
+        /* ── File handler — main thread only reads the file, worker does everything else ── */
+        async function handleFile(file) {
+          if (!file) return;
+          const ext = (file.name.split('.').pop() || '').toLowerCase();
+          dfEl('df-file-inp').disabled = true;
+          store = null; filtered = null; fmap = {};
+          if (worker) { try { worker.terminate(); } catch(e){} worker = null; }
+          worker = buildWorker();
+          if (!worker) {
+            dfToast('Web Worker not supported — try Chrome/Edge/Firefox', 'e');
+            dfEl('df-file-inp').disabled = false; return;
+          }
+          worker.onmessage = onWorkerMessage;
+          worker.onerror   = err => {
+            dfProgHide(); dfEl('df-file-inp').disabled = false;
+            dfToast('Worker error: ' + (err.message || err), 'e');
+          };
+          try {
+            dfProg('Reading ' + file.name + '\u2026', 3, 'Handing off to background thread');
+            const ab = await file.arrayBuffer();
+            if (ext === 'csv') {
+              /* Zero-copy transfer — ArrayBuffer moves to worker, main thread has nothing to parse */
+              dfProg('CSV sent to worker\u2026', 6, 'Parse + index runs fully off main thread');
+              worker.postMessage({type:'LOAD_CSV', payload:{buffer: ab}}, [ab]);
+            } else {
+              /* XLSX/XLS: XLSX.js must run on main thread, then send column arrays to worker */
+              dfProg('Parsing spreadsheet\u2026', 10, 'XLSX parse on main thread');
+              await dfYield();
+              let rows;
+              await new Promise(res => setTimeout(() => {
+                const wb = XLSX.read(ab, {type:'array', cellDates:true});
+                rows = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], {defval:''});
+                res();
+              }, 20));
+              if (!rows || !rows.length) {
+                dfToast('No data found in file', 'e');
+                dfEl('df-file-inp').disabled = false; dfProgHide(); return;
+              }
+              const cols = Object.keys(rows[0]), n = rows.length;
+              dfProg('Extracting columns\u2026', 38, n.toLocaleString() + ' rows \u00b7 ' + cols.length + ' cols');
+              await dfYield();
+              /* Build column-first arrays (avoids sending 80L objects to worker) */
+              const colArrs = cols.map(col => {
+                const arr = new Array(n);
+                for (let i = 0; i < n; i++) arr[i] = rows[i][col] != null ? String(rows[i][col]) : '';
+                return arr;
+              });
+              rows = null; /* free row objects ASAP */
+              dfProg('Sending to worker\u2026', 50, 'Worker will build indexes');
+              worker.postMessage({type:'LOAD_COLS', payload:{cols, colArrs, n}});
+            }
+          } catch(err) {
+            dfProgHide(); dfEl('df-file-inp').disabled = false;
+            dfToast('Error: ' + err.message, 'e'); console.error(err);
+          }
+        }
+
+        /* ── Worker message dispatcher ── */
+        function onWorkerMessage(e) {
+          const msg = e.data, type = msg.type;
+          if (type === 'PROGRESS') {
+            dfProg(msg.label, msg.pct, msg.detail);
+          }
+          else if (type === 'STORE_META') {
+            /* Worker finished building store; main thread gets light meta (dicts, no idx) */
+            store = msg.meta; /* {cols, n, colData:{col:{dict, revMap}}} */
+            filtered = new Uint32Array(store.n); for (let i = 0; i < store.n; i++) filtered[i] = i;
+            fmap = {};
+            store.cols.forEach(c => {
+              fmap[c] = {mode: store.colData[c].dict.length <= MAX_DROPDOWN ? 'multi' : 'text', sel: new Set(), txt: ''};
+            });
+            sortCol = null; sortDir = 1; pg = 1;
+            dfProg('Building filter UI\u2026', 98, '');
+            buildFilterUI();
+            dfEl('df-up-sec').style.display  = 'none';
+            dfEl('df-dash-sec').style.display = 'block';
+            dfEl('df-exp-btn').disabled  = false;
+            dfEl('df-copy-btn').disabled = false;
+            updStats(); updBadge();
+            renderTable(); /* sends GET_PAGE to worker */
+            dfProgHide();
+            dfEl('df-file-inp').disabled = false;
+            dfToast('Loaded ' + store.n.toLocaleString() + ' rows \u00b7 ' + store.cols.length + ' columns', 's');
+          }
+          else if (type === 'PAGE_DATA') {
+            _renderPageData(msg.rows);
+          }
+          else if (type === 'SORT_RESULT') {
+            filtered = msg.indices;
+            pg = 1;
+            renderTable();
+          }
+          else if (type === 'RESULT') {
+            filtered = msg.indices;
+            pg = 1;
+            updStats(); updBadge(); renderChips(); renderTable();
+            const fs = dfEl('df-filter-status'); if (fs) fs.textContent = '';
+          }
+          else if (type === 'CSV_DATA') {
+            if (!msg.csv) { dfToast('Nothing to export', 'e'); return; }
+            const blob = new Blob([msg.csv], {type:'text/csv;charset=utf-8'});
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(blob);
+            a.download = 'filtered_' + (filtered ? filtered.length : 0) + 'rows_' + Date.now() + '.csv';
+            a.click(); URL.revokeObjectURL(a.href);
+            dfToast('Exported ' + (filtered ? filtered.length.toLocaleString() : 0) + ' rows', 's');
+          }
+          else if (type === 'COPY_DATA') {
+            if (!msg.text) { dfToast('Nothing to copy', 'e'); return; }
+            navigator.clipboard.writeText(msg.text).then(() => {
+              dfToast('Copied ' + (filtered ? filtered.length.toLocaleString() : 0) + ' rows', 's');
+            }).catch(() => dfToast('Copy failed \u2014 use Export CSV instead', 'e'));
+            const lbl = dfEl('df-copy-lbl');
+            if (lbl) { lbl.textContent = 'Copied!'; setTimeout(() => lbl.textContent = 'Copy', 2000); }
+          }
+          else if (type === 'ERROR') {
+            dfProgHide(); dfEl('df-file-inp').disabled = false;
+            dfToast('Worker error: ' + msg.msg, 'e'); console.error('DF Worker:', msg.msg);
+          }
+        }
+
+        /* ── Filter UI ── */
+        function buildFilterUI() {
+          const grid = dfEl('df-fg'); if (!grid) return;
+          // Remove old portaled panels
+          panels.forEach(p => { try { p.remove(); } catch(e){} });
+          panels = [];
+          grid.innerHTML = '';
+          const frag = document.createDocumentFragment();
+          store.cols.forEach(col => {
+            const item = document.createElement('div'); item.className = 'df-col-wrap';
+            const lbl = document.createElement('div'); lbl.className = 'df-col-label';
+            lbl.innerHTML = '<span>' + dfEsc(col) + '</span><span class="df-col-cnt">' + store.colData[col].dict.length + '</span>';
+            item.appendChild(lbl);
+            if (fmap[col].mode === 'text') {
+              item.appendChild(makeTextFilter(col));
+            } else {
+              item.appendChild(makeMultiSelect(col));
+            }
+            frag.appendChild(item);
+          });
+          grid.appendChild(frag);
+          // Global search
+          const gs = dfEl('df-gsearch');
+          if (gs) { gs.oninput = () => { clearTimeout(debT); debT = setTimeout(schedFilter, 220); }; }
+        }
+
+        /* ── Text filter input ── */
+        function makeTextFilter(col) {
+          const inp = document.createElement('input');
+          inp.className = 'df-txt';
+          inp.placeholder = 'Search ' + col + '...';
+          inp.type = 'text';
+          inp.oninput = () => {
+            fmap[col].txt = inp.value;
+            inp.classList.toggle('df-active', !!inp.value);
+            clearTimeout(debT); debT = setTimeout(schedFilter, 220);
+          };
+          return inp;
+        }
+
+        /* ── Multi-select ── */
+        const BATCH = 80;
+        function makeMultiSelect(col) {
+          const vals = store.colData[col].dict;
+          const outer = document.createElement('div'); outer.className = 'df-ms-outer';
+          const state = { open:false, q:'', filtered:vals.slice(), rendered:0 };
+          const trigger = document.createElement('div');
+          trigger.className = 'df-ms-trig'; trigger.id = 'df-ms-' + col;
+          trigger.tabIndex = 0;
+          setTrigger(trigger, col);
+          outer.appendChild(trigger);
+
+          const panel = document.createElement('div'); panel.className = 'df-ms-panel';
+          panel.style.display = 'none'; document.body.appendChild(panel); panels.push(panel);
+
+          const sr = document.createElement('div'); sr.className = 'df-ms-srow';
+          sr.innerHTML = '<i class="bi bi-search df-ms-sico"></i>';
+          const si = document.createElement('input'); si.className = 'df-ms-sinp'; si.placeholder = 'Search options...';
+          sr.appendChild(si); panel.appendChild(sr);
+
+          const ar = document.createElement('div'); ar.className = 'df-ms-arow';
+          const selAll = document.createElement('button'); selAll.className = 'df-ms-act'; selAll.textContent = 'All';
+          const clrAll = document.createElement('button'); clrAll.className = 'df-ms-act'; clrAll.textContent = 'Clear';
+          const cntLbl = document.createElement('span'); cntLbl.className = 'df-ms-cnt';
+          ar.appendChild(selAll); ar.appendChild(clrAll); ar.appendChild(cntLbl); panel.appendChild(ar);
+
+          const list = document.createElement('div'); list.className = 'df-ms-list'; panel.appendChild(list);
+
+          function pos() {
+            const tr = trigger.getBoundingClientRect();
+            panel.style.left = tr.left + 'px';
+            panel.style.width = Math.max(tr.width, 210) + 'px';
+            panel.style.zIndex = '99999';
+            const spB = window.innerHeight - tr.bottom - 6, spA = tr.top - 6, panH = 280;
+            if (spB >= panH || spB >= spA) { panel.style.top = (tr.bottom + 3) + 'px'; panel.style.bottom = 'auto'; }
+            else { panel.style.bottom = (window.innerHeight - tr.top + 3) + 'px'; panel.style.top = 'auto'; }
+          }
+
+          function refilter() {
+            const q = state.q.toLowerCase();
+            state.filtered = q ? vals.filter(v => v.toLowerCase().includes(q)) : vals;
+            state.rendered = 0; list.innerHTML = '';
+            cntLbl.textContent = state.filtered.length + '/' + vals.length;
+            appendBatch();
+          }
+
+          function appendBatch() {
+            const total = state.filtered.length;
+            if (!total) { list.innerHTML = '<div class="df-ms-empty">No options</div>'; return; }
+            const end = Math.min(state.rendered + BATCH, total);
+            const frag = document.createDocumentFragment();
+            for (let i = state.rendered; i < end; i++) frag.appendChild(makeOpt(state.filtered[i]));
+            list.appendChild(frag); state.rendered = end;
+          }
+
+          function makeOpt(v) {
+            const isSel = fmap[col].sel.has(v);
+            const opt = document.createElement('div');
+            opt.className = 'df-ms-opt' + (isSel ? ' sel' : ''); opt.dataset.val = v;
+            opt.innerHTML = '<div class="df-ms-cb">' + (isSel ? '<svg width="9" height="9" fill="none" stroke="#fff" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>' : '') + '</div>'
+              + '<span class="df-ms-opt-txt" title="' + dfEsc(v) + '">' + dfEsc(v) + '</span>';
+            opt.addEventListener('mousedown', ev => {
+              ev.preventDefault();
+              const nowSel = !fmap[col].sel.has(v);
+              if (nowSel) fmap[col].sel.add(v); else fmap[col].sel.delete(v);
+              opt.classList.toggle('sel', nowSel);
+              const cb = opt.querySelector('.df-ms-cb');
+              cb.style.background = nowSel ? 'var(--blue)' : '';
+              cb.style.borderColor = nowSel ? 'var(--blue)' : '';
+              cb.innerHTML = nowSel ? '<svg width="9" height="9" fill="none" stroke="#fff" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>' : '';
+              setTrigger(trigger, col); schedFilter();
+            });
+            return opt;
+          }
+
+          list.addEventListener('scroll', () => {
+            if (state.rendered < state.filtered.length && list.scrollTop + list.clientHeight >= list.scrollHeight - 60) appendBatch();
+          }, {passive:true});
+
+          function openPanel() {
+            document.querySelectorAll('.df-ms-panel').forEach(p => { if (p !== panel && p.style.display !== 'none') { p.style.display = 'none'; if (p._trig) p._trig.classList.remove('open'); } });
+            state.open = true; state.q = ''; si.value = ''; panel.style.display = 'flex';
+            panel._trig = trigger; trigger.classList.add('open'); pos(); refilter();
+            setTimeout(() => si.focus(), 0);
+          }
+          function closePanel() { state.open = false; panel.style.display = 'none'; trigger.classList.remove('open'); }
+
+          trigger.addEventListener('click', ev => { ev.stopPropagation(); state.open ? closePanel() : openPanel(); });
+          trigger.addEventListener('keydown', ev => {
+            if (ev.key==='Enter'||ev.key===' ') { ev.preventDefault(); state.open ? closePanel() : openPanel(); }
+            if (ev.key==='Escape') closePanel();
+          });
+
+          let siT = null;
+          si.addEventListener('input', () => { clearTimeout(siT); siT = setTimeout(() => { state.q = si.value; list.scrollTop = 0; refilter(); }, 150); });
+
+          selAll.addEventListener('mousedown', ev => {
+            ev.preventDefault(); state.filtered.forEach(v => fmap[col].sel.add(v));
+            list.querySelectorAll('.df-ms-opt').forEach(o => {
+              if (!fmap[col].sel.has(o.dataset.val)) return;
+              o.classList.add('sel'); const cb=o.querySelector('.df-ms-cb');
+              cb.style.background='var(--blue)'; cb.style.borderColor='var(--blue)';
+              cb.innerHTML='<svg width="9" height="9" fill="none" stroke="#fff" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>';
+            });
+            setTrigger(trigger, col); schedFilter();
+          });
+          clrAll.addEventListener('mousedown', ev => {
+            ev.preventDefault(); state.filtered.forEach(v => fmap[col].sel.delete(v));
+            list.querySelectorAll('.df-ms-opt').forEach(o => {
+              o.classList.remove('sel'); const cb=o.querySelector('.df-ms-cb');
+              cb.style.background=''; cb.style.borderColor=''; cb.innerHTML='';
+            });
+            setTrigger(trigger, col); schedFilter();
+          });
+
+          document.addEventListener('click', ev => {
+            if (state.open && !outer.contains(ev.target) && !panel.contains(ev.target)) closePanel();
+          });
+          const onScroll = () => { if (state.open) pos(); };
+          window.addEventListener('scroll', onScroll, true);
+          window.addEventListener('resize', onScroll);
+          return outer;
+        }
+
+        function setTrigger(trigger, col) {
+          const sel = fmap[col] && fmap[col].sel;
+          if (!sel || sel.size === 0) {
+            trigger.innerHTML = '<span class="df-ms-ph">&#8212; All &#8212;</span>';
+            trigger.classList.remove('df-active');
+          } else {
+            trigger.classList.add('df-active');
+            const items = [...sel], show = items.slice(0, 2), extra = items.length - 2;
+            let html = '<div class="df-ms-tags">';
+            show.forEach(v => {
+              html += '<span class="df-ms-tag">' + dfEsc(v)
+                + '<button class="df-ms-tag-x" onmousedown="event.stopPropagation();event.preventDefault();DF.removeTag(\'' + dfEsc(col) + '\',\'' + dfEsc(v) + '\')">&#215;</button></span>';
+            });
+            if (extra > 0) html += '<span class="df-ms-more">+' + extra + '</span>';
+            html += '</div>'; trigger.innerHTML = html;
+          }
+        }
+
+        /* ── Filter scheduling & engine ── */
+        function schedFilter() {
+          clearTimeout(debT);
+          // Show "filtering..." status for large datasets
+          if (store && store.n > 200000) {
+            const fs = dfEl('df-filter-status'); if (fs) fs.textContent = 'Filtering\u2026';
+          }
+          debT = setTimeout(applyFilters, 200);
+        }
+
+        function applyFilters() {
+          if (!store || !worker) return;
+          const gs = ((dfEl('df-gsearch') || {}).value || '').trim();
+          const colFilters = [], textFilters = [];
+          store.cols.forEach(col => {
+            const f = fmap[col]; if (!f) return;
+            if (f.mode === 'multi' && f.sel.size > 0) colFilters.push({col, vals: [...f.sel]});
+            else if (f.mode === 'text' && f.txt) textFilters.push({col, q: f.txt});
+          });
+          /* Always use worker — it has the idx arrays, main thread does not */
+          worker.postMessage({type:'FILTER', payload:{colFilters, textFilters, gs, sortColName: sortCol, sortDir}});
+        }
+
+        /* ── Stats ── */
+        function updStats() {
+          if (!store) return;
+          const tot = store.n, f = filtered ? filtered.length : tot, exc = tot - f;
+          const pct = tot ? Math.round(f / tot * 100) : 0;
+          const sv = dfEl('df-sv-tot'); if (sv) sv.textContent = tot.toLocaleString();
+          const sf = dfEl('df-sv-fil'); if (sf) sf.textContent = f.toLocaleString();
+          const sc = dfEl('df-sv-col'); if (sc) sc.textContent = store.cols.length;
+          const se = dfEl('df-sv-exc'); if (se) se.textContent = exc.toLocaleString();
+          const sp2 = dfEl('df-sp2'); if (sp2) sp2.style.width = pct + '%';
+          const sp4 = dfEl('df-sp4'); if (sp4) sp4.style.width = (tot ? Math.round(exc/tot*100) : 0) + '%';
+          const tb = dfEl('df-tbadge'); if (tb) tb.textContent = f.toLocaleString() + ' rows';
+        }
+
+        function updBadge() {
+          let a = 0;
+          if (fmap) { store && store.cols.forEach(c => { const f = fmap[c]; if (f && ((f.sel && f.sel.size > 0) || f.txt)) a++; }); }
+          const gs = dfEl('df-gsearch'); if (gs && gs.value) a++;
+          const fb = dfEl('df-fbadge');
+          if (fb) { fb.textContent = a ? a + ' active' : (store ? store.cols.length + ' filters' : ''); }
+        }
+
+        /* ── Chips ── */
+        function renderChips() {
+          const row = dfEl('df-chips-row'), inner = dfEl('df-chips-inner'); if (!row || !inner) return;
+          const gs = dfEl('df-gsearch') && dfEl('df-gsearch').value;
+          const parts = [];
+          if (store) store.cols.forEach(col => {
+            const f = fmap[col]; if (!f) return;
+            if (f.sel && f.sel.size > 0) {
+              const items = [...f.sel];
+              const preview = items.slice(0,2).join(', ') + (items.length > 2 ? ' +' + (items.length-2) : '');
+              parts.push({label: col + ': ' + preview, clear: () => { f.sel.clear(); const t = dfEl('df-ms-' + col); if (t) setTrigger(t, col); }});
+            }
+            if (f.txt) parts.push({label: col + ' contains: ' + f.txt, clear: () => { f.txt = ''; }});
+          });
+          if (!parts.length && !gs) { row.style.display = 'none'; return; }
+          row.style.display = 'flex'; inner.innerHTML = '';
+          parts.forEach(({ label, clear }) => {
+            const c = document.createElement('span'); c.className = 'df-chip';
+            c.innerHTML = dfEsc(label) + '<button class="df-chip-x">&#215;</button>';
+            c.querySelector('.df-chip-x').onclick = () => { clear(); applyFilters(); };
+            inner.appendChild(c);
+          });
+          if (gs) {
+            const c = document.createElement('span'); c.className = 'df-chip';
+            c.innerHTML = 'Search: ' + dfEsc(gs) + '<button class="df-chip-x">&#215;</button>';
+            c.querySelector('.df-chip-x').onclick = () => { const el = dfEl('df-gsearch'); if(el) el.value=''; applyFilters(); };
+            inner.appendChild(c);
+          }
+        }
+
+        /* ── Table rendering — requests page from worker (worker owns idx arrays) ── */
+        function renderTable() {
+          const wrap = dfEl('df-tw'); if (!wrap || !store) return;
+          const total = filtered ? filtered.length : 0;
+          if (!total) {
+            wrap.innerHTML = '<div class="df-empty"><h3>' + (store.n > 0 ? 'No matching records' : 'No data loaded') + '</h3>'
+              + '<p>' + (store.n > 0 ? 'Try adjusting filters' : 'Upload a file above') + '</p></div>';
+            const pag = dfEl('df-pag'); if (pag) pag.style.display = 'none'; return;
+          }
+          renderPag(total);
+          const s = (pg - 1) * ps, e2 = Math.min(s + ps, total);
+          const pageIdx = filtered.slice(s, e2);
+          wrap.innerHTML = '<div style="padding:24px;text-align:center;color:var(--text3);font-size:13px">'
+            + '<i class="bi bi-hourglass-split"></i>&nbsp; Loading rows…</div>';
+          if (worker) worker.postMessage({type:'GET_PAGE', payload:{indices: pageIdx}});
+        }
+
+        function _renderPageData(rows) {
+          const wrap = dfEl('df-tw'); if (!wrap || !store || !rows) return;
+          const parts = ['<table class="df-tbl"><thead><tr>'];
+          store.cols.forEach(c => {
+            const sorted = sortCol === c;
+            parts.push('<th class="' + (sorted ? 'df-sorted' : '') + '" onclick="DF.sort(\'' + dfEsc(c) + '\')">'
+              + dfEsc(c) + ' <span style="opacity:.35;font-size:9px">'
+              + (sorted ? (sortDir === 1 ? '&#9650;' : '&#9660;') : '&#8597;') + '</span></th>');
+          });
+          parts.push('</tr></thead><tbody>');
+          rows.forEach(row => {
+            parts.push('<tr>');
+            store.cols.forEach(c => {
+              const v = row[c] != null ? String(row[c]) : '';
+              parts.push('<td title="' + dfEsc(v) + '">'
+                + (v === '' ? '<span style="color:var(--text3);font-style:italic">&#8212;</span>' : dfEsc(v)) + '</td>');
+            });
+            parts.push('</tr>');
+          });
+          parts.push('</tbody></table>');
+          wrap.innerHTML = parts.join('');
+        }
+        function renderPag(total) {
+          const pag = dfEl('df-pag'), pb = dfEl('df-pb'), pi = dfEl('df-pi');
+          if (!pag) return;
+          const tp = Math.ceil(total / ps);
+          if (tp <= 1) { pag.style.display = 'none'; return; }
+          pag.style.display = 'flex';
+          const s = (pg-1)*ps+1, e = Math.min(pg*ps, total);
+          if (pi) pi.textContent = s.toLocaleString() + '\u2013' + e.toLocaleString() + ' of ' + total.toLocaleString() + ' records';
+          if (!pb) return; pb.innerHTML = '';
+          const mk = (lbl, p, dis, act) => {
+            const b = document.createElement('button'); b.className = 'df-pb' + (act ? ' df-cur' : '');
+            b.innerHTML = lbl; b.disabled = dis || act;
+            if (!dis && !act) b.onclick = () => { pg = p; renderTable(); };
+            pb.appendChild(b);
+          };
+          mk('&#8249;', pg-1, pg===1);
+          const lo = Math.max(1, pg-2), hi = Math.min(tp, pg+2);
+          if (lo>1) { mk(1,1); if(lo>2){const sp=document.createElement('span');sp.textContent='...';sp.style.cssText='color:var(--text3);padding:0 4px;font-size:11px;line-height:26px';pb.appendChild(sp);}}
+          for(let i=lo;i<=hi;i++) mk(i,i,false,i===pg);
+          if(hi<tp){if(hi<tp-1){const sp=document.createElement('span');sp.textContent='...';sp.style.cssText='color:var(--text3);padding:0 4px;font-size:11px;line-height:26px';pb.appendChild(sp);}mk(tp,tp);}
+          mk('&#8250;', pg+1, pg===tp);
+        }
+
+        /* ── Sort — offloaded to worker (worker has idx arrays) ── */
+        function sort(col) {
+          if (sortCol === col) sortDir *= -1; else { sortCol = col; sortDir = 1; }
+          if (filtered && filtered.length > 1 && worker) {
+            worker.postMessage({type:'GET_SORT_IDX', payload:{indices: filtered, sortColName: col, sortDir}});
+            /* SORT_RESULT message will update filtered + call renderTable */
+          } else {
+            pg = 1; renderTable();
+          }
+        }
+
+        /* ── Export CSV — worker builds the CSV string (it has idx arrays) ── */
+        function exportCSV() {
+          if (!filtered || !filtered.length) { dfToast('No data to export', 'e'); return; }
+          if (!worker) { dfToast('Worker unavailable', 'e'); return; }
+          dfToast('Preparing export…', 'i');
+          worker.postMessage({type:'GET_CSV', payload:{indices: filtered}});
+        }
+
+        /* ── Copy table — worker builds TSV string ── */
+        function copyTable() {
+          if (!filtered || !filtered.length) { dfToast('No data to copy', 'e'); return; }
+          if (!worker) { dfToast('Worker unavailable', 'e'); return; }
+          const lbl = dfEl('df-copy-lbl'); if (lbl) lbl.textContent = 'Copying…';
+          worker.postMessage({type:'GET_COPY', payload:{indices: filtered}});
+        }
+
+        /* ── Reset / Clear ── */
+        function reset() {
+          if (!store) return;
+          store.cols.forEach(col => {
+            fmap[col].sel.clear(); fmap[col].txt = '';
+            const t = dfEl('df-ms-' + col); if (t) setTrigger(t, col);
+          });
+          const gs = dfEl('df-gsearch'); if (gs) gs.value = '';
+          applyFilters(); dfToast('Filters reset', 'i');
+        }
+
+        function clear() {
+          store = null; filtered = null; fmap = {}; sortCol = null; sortDir = 1; pg = 1;
+          if (worker) { try { worker.terminate(); } catch(e){} worker = null; }
+          panels.forEach(p => { try { p.remove(); } catch(e){} }); panels = [];
+          dfEl('df-up-sec').style.display = 'block';
+          dfEl('df-dash-sec').style.display = 'none';
+          const fi = dfEl('df-file-inp'); if (fi) fi.value = '';
+          dfEl('df-exp-btn').disabled = true;
+          dfEl('df-copy-btn').disabled = true;
+          dfToast('Data Filter cleared', 'i');
+        }
+
+        function removeTag(col, val) {
+          if (fmap[col]) fmap[col].sel.delete(val);
+          const t = dfEl('df-ms-' + col); if (t) setTrigger(t, col);
+          schedFilter();
+        }
+
+        function changePS(v) { ps = parseInt(v); pg = 1; renderTable(); }
+
+        /* ── Drag/drop on drop zone ── */
+        (function initDZ() {
+          const dz = dfEl('df-dz'); if (!dz) return;
+          dz.addEventListener('dragover', ev => { ev.preventDefault(); dz.classList.add('over'); });
+          dz.addEventListener('dragleave', () => dz.classList.remove('over'));
+          dz.addEventListener('drop', ev => { ev.preventDefault(); dz.classList.remove('over'); const f = ev.dataTransfer.files[0]; if (f) handleFile(f); });
+        })();
+
+        return { handleFile, reset, clear, sort, exportCSV, copyTable, changePS, removeTag };
+      })();
 
     </script>
-</body>
-
+  </body>
 </html>
