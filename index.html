@@ -3294,6 +3294,7 @@
                       6</button>
                     <button class="btn btn-sm btn-default pso-pill" onclick="psoSetPill(this,12)">12 Weeks · Best
                       8</button>
+                    <button class="btn btn-sm btn-default pso-pill" onclick="psoSetPill(this,'rename')" style="border-color:#605ca8;color:#605ca8"><i class="bi bi-tag-fill"></i> Header Renamer</button>
                   </div>
                   <span style="font-size:12px;color:var(--text3);font-style:italic;margin-left:auto"
                     id="pso-strat-desc">No best-score computation</span>
@@ -6588,7 +6589,7 @@
       // ═══════════════════════════════════════════════════════════════
       const PSO = { scoreChoice: null, mapData: [null, null], stuData: [null, null], courseId: [null, null], results: [null, null] };
       const PSO_CFG = { 12: { N: 12, K: 8 }, 8: { N: 8, K: 6 }, 4: { N: 4, K: 3 } };
-      function psoSetPill(el, val) { document.querySelectorAll('.pso-pill').forEach(p => { p.classList.remove('active', 'btn-primary'); p.classList.add('btn-default'); }); el.classList.remove('btn-default'); el.classList.add('active', 'btn-primary'); PSO.scoreChoice = val; const d = { null: 'No best-score computation', 4: 'Top 3 of 4 weeks', 8: 'Top 6 of 8 weeks', 12: 'Top 8 of 12 weeks' }; document.getElementById('pso-strat-desc').textContent = d[val] || d[null]; }
+      function psoSetPill(el, val) { document.querySelectorAll('.pso-pill').forEach(p => { p.classList.remove('active', 'btn-primary'); p.classList.add('btn-default'); }); el.classList.remove('btn-default'); el.classList.add('active', 'btn-primary'); PSO.scoreChoice = val; const d = { 'null': 'No best-score computation', 4: 'Top 3 of 4 weeks', 8: 'Top 6 of 8 weeks', 12: 'Top 8 of 12 weeks', rename: 'Rename headers from mapping sheet + fill blank/-- with 0 (no week avg / best score)' }; document.getElementById('pso-strat-desc').textContent = d[String(val)] !== undefined ? d[String(val)] : d['null']; }
       function psoDov(e, id) { e.preventDefault(); document.getElementById(id) && document.getElementById(id).classList.add('drag'); }
       function psoDlv(id) { document.getElementById(id) && document.getElementById(id).classList.remove('drag'); }
       function psoDrop(e, n, type) { e.preventDefault(); const z = 'pso-uz' + n + (type === 'map' ? 'm' : 's'); document.getElementById(z) && document.getElementById(z).classList.remove('drag'); const f = e.dataTransfer.files[0]; if (f) { if (type === 'map') psoMapUp(n, { files: [f] }); else psoStuUp(n, { files: [f] }); } }
@@ -6612,7 +6613,7 @@
         document.getElementById('pso-k-mapped').textContent = tM;
         document.getElementById('pso-k-weeks').textContent = tW;
         const bestEl = document.getElementById('pso-k-best');
-        bestEl.textContent = bR ? 'Yes' : (PSO.scoreChoice ? 'No' : '—');
+        bestEl.textContent = bR ? 'Yes' : (PSO.scoreChoice && PSO.scoreChoice !== 'rename' ? 'No' : '—');
         bestEl.style.color = bR ? 'var(--green)' : '';
         document.getElementById('pso-s-txt').textContent = 'Analysis complete';
         document.getElementById('pso-results').style.display = 'block';
@@ -6620,12 +6621,14 @@
         const both = r1 && r2;
         const btnLbl = document.getElementById('pso-export-btn-lbl'), expDesc = document.getElementById('pso-export-desc');
         if (btnLbl) btnLbl.textContent = both ? 'Download Combined Excel' : 'Download Excel';
-        if (expDesc) expDesc.textContent = both ? 'Both courses in one Excel (two sheets) + formula reference' : 'Single course Excel with formula reference';
+        if (expDesc) expDesc.textContent = both ? 'Both courses in one Excel — renamed headers' : 'Single course Excel — renamed headers';
         const c1btn = document.getElementById('pso-copy1-btn'), c2btn = document.getElementById('pso-copy2-btn');
         if (c1btn) c1btn.style.display = (r1 && PSO.results[0]) ? '' : 'none';
         if (c2btn) c2btn.style.display = (r2 && PSO.results[1]) ? '' : 'none';
+        window._psoPreviewPending=[];
         if (r1 && PSO.results[0]) psoRenderResult(1, PSO.results[0], PSO.courseId[0]);
         if (r2 && PSO.results[1]) psoRenderResult(2, PSO.results[1], PSO.courseId[1]);
+        psoRenderPreviews();
         hideOv(); toast('Analysis complete', 's');
       }
       function psoProcess(n) {
@@ -6667,10 +6670,36 @@
           } else newCols.push(col);
         });
 
-        const resultRows=stuData.rows.map(row=>{ const nr={}; stuData.columns.forEach((col,i)=>{ nr[newCols[i]]=row[col]; }); return nr; });
+        const resultRows=stuData.rows.map(row=>{
+          const nr={}; stuData.columns.forEach((col,i)=>{ nr[newCols[i]]=row[col]; });
+          return nr;
+        });
         const resultCols=[...newCols], weeksCreated=[], formulaDesc={};
 
-        // ── 3. Create Week columns — ROUND(SUM(cols)/N, 0) ──
+        // ── 3. Header Renamer mode: fill blank / '--' values with 0, keep originals ──
+        if(scoreChoice==='rename'){
+          // Attach original raw values under __orig__ keys (shown next to renamed col)
+          const stuRows=stuData.rows;
+          renamedList.forEach(rl=>{
+            resultRows.forEach((row,i)=>{
+              const stuRow=stuRows[i]||{};
+              row['__orig__'+rl.renamed]=stuRow[rl.original]!==undefined?stuRow[rl.original]:'';
+            });
+          });
+          // Zero-fill blank or '--' values for renamed (assignment) columns
+          const renamedKeys=new Set(renamedList.map(r=>r.renamed));
+          resultRows.forEach(row=>{
+            renamedKeys.forEach(key=>{
+              const v=row[key];
+              if(v===undefined||v===null||v===''||String(v).trim()===''||String(v).trim()==='--'){
+                row[key]=0;
+              }
+            });
+          });
+          return {columns:resultCols,rows:resultRows,renamedMap,renamedList,weeksCreated:[],bestScoreCol:null,mappingIdCount:Object.keys(idToLabel).length,formulaDesc:{},diag:{matchCount:Object.keys(renamedMap).length},scoreChoice:'rename'};
+        }
+
+        // ── 4. Create Week columns — ROUND(SUM(cols)/N, 0) ──
         Object.entries(weekToLabels).forEach(([wName,labels])=>{
           const avail=labels.filter(l=>resultCols.includes(l));
           if(avail.length){
@@ -6683,7 +6712,7 @@
           }
         });
 
-        // ── 4. Best Score — ROUND(SUM(LARGE({w1,w2,...},{1,2,..,K}))/K, 2) ──
+        // ── 5. Best Score — ROUND(SUM(LARGE({w1,w2,...},{1,2,..,K}))/K, 2) ──
         let bestScoreCol=null;
         if(scoreChoice && PSO_CFG[scoreChoice]){
           const {N:ni,K:ki}=PSO_CFG[scoreChoice];
@@ -6718,11 +6747,11 @@
         html+='<div style="background:#f9f9f9;border-radius:3px;padding:8px;text-align:center;border-bottom:3px solid '+(res.bestScoreCol?'var(--green)':'var(--border)')+'"><div style="font-size:18px;font-weight:700;color:'+(res.bestScoreCol?'var(--green)':'var(--text3)')+'">'+(res.bestScoreCol?'Yes':'No')+'</div><div style="font-size:10px;color:var(--text3);text-transform:uppercase">Best Score</div></div>';
         html+='</div>';
 
-        // ── Formula reference (inline, styled) ──
+        // ── Formula reference ──
         if(fEntries.length){
           html+='<div style="margin-bottom:10px;padding:8px 10px;background:#f0f7ff;border-left:3px solid var(--blue);border-radius:2px;font-size:11px;line-height:1.7">';
           html+='<b style="color:var(--blue)"><i class="bi bi-calculator-fill"></i> Formulas applied:</b><br>';
-          html+=fEntries.map(([k,v])=>'<span style="display:inline-block;min-width:80px;font-weight:700;color:var(--text)">'+escHtml(k)+'</span><span style="color:var(--text2);font-family:monospace;font-size:10px"> = '+escHtml(v)+'</span>').join('<br>');
+          html+=fEntries.map(([k,v])=>'<span style="display:inline-block;min-width:90px;font-weight:700;color:var(--text)">'+escHtml(k)+'</span><span style="color:var(--text2);font-family:monospace;font-size:10px"> = '+escHtml(v)+'</span>').join('<br>');
           html+='</div>';
         }
 
@@ -6730,103 +6759,271 @@
         const rl=res.renamedList||[];
         if(rl.length){
           html+='<div style="margin-bottom:10px">';
-          html+='<div style="font-size:11px;font-weight:700;color:var(--text2);margin-bottom:4px"><i class="bi bi-arrow-left-right"></i> Column Renames ('+rl.length+' mapped)</div>';
-          html+='<div style="max-height:120px;overflow-y:auto;border:1px solid var(--border);border-radius:var(--rad)">';
-          html+='<table style="width:100%;border-collapse:collapse;font-size:11px"><thead><tr style="background:var(--card-head)"><th style="padding:4px 8px;text-align:left;border-bottom:1px solid var(--border)">ID</th><th style="padding:4px 8px;text-align:left;border-bottom:1px solid var(--border)">Original Column</th><th style="padding:4px 8px;text-align:left;border-bottom:1px solid var(--border)">→ Renamed To</th></tr></thead><tbody>';
+          html+='<div style="font-size:11px;font-weight:700;color:var(--text2);margin-bottom:4px"><i class="bi bi-arrow-left-right"></i> Column Renames ('+rl.length+' mapped) — download uses renamed headers</div>';
+          html+='<div style="max-height:110px;overflow-y:auto;border:1px solid var(--border);border-radius:var(--rad)">';
+          html+='<table style="width:100%;border-collapse:collapse;font-size:11px"><thead><tr style="background:var(--card-head);position:sticky;top:0"><th style="padding:4px 8px;text-align:left;border-bottom:1px solid var(--border)">ID</th><th style="padding:4px 8px;text-align:left;border-bottom:1px solid var(--border)">Original Column</th><th style="padding:4px 8px;text-align:left;border-bottom:1px solid var(--border)">→ Renamed To</th></tr></thead><tbody>';
           html+=rl.map((r,i)=>'<tr style="background:'+(i%2===0?'#fff':'#f9f9f9')+'"><td style="padding:3px 8px;font-weight:700;color:var(--purple)">'+escHtml(r.id)+'</td><td style="padding:3px 8px;color:var(--text3);font-family:monospace;font-size:10px">'+escHtml(r.original)+'</td><td style="padding:3px 8px;color:var(--green);font-weight:600">'+escHtml(r.renamed)+'</td></tr>').join('');
           html+='</tbody></table></div></div>';
         }
 
-        // ── Data preview — ALL cols, full horizontal scroll ──
-        html+='<div style="font-size:11px;font-weight:700;color:var(--text2);margin-bottom:4px"><i class="bi bi-table"></i> Data Preview (first '+Math.min(8,res.rows.length)+' rows, '+res.columns.length+' columns)</div>';
-        html+='<div style="overflow:auto;max-height:220px;border:1px solid var(--border);border-radius:var(--rad);width:100%">';
-        html+='<table style="border-collapse:collapse;font-size:11px;white-space:nowrap;min-width:max-content"><thead><tr style="background:var(--card-head);position:sticky;top:0;z-index:1">';
-        html+=res.columns.map(c=>'<th style="padding:4px 8px;border:1px solid var(--border);font-weight:700;min-width:70px;cursor:default" title="'+escHtml(c)+'">'+escHtml(c)+'</th>').join('');
-        html+='</tr></thead><tbody>';
-        html+=res.rows.slice(0,8).map((row,i)=>'<tr style="background:'+(i%2===0?'#fff':'#f9f9f9')+'">'+ res.columns.map(c=>{const v=String(row[c]!==undefined?row[c]:''); return '<td style="padding:3px 8px;border:1px solid #eee;text-align:'+(isNaN(parseFloat(v))||v===''?'left':'right')+'">'+escHtml(v)+'</td>';}).join('') +'</tr>').join('');
-        html+='</tbody></table></div>';
-
         body.innerHTML=html;
-      }
-      // Build data-only XLSX worksheet (clean header at row 1, no formula rows)
-      function psoBuildDataSheet(res) {
-        const aoa=[res.columns];
-        res.rows.forEach(r=>aoa.push(res.columns.map(c=>{
-          const v=r[c];
-          if(v===''||v===null||v===undefined) return '';
-          const n=parseFloat(v);
-          return !isNaN(n)?n:String(v);
-        })));
-        return XLSX.utils.aoa_to_sheet(aoa);
+        // ── Data preview rendered OUTSIDE the 2-col grid — appended after result panels ──
+        // Store result for preview rendering after both panels are done
+        if(!window._psoPreviewPending) window._psoPreviewPending=[];
+        window._psoPreviewPending.push({n,res});
       }
 
-      // Build formula-reference worksheet
-      function psoBuildFormulaSheet(res, cid) {
-        const fEntries=Object.entries(res.formulaDesc||{});
-        const rl=res.renamedList||[];
-        const aoa=[['Formula Reference — '+cid],[]];
-        if(fEntries.length){
-          aoa.push(['Column','Formula']);
-          fEntries.forEach(([k,v])=>aoa.push([k,v]));
-          aoa.push([]);
+      // ── Preview data store for search ──
+      window._psoPreviewDataMap = {};
+      const _psoSearchTimers = {};
+
+      function psoRenderPreviews() {
+        const old = document.getElementById('pso-full-preview');
+        if (old) old.remove();
+        window._psoPreviewDataMap = {};
+        const pending = window._psoPreviewPending || [];
+        if (!pending.length) return;
+        const wrap = document.createElement('div');
+        wrap.id = 'pso-full-preview';
+        wrap.style.cssText = 'margin-top:16px';
+
+        pending.forEach(({ n, res }) => {
+          const cid = PSO.courseId[n - 1] || 'Course #' + n;
+          const exportCols = psoBuildFlatCols(res);
+          window._psoPreviewDataMap[n] = { res, exportCols };
+
+          const div = document.createElement('div');
+          div.style.cssText = 'margin-bottom:16px;background:#fff;border:1px solid var(--border);border-radius:var(--rad);box-shadow:var(--shad);overflow:hidden';
+
+          // ── Header ──
+          const hdr = document.createElement('div');
+          hdr.style.cssText = 'background:linear-gradient(135deg,#3c8dbc,#2171a0);color:#fff;font-size:12px;font-weight:700;padding:8px 14px;display:flex;align-items:center;gap:8px';
+          hdr.innerHTML = '<i class="bi bi-table"></i><span style="flex:1">' + escHtml(cid) + ' — Full Data Preview</span>'
+            + '<span style="font-size:11px;font-weight:400;opacity:.85">' + res.rows.length.toLocaleString() + ' rows &nbsp;·&nbsp; ' + exportCols.length + ' columns</span>';
+          div.appendChild(hdr);
+
+          // ── Search bar ──
+          const searchBar = document.createElement('div');
+          searchBar.style.cssText = 'padding:7px 12px;background:#f4f6f9;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:7px';
+          searchBar.innerHTML = '<i class="bi bi-search" style="color:var(--text3);font-size:13px;flex-shrink:0"></i>'
+            + '<input id="pso-search-' + n + '" type="text" placeholder="Search User ID, Email, Name…" autocomplete="off"'
+            + ' style="flex:1;border:1px solid var(--border);border-radius:3px;padding:4px 9px;font-size:12px;outline:none;background:#fff;min-width:0"'
+            + ' oninput="psoSearchPreviewDebounced(' + n + ',this.value)">'
+            + '<span id="pso-search-count-' + n + '" style="font-size:11px;white-space:nowrap;min-width:80px;text-align:right;color:var(--text3)"></span>'
+            + '<button onclick="document.getElementById(\'pso-search-' + n + '\').value=\'\';psoSearchPreview(' + n + ',\'\')"'
+            + ' style="border:none;background:none;color:var(--text3);cursor:pointer;padding:2px 4px;font-size:14px;line-height:1;flex-shrink:0" title="Clear"><i class="bi bi-x-circle"></i></button>';
+          div.appendChild(searchBar);
+
+          // ── Table wrapper ──
+          const tblWrap = document.createElement('div');
+          tblWrap.id = 'pso-tbl-wrap-' + n;
+          tblWrap.style.cssText = 'overflow:auto;max-height:340px;width:100%';
+          div.appendChild(tblWrap);
+
+          psoRenderPreviewTable(n, res.rows, exportCols, tblWrap, 25);
+          wrap.appendChild(div);
+        });
+
+        const resultsDiv = document.getElementById('pso-results');
+        if (resultsDiv) resultsDiv.appendChild(wrap);
+        window._psoPreviewPending = [];
+      }
+
+      function psoSearchPreviewDebounced(n, query) {
+        clearTimeout(_psoSearchTimers[n]);
+        _psoSearchTimers[n] = setTimeout(() => psoSearchPreview(n, query), 220);
+      }
+
+      function psoSearchPreview(n, query) {
+        const pd = window._psoPreviewDataMap && window._psoPreviewDataMap[n];
+        if (!pd) return;
+        const { res, exportCols } = pd;
+        const tblWrap = document.getElementById('pso-tbl-wrap-' + n);
+        if (!tblWrap) return;
+        const q = query.trim().toLowerCase();
+        let filtered;
+        if (!q) {
+          filtered = res.rows;
+        } else {
+          // Search across first 5 cols (User ID, Email, Name typically)
+          const sCols = exportCols.slice(0, Math.min(5, exportCols.length));
+          filtered = res.rows.filter(row => sCols.some(col => String(row[col.dataKey] || '').toLowerCase().includes(q)));
         }
-        if(rl.length){
-          aoa.push(['ID','Original Column','Renamed To']);
-          rl.forEach(r=>aoa.push([r.id, r.original, r.renamed]));
+        const countEl = document.getElementById('pso-search-count-' + n);
+        if (countEl) {
+          if (q) {
+            countEl.textContent = filtered.length.toLocaleString() + ' match' + (filtered.length !== 1 ? 'es' : '');
+            countEl.style.color = filtered.length > 0 ? 'var(--green)' : 'var(--red)';
+          } else { countEl.textContent = ''; countEl.style.color = ''; }
         }
-        return XLSX.utils.aoa_to_sheet(aoa);
+        psoRenderPreviewTable(n, filtered, exportCols, tblWrap, q ? 100 : 25);
+      }
+
+      function psoRenderPreviewTable(n, rows, exportCols, tblWrap, limit) {
+        limit = limit || 25;
+        const showRows = rows.slice(0, limit);
+        let tbl = '<table style="border-collapse:collapse;font-size:11px;white-space:nowrap;min-width:max-content;width:100%">';
+        tbl += '<thead><tr style="background:var(--card-head)">';
+        tbl += exportCols.map(col => {
+          const isOrig = col.dataKey.startsWith('__orig__');
+          const bg = isOrig ? 'background:#fffbe6;' : '';
+          return '<th style="position:sticky;top:0;z-index:2;padding:5px 10px;border:1px solid var(--border);font-weight:700;min-width:80px;' + bg + '" title="' + escHtml(col.header) + '">' + escHtml(col.header) + '</th>';
+        }).join('');
+        tbl += '</tr></thead><tbody>';
+        if (showRows.length === 0) {
+          tbl += '<tr><td colspan="' + exportCols.length + '" style="padding:20px;text-align:center;color:var(--text3);font-style:italic">No matching rows found</td></tr>';
+        } else {
+          tbl += showRows.map((row, i) => {
+            const bg = i % 2 === 0 ? '#fff' : '#f9f9f9';
+            return '<tr style="background:' + bg + '">' + exportCols.map(col => {
+              const isOrig = col.dataKey.startsWith('__orig__');
+              const v = String(row[col.dataKey] !== undefined ? row[col.dataKey] : '');
+              const isNum = v !== '' && !isNaN(parseFloat(v)) && isFinite(v);
+              const cellBg = isOrig ? (i % 2 === 0 ? '#fffdf0' : '#fffbe6') : '';
+              return '<td style="padding:3px 10px;border:1px solid #eee;text-align:' + (isNum ? 'right' : 'left') + ';background:' + cellBg + '">' + (v === '' || v === '--' ? '<span style="color:#ccc">—</span>' : escHtml(v)) + '</td>';
+            }).join('') + '</tr>';
+          }).join('');
+        }
+        tbl += '</tbody></table>';
+        tblWrap.innerHTML = tbl;
+        // Footer
+        if (rows.length > limit || rows.length < (window._psoPreviewDataMap[n] ? window._psoPreviewDataMap[n].res.rows.length : 0)) {
+          const foot = document.createElement('div');
+          foot.style.cssText = 'padding:5px 12px;font-size:11px;color:var(--text3);background:#f9f9f9;border-top:1px solid var(--border);display:flex;justify-content:space-between';
+          foot.innerHTML = '<span>Showing <b>' + Math.min(showRows.length, limit).toLocaleString() + '</b> of <b>' + rows.length.toLocaleString() + '</b> rows</span>'
+            + (rows.length > limit ? '<span style="color:var(--blue)">Use search to filter rows</span>' : '');
+          tblWrap.appendChild(foot);
+        }
+      }
+
+      // Columns that should always be forced as text (no numeric coercion)
+      const PSO_TEXT_COLS = /user.?id|email|name/i;
+
+      // Build the export column list:
+      // For Header Renamer mode: main cols + original cols appended side-by-side
+      // For all other modes: main cols only (no originals)
+      function psoBuildExportLayout(res) {
+        const mainCols = res.columns.map(c => ({ header: c, dataKey: c }));
+        if(res.scoreChoice === 'rename'){
+          const rl = res.renamedList || [];
+          const origAppend = rl.map(r => ({ header: r.original + ' [original]', dataKey: '__orig__' + r.renamed }));
+          return { mainCols, origAppend };
+        }
+        return { mainCols, origAppend: [] };
+      }
+
+      // ── Build XLSX worksheet — AOA approach (10x faster than cell-by-cell) ──
+      async function psoBuildDataSheetAsync(res, onProgress) {
+        const { mainCols, origAppend } = psoBuildExportLayout(res);
+        const allCols = [...mainCols, ...origAppend];
+        // Which column indices need text-forcing (User ID / Email / Name)
+        const textCiSet = new Set();
+        allCols.forEach((col, ci) => { if (PSO_TEXT_COLS.test(col.header)) textCiSet.add(ci); });
+
+        // Build array-of-arrays in 10K-row chunks — yields to browser between chunks
+        const CHUNK = 10000;
+        const aoa = [allCols.map(c => c.header)];
+        for (let start = 0; start < res.rows.length; start += CHUNK) {
+          const end = Math.min(start + CHUNK, res.rows.length);
+          for (let ri = start; ri < end; ri++) {
+            const row = res.rows[ri];
+            aoa.push(allCols.map(col => {
+              const raw = row[col.dataKey];
+              return (raw !== undefined && raw !== null) ? raw : '';
+            }));
+          }
+          if (onProgress) onProgress(end / res.rows.length);
+          await delay(0); // yield — keeps browser responsive
+        }
+
+        // aoa_to_sheet is optimised in SheetJS — much faster than encode_cell loop
+        const ws = XLSX.utils.aoa_to_sheet(aoa);
+
+        // Post-fix: re-tag text cols as type 's' so Excel doesn't coerce UUIDs to numbers
+        if (textCiSet.size > 0) {
+          const nRows = res.rows.length;
+          textCiSet.forEach(ci => {
+            for (let ri = 1; ri <= nRows; ri++) {
+              const addr = XLSX.utils.encode_cell({ r: ri, c: ci });
+              const cell = ws[addr];
+              if (cell) { cell.t = 's'; cell.v = String(cell.v !== undefined ? cell.v : ''); delete cell.w; }
+              else ws[addr] = { t: 's', v: '' };
+            }
+          });
+        }
+        ws['!freeze'] = { xSplit: 0, ySplit: 1 };
+        return ws;
       }
 
       async function psoExportExcel() {
-        const r1=PSO.results[0], r2=PSO.results[1];
-        if(!r1&&!r2){toast('No results to export','w');return;}
-        showOv('Building Excel','Preparing...',10); await delay(20);
+        const r1 = PSO.results[0], r2 = PSO.results[1];
+        if (!r1 && !r2) { toast('No results to export', 'w'); return; }
+        const totalRows = (r1 ? r1.rows.length : 0) + (r2 ? r2.rows.length : 0);
+        if (totalRows > 1048576) {
+          toast('Dataset exceeds Excel row limit (1M). Use CSV ZIP for full data.', 'w'); return;
+        }
+        showOv('Building Excel', 'Preparing…', 3); await delay(20);
         try {
-          const wb=XLSX.utils.book_new();
-          if(r1){
-            const name1=(PSO.courseId[0]||'Course1').slice(0,28);
-            XLSX.utils.book_append_sheet(wb, psoBuildDataSheet(r1), name1);
-            XLSX.utils.book_append_sheet(wb, psoBuildFormulaSheet(r1,PSO.courseId[0]||'Course1'), (name1+' Formulas').slice(0,31));
+          const wb = XLSX.utils.book_new();
+          if (r1) {
+            pOv(5, 'Building Course #1 (' + r1.rows.length.toLocaleString() + ' rows)…'); await delay(0);
+            const ws1 = await psoBuildDataSheetAsync(r1, p => pOv(Math.round(5 + p * 40), 'Course #1: ' + Math.round(p * 100) + '%…'));
+            XLSX.utils.book_append_sheet(wb, ws1, (PSO.courseId[0] || 'Course1').slice(0, 31));
           }
-          if(r2){
-            const name2=(PSO.courseId[1]||'Course2').slice(0,28);
-            XLSX.utils.book_append_sheet(wb, psoBuildDataSheet(r2), name2);
-            XLSX.utils.book_append_sheet(wb, psoBuildFormulaSheet(r2,PSO.courseId[1]||'Course2'), (name2+' Formulas').slice(0,31));
+          if (r2) {
+            pOv(50, 'Building Course #2 (' + r2.rows.length.toLocaleString() + ' rows)…'); await delay(0);
+            const ws2 = await psoBuildDataSheetAsync(r2, p => pOv(Math.round(50 + p * 40), 'Course #2: ' + Math.round(p * 100) + '%…'));
+            XLSX.utils.book_append_sheet(wb, ws2, (PSO.courseId[1] || 'Course2').slice(0, 31));
           }
-          pOv(80,'Writing file...');
-          const fname=(r1&&r2)?'NPTEL_PreScoring_Combined.xlsx':'NPTEL_PreScoring_'+(PSO.courseId[r1?0:1]||'Course')+'.xlsx';
-          XLSX.writeFile(wb,fname);
-          hideOv(); toast('Excel downloaded: '+fname,'s');
-        } catch(e){hideOv(); toast('Export failed: '+e.message,'e');}
+          pOv(93, 'Writing file…'); await delay(0);
+          const fname = (r1 && r2) ? 'NPTEL_PreScoring_Combined.xlsx' : 'NPTEL_PreScoring_' + (PSO.courseId[r1 ? 0 : 1] || 'Course') + '.xlsx';
+          XLSX.writeFile(wb, fname);
+          hideOv(); toast('Excel downloaded: ' + fname, 's');
+        } catch (e) { hideOv(); toast('Export failed: ' + e.message, 'e'); }
+      }
+
+      // Shared: build flat array of {header, dataKey} for export/copy
+      function psoBuildFlatCols(res) {
+        const { mainCols, origAppend } = psoBuildExportLayout(res);
+        return [...mainCols, ...origAppend];
       }
 
       async function psoExportZip() {
         if (!PSO.results[0] && !PSO.results[1]) { toast('No results', 'w'); return; }
-        showOv('Building ZIP', 'Preparing...', 10); await delay(20);
+        showOv('Building CSV ZIP', 'Preparing…', 3); await delay(20);
         try {
           const zip = new JSZip();
-          [0,1].forEach(i => {
-            const res=PSO.results[i]; if (!res) return;
-            const fEntries=Object.entries(res.formulaDesc||{});
-            let csv='';
-            if (fEntries.length) { csv+='# Formula Reference\n'; fEntries.forEach(([k,v])=>{ csv+='# '+k+': '+v+'\n'; }); csv+='#\n'; }
-            csv+=res.columns.join(',')+'\n';
-            res.rows.forEach(r=>{ csv+=res.columns.map(c=>{ const v=String(r[c]!==undefined?r[c]:''); return (v.includes(',')||v.includes('"'))?'"'+v.replace(/"/g,'""')+'"':v; }).join(',')+'\n'; });
-            zip.file((PSO.courseId[i]||'Course'+(i+1))+'.csv', csv);
-          });
-          pOv(80,'Compressing...');
-          const blob = await zip.generateAsync({type:'blob',compression:'DEFLATE',compressionOptions:{level:5}});
-          dlBlob(blob,'NPTEL_PreScoring.zip'); hideOv(); toast('ZIP downloaded','s');
-        } catch(e) { hideOv(); toast('Export failed: '+e.message,'e'); }
+          const CHUNK = 10000;
+          const csvCell = v => { const s = String(v !== undefined && v !== null ? v : ''); return (s.includes(',') || s.includes('"') || s.includes('\n')) ? '"' + s.replace(/"/g, '""') + '"' : s; };
+          for (let i = 0; i <= 1; i++) {
+            const res = PSO.results[i]; if (!res) continue;
+            const cols = psoBuildFlatCols(res);
+            const parts = [cols.map(c => csvCell(c.header)).join(',') + '\n'];
+            for (let start = 0; start < res.rows.length; start += CHUNK) {
+              const end = Math.min(start + CHUNK, res.rows.length);
+              for (let ri = start; ri < end; ri++) {
+                parts.push(cols.map(c => csvCell(res.rows[ri][c.dataKey] !== undefined ? res.rows[ri][c.dataKey] : '')).join(',') + '\n');
+              }
+              const pct = Math.round(5 + i * 40 + (end / res.rows.length) * 38);
+              pOv(pct, 'Course #' + (i + 1) + ': ' + end.toLocaleString() + ' / ' + res.rows.length.toLocaleString() + ' rows…');
+              await delay(0);
+            }
+            zip.file((PSO.courseId[i] || 'Course' + (i + 1)) + '.csv', parts.join(''));
+          }
+          pOv(88, 'Compressing…'); await delay(0);
+          const blob = await zip.generateAsync({ type: 'blob', compression: 'DEFLATE', compressionOptions: { level: 6 } });
+          dlBlob(blob, 'NPTEL_PreScoring.zip'); hideOv(); toast('CSV ZIP downloaded', 's');
+        } catch (e) { hideOv(); toast('Export failed: ' + e.message, 'e'); }
       }
 
       function psoCopyResult(n) {
-        const res=PSO.results[n-1]; if (!res) { toast('No data for Course #'+n,'w'); return; }
-        const lines=[res.columns.join('\t')];
-        res.rows.forEach(r => lines.push(res.columns.map(c=>String(r[c]!==undefined?r[c]:'')).join('\t')));
+        const res = PSO.results[n - 1]; if (!res) { toast('No data for Course #' + n, 'w'); return; }
+        const cols = psoBuildFlatCols(res);
+        const lines = [cols.map(c => c.header).join('\t')];
+        res.rows.forEach(r => lines.push(cols.map(c => String(r[c.dataKey] !== undefined ? r[c.dataKey] : '')).join('\t')));
         navigator.clipboard.writeText(lines.join('\n'))
-          .then(()=>toast('Copied Course #'+n+' — '+res.rows.length.toLocaleString()+' rows','s'))
-          .catch(()=>toast('Copy failed','e'));
+          .then(() => toast('Copied Course #' + n + ' — ' + res.rows.length.toLocaleString() + ' rows (' + cols.length + ' cols)', 's'))
+          .catch(() => toast('Copy failed', 'e'));
       }
 
       function psoClearAll() {
