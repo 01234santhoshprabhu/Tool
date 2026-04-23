@@ -5655,75 +5655,144 @@
       // ═══════════════════════════════════════════════════════════════
       function safeSheet(s) { return s.replace(/[:\\/\?\*\[\]]/g, '_').substring(0, 31); }
 
+      /* ── Combined Excel download — xlsb (binary) for large, xlsx for small ──
+         Always includes Excel formulas. XLSX.write() runs in a blob Worker so
+         the main thread stays responsive and the progress bar keeps animating.   ── */
       async function exportExcel() {
-        showOv('Building Excel', 'Compiling all groups…', 5); await delay(30);
+        showOv('Building Excel', 'Compiling all groups…', 3); await delay(30);
         const o = getEOpts();
-        const wb = XLSX.utils.book_new();
-        let totalDone = 0;
         const sel = groups.filter(g => $(`chk_${g.key}`)?.checked);
+        if (!sel.length) { hideOv(); toast('No groups selected', 'w'); return; }
         const totalRows = sel.reduce((s, g) => s + g.rows.length, 0);
 
+        /* Build the full workbook AOA on main thread (fast) */
+        const wb = XLSX.utils.book_new();
+        let totalDone = 0;
         for (const g of sel) {
           const cache = buildScoreCache(g, o.blank);
-          // FIX #3: Use getEOpts to build correct headers
           const hdrs = [...g.hdrs, ...(o.avg ? ['Best_Avg'] : []), ...(o.s25 ? ['Score_25'] : []), ...(o.match ? ['Match'] : [])];
           const aoa = [hdrs];
-          const CHUNK = 30000;
+          const CHUNK = 80000;
           for (let ri = 0; ri < g.rows.length; ri += CHUNK) {
             const end = Math.min(ri + CHUNK, g.rows.length);
             for (let i = ri; i < end; i++) aoa.push(buildDataRow(g.rows[i], i, g, o, cache, aoa.length + 1));
             totalDone += end - ri;
-            pOv(5 + Math.round((totalDone / totalRows) * 80), `${totalDone.toLocaleString()} / ${totalRows.toLocaleString()} rows`, g.label);
+            pOv(3 + Math.round((totalDone / totalRows) * 72), `${totalDone.toLocaleString()} / ${totalRows.toLocaleString()} rows`, g.label);
             await delay(0);
           }
-          const ws = XLSX.utils.aoa_to_sheet(aoa, { cellStyles: true });
+          const ws = XLSX.utils.aoa_to_sheet(aoa);
           ws['!cols'] = hdrs.map(h => ({ wch: h === 'EmailId' ? 34 : h === 'new_courseid' ? 16 : h === 'sem' ? 11 : h === 'Match' ? 12 : 10 }));
           XLSX.utils.book_append_sheet(wb, ws, safeSheet(g.label));
         }
-
         const sa = [['Group', 'Course ID', 'Duration', 'Semester', 'Total', 'Best Of', 'Rows', 'Avg /25']];
         sel.forEach(g => g.summary.forEach(c => sa.push([g.label, c.cid, c.Duration, c.semExcel || '', c.ta, c.bn, c.count, c.avg])));
         XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(sa), 'Course_Summary');
 
-        pOv(93, 'Writing file…'); await delay(20);
-        XLSX.writeFile(wb, 'NPTEL_Processed_Scores.xlsx');
-        hideOv(); toast('Combined Excel downloaded!', 's');
+        /* Choose format: xlsb (binary) = ~5x faster write for large files */
+        const useBin  = totalRows > 100000;
+        const fmt     = useBin ? 'xlsb' : 'xlsx';
+        const mime    = useBin
+          ? 'application/vnd.ms-excel.sheet.binary.macroEnabled.12'
+          : 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
+        const fname   = 'NPTEL_Combined_Scores.' + fmt;
+
+        pOv(78, (useBin ? 'Writing ' + fmt.toUpperCase() + ' (binary — faster)…' : 'Writing file…'), ''); await delay(20);
+
+        /* Offload XLSX.write() to a blob Worker so the UI stays responsive */
+        try {
+          const buf = await xlsbWorkerWrite(wb, fmt);
+          dlBlob(new Blob([buf], { type: mime }), fname);
+          hideOv();
+          toast('Downloaded ' + fname + ' — ' + totalRows.toLocaleString() + ' rows' + (useBin ? ' (Excel binary, opens normally)' : ''), 's');
+        } catch (err) {
+          /* Worker failed — fallback to synchronous write */
+          console.warn('Worker write failed, falling back:', err);
+          pOv(85, 'Writing (fallback mode)…'); await delay(10);
+          const buf2 = XLSX.write(wb, { bookType: fmt, type: 'array', compression: false });
+          dlBlob(new Blob([buf2], { type: mime }), fname);
+          hideOv();
+          toast('Downloaded ' + fname + ' — ' + totalRows.toLocaleString() + ' rows', 's');
+        }
+      }
+
+      /* Run XLSX.write() in a Web Worker so the main thread stays alive */
+      function xlsbWorkerWrite(wb, fmt) {
+        return new Promise((resolve, reject) => {
+          const src = `
+importScripts('https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js');
+self.onmessage = function(e) {
+  try {
+    const buf = XLSX.write(e.data.wb, { bookType: e.data.fmt, type: 'array', compression: false });
+    self.postMessage({ ok: true, buf: buf }, [buf.buffer]);
+  } catch(ex) {
+    self.postMessage({ ok: false, err: ex.message });
+  }
+};`;
+          let w;
+          try {
+            const blob = new Blob([src], { type: 'application/javascript' });
+            const url  = URL.createObjectURL(blob);
+            w = new Worker(url);
+            URL.revokeObjectURL(url);
+          } catch(e) { reject(e); return; }
+          w.onmessage = function(e) {
+            w.terminate();
+            if (e.data.ok) resolve(new Uint8Array(e.data.buf));
+            else reject(new Error(e.data.err));
+          };
+          w.onerror = function(e) { w.terminate(); reject(new Error(e.message || 'Worker error')); };
+          w.postMessage({ wb, fmt });
+        });
       }
 
       async function exportZip() {
-        showOv('Building ZIP', 'Compressing…', 5); await delay(30);
+        showOv('Building ZIP', 'Preparing…', 3); await delay(30);
         const o = getEOpts();
         const zip = new JSZip();
         let totalDone = 0;
         const sel = groups.filter(g => $(`chk_${g.key}`)?.checked);
+        if (!sel.length) { hideOv(); toast('No groups selected', 'w'); return; }
         const totalRows = sel.reduce((s, g) => s + g.rows.length, 0);
+
+        /* CSV escape — extract .v from XLSX cell objects {t,v,f} before encoding */
+        const cellVal = v => (v !== null && typeof v === 'object' && 'v' in v) ? v.v : v;
+        const ce = v => {
+          const s = String(cellVal(v) != null ? cellVal(v) : '');
+          return (s.indexOf(',') >= 0 || s.indexOf('"') >= 0 || s.indexOf('\n') >= 0 || s.indexOf('\r') >= 0)
+            ? '"' + s.replace(/"/g, '""') + '"' : s;
+        };
 
         for (const g of sel) {
           const cache = buildScoreCache(g, o.blank);
           const hdrs = [...g.hdrs, ...(o.avg ? ['Best_Avg'] : []), ...(o.s25 ? ['Score_25'] : []), ...(o.match ? ['Match'] : [])];
-          const aoa = [hdrs];
-          const CHUNK = 30000;
+          const lines = [hdrs.map(ce).join(',')];
+          const CHUNK = 50000;
           for (let ri = 0; ri < g.rows.length; ri += CHUNK) {
             const end = Math.min(ri + CHUNK, g.rows.length);
-            for (let i = ri; i < end; i++) aoa.push(buildDataRow(g.rows[i], i, g, o, cache, aoa.length + 1));
+            for (let i = ri; i < end; i++) {
+              lines.push(buildDataRow(g.rows[i], i, g, o, cache, lines.length + 1).map(ce).join(','));
+            }
             totalDone += end - ri;
-            pOv(5 + Math.round((totalDone / totalRows) * 75), `${totalDone.toLocaleString()} rows`, g.label);
+            pOv(3 + Math.round((totalDone / totalRows) * 84), `${totalDone.toLocaleString()} / ${totalRows.toLocaleString()} rows`, g.label);
             await delay(0);
           }
-          const wb2 = XLSX.utils.book_new();
-          const ws = XLSX.utils.aoa_to_sheet(aoa, { cellStyles: true });
-          XLSX.utils.book_append_sheet(wb2, ws, safeSheet(g.label));
-          const sa = [['Course ID', 'Duration', 'Semester', 'Total', 'Best Of', 'Rows', 'Avg /25']];
-          g.summary.forEach(c => sa.push([c.cid, c.Duration, c.semExcel || '', c.ta, c.bn, c.count, c.avg]));
-          XLSX.utils.book_append_sheet(wb2, XLSX.utils.aoa_to_sheet(sa), 'Course_Summary');
-          const fn = g.label.replace(/[^a-zA-Z0-9_\-]/g, '_').replace(/_+/g, '_') + '.xlsx';
-          zip.file(fn, XLSX.write(wb2, { bookType: 'xlsx', type: 'array' }));
+          const fn = g.label.replace(/[^a-zA-Z0-9_\-]/g, '_').replace(/_+/g, '_') + '.csv';
+          zip.file(fn, '\uFEFF' + lines.join('\r\n'));  /* UTF-8 BOM — Excel auto-detects encoding */
         }
 
-        pOv(89, 'Compressing…'); await delay(20);
-        const blob = await zip.generateAsync({ type: 'blob', compression: 'DEFLATE', compressionOptions: { level: 6 } });
+        /* Summary CSV */
+        const sumH = ['Group','Course ID','Duration','Semester','Total','Best Of','Rows','Avg /25'];
+        const sumLines = [sumH.join(',')];
+        sel.forEach(g => g.summary.forEach(c =>
+          sumLines.push([g.label, c.cid, c.Duration, c.semExcel||'', c.ta, c.bn, c.count, c.avg].map(ce).join(','))
+        ));
+        zip.file('Course_Summary.csv', '\uFEFF' + sumLines.join('\r\n'));
+
+        pOv(90, 'Compressing…'); await delay(20);
+        /* level:1 = fast compression, CSV text compresses extremely well */
+        const blob = await zip.generateAsync({ type: 'blob', compression: 'DEFLATE', compressionOptions: { level: 1 } });
         dlBlob(blob, 'NPTEL_Separate_Scores.zip');
-        hideOv(); toast('ZIP downloaded!', 's');
+        hideOv(); toast('ZIP downloaded — ' + totalRows.toLocaleString() + ' rows across ' + sel.length + ' groups', 's');
       }
 
       // ═══════════════════════════════════════════════════════════════
