@@ -3076,6 +3076,10 @@
       animation: ps 2s infinite;
     }
 
+    .sdot.err {
+      background: var(--red);
+    }
+
     @keyframes ps {
 
       0%,
@@ -3175,6 +3179,7 @@
         </button>
         <button class="nb" onclick="showPage('diff')"><i class="bi bi-arrow-left-right"></i><span class="nl">Score
             Diff</span></button>
+        <button class="nb" onclick="showPage('sc')"><i class="bi bi-clipboard-check-fill"></i><span class="nl">Score Cross Check</span></button>
         <span class="sb-sec-lbl nl" style="margin-top:6px">NPTEL Tools</span>
         <button class="nb" onclick="showPsoPage()"><i class="bi bi-grid-1x2-fill"></i><span
             class="nl">Manual/Programming</span></button>
@@ -4067,6 +4072,120 @@
         </div>
       </div><!-- /page-diff -->
 
+      <!-- ════ PAGE: SCORE CROSS CHECK ════ -->
+      <div id="page-sc" class="page-sec">
+        <style>
+          #sc-tbl-wrap{overflow:auto;max-height:540px;border:1px solid var(--border);border-radius:var(--rad);}
+          #sc-tbl{border-collapse:collapse;width:100%;font-size:12px;}
+          #sc-tbl th,#sc-tbl td{border:1px solid var(--border);padding:4px 7px;white-space:nowrap;}
+          #sc-tbl thead th{background:var(--card-head);position:sticky;top:0;z-index:2;vertical-align:top;}
+          #sc-tbl tbody tr:hover td{background:rgba(60,141,188,.05);}
+          .sc-match{background:rgba(0,166,90,.13);}
+          .sc-diff{background:rgba(221,75,57,.13);}
+          .sc-col-flt{width:100%;padding:2px 4px;font-size:10px;border:1px solid var(--border2);border-radius:2px;background:var(--input-bg);color:var(--text);margin-top:3px;box-sizing:border-box;}
+          .sc-pill{display:inline-block;padding:1px 7px;border-radius:10px;font-size:10px;font-weight:700;text-transform:uppercase;}
+          .sc-pill-match{background:rgba(0,166,90,.18);color:var(--green);}
+          .sc-pill-diff{background:rgba(221,75,57,.18);color:var(--red);}
+          .sc-pill-miss{background:rgba(243,156,18,.18);color:#c77a00;}
+          .sc-pill-dump{background:rgba(96,92,168,.18);color:var(--purple);}
+          .sc-sum-row{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px;}
+          .sc-sum-card{border:1px solid var(--border);border-radius:var(--rad);padding:8px 16px;text-align:center;min-width:110px;cursor:pointer;transition:var(--tr);}
+          .sc-sum-card:hover{box-shadow:var(--shad2);}
+          .sc-sum-active{border-color:var(--blue);background:rgba(60,141,188,.07);}
+          .sc-sum-val{font-size:22px;font-weight:700;font-family:var(--mono);}
+          .sc-sum-lbl{font-size:10px;font-weight:700;text-transform:uppercase;color:var(--text2);margin-top:2px;}
+          .sc-pager{display:flex;align-items:center;gap:5px;flex-wrap:wrap;padding:8px 0;}
+          .sc-pager button{padding:3px 10px;font-size:12px;border:1px solid var(--border2);border-radius:var(--rad);cursor:pointer;background:var(--input-bg);color:var(--text);font-family:var(--font);}
+          .sc-pager button:hover:not(:disabled){background:var(--body-bg);}
+          .sc-pg-active{background:var(--blue)!important;color:#fff!important;border-color:var(--blue)!important;}
+          .sc-pager button:disabled{opacity:.4;cursor:default;}
+        </style>
+        <div class="box box-success">
+          <div class="box-header">
+            <h3 class="box-title"><i class="bi bi-clipboard-check-fill"></i> Assignment Score Sheet Cross Check</h3>
+            <span style="font-size:11px;font-weight:400;color:var(--text3);margin-left:auto">Cross-check dump scores against a score sheet — flags mismatches per assignment column</span>
+          </div>
+          <div class="box-body">
+            <div class="callout callout-info">
+              <i class="bi bi-info-circle-fill" style="color:var(--teal);margin-right:5px"></i>
+              Load the <strong>Assignment Score Dump</strong> on Dashboard first, then upload a <strong>Score Sheet</strong> here.
+              Checks <code>EmailId</code>, <code>A1–AN</code>, and <code>out_of_25</code> column-by-column. Results show Match / Diff / Missing.
+            </div>
+            <!-- Upload grid -->
+            <div class="tool-upload-grid">
+              <div>
+                <div class="tool-uz-badge badge-score"><i class="bi bi-database-fill"></i> Assignment Dump (from Dashboard)</div>
+                <div class="tool-upload-zone" id="sc-dump-box" style="cursor:default;border-style:solid">
+                  <div class="tool-uz-ico" id="sc-dump-ico" style="color:#ccc"><i class="bi bi-database"></i></div>
+                  <div class="tool-uz-title" id="sc-dump-t">Load assignment dump first</div>
+                  <div class="tool-uz-sub" id="sc-dump-sub">Use the Dashboard upload<br>to load the main score file</div>
+                </div>
+              </div>
+              <div>
+                <div class="tool-uz-badge badge-new"><i class="bi bi-file-earmark-spreadsheet-fill"></i> Score Sheet Upload</div>
+                <div class="tool-upload-zone" id="sc-sheet-uz"
+                  ondragover="toolDov(event,'sc-sheet-uz')" ondragleave="toolDlv('sc-sheet-uz')"
+                  ondrop="scSheetDrop(event)">
+                  <input type="file" id="sc-sheet-inp" accept=".csv,.xlsx,.xls" onchange="scLoadSheet(this.files[0])">
+                  <div class="tool-uz-ico"><i class="bi bi-file-earmark-spreadsheet-fill"></i></div>
+                  <div class="tool-uz-title" id="sc-sheet-t">Drop Score Sheet here</div>
+                  <div class="tool-uz-sub">Needs EmailId + A1–AN columns<br>.xlsx or .csv</div>
+                  <div class="tool-uz-fn" id="sc-sheet-fn"></div>
+                </div>
+              </div>
+            </div>
+            <!-- Course filter panel -->
+            <div id="sc-course-panel" style="display:none;margin-bottom:14px;background:var(--card-head);border:1px solid var(--border);border-radius:var(--rad);padding:12px 14px">
+              <div style="display:flex;align-items:flex-start;gap:10px;flex-wrap:wrap">
+                <label style="font-size:12px;font-weight:700;color:var(--text2);white-space:nowrap;padding-top:6px"><i class="bi bi-funnel-fill" style="color:var(--green);margin-right:4px"></i>Filter by Course ID:</label>
+                <div style="flex:1;min-width:240px">
+                  <div id="sc-course-trigger" onclick="scToggleCourseDropdown()" style="cursor:pointer;padding:5px 10px;border:1px solid var(--border2);border-radius:var(--rad);font-size:13px;background:var(--input-bg);color:var(--text);display:flex;align-items:center;justify-content:space-between;user-select:none">
+                    <span id="sc-course-label" style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">— All Courses —</span>
+                    <i class="bi bi-chevron-down" id="sc-course-chevron" style="margin-left:8px;font-size:11px;color:var(--text3);flex-shrink:0;transition:transform .2s"></i>
+                  </div>
+                  <div id="sc-course-dd" style="display:none;position:relative;z-index:200;background:var(--card-bg);border:1px solid var(--border2);border-radius:var(--rad);margin-top:3px;box-shadow:var(--shad2);max-height:260px;overflow-y:auto">
+                    <div style="padding:7px 8px;border-bottom:1px solid var(--border);position:sticky;top:0;background:var(--card-bg);z-index:1">
+                      <input id="sc-course-search" type="text" placeholder="Search course ID…" oninput="scFilterCourseList()" style="width:100%;padding:4px 8px;border:1px solid var(--border2);border-radius:var(--rad);font-size:12px;background:var(--input-bg);color:var(--text)">
+                      <div style="display:flex;gap:6px;margin-top:5px">
+                        <button onclick="scCourseSelectAll()" class="btn btn-xs btn-default" style="font-size:11px;padding:2px 8px">Select All</button>
+                        <button onclick="scCourseSelectNone()" class="btn btn-xs btn-default" style="font-size:11px;padding:2px 8px">Clear All</button>
+                      </div>
+                    </div>
+                    <div id="sc-course-list" style="padding:4px 0"></div>
+                  </div>
+                </div>
+                <span id="sc-course-count" style="font-size:11px;color:var(--text3);padding-top:6px"></span>
+              </div>
+            </div>
+            <!-- Run -->
+            <div style="display:flex;align-items:center;gap:12px;margin-bottom:15px;flex-wrap:wrap">
+              <button class="btn-run" id="sc-run-btn" onclick="scRunCheck()" disabled style="background:var(--green)"><i class="bi bi-play-circle-fill"></i> Run Cross Check</button>
+              <span style="font-size:12px;color:var(--text3)" id="sc-run-hint">Load both files to enable</span>
+            </div>
+            <!-- Results -->
+            <div id="sc-results" style="display:none">
+              <div class="sc-sum-row" id="sc-sum-row"></div>
+              <div class="tool-action-bar">
+                <div class="tool-result-label" id="sc-result-label"></div>
+                <div class="tool-action-btns">
+                  <input type="text" id="sc-global-search" placeholder="Search all columns…" oninput="scApplyFilters()" style="padding:4px 8px;font-size:12px;border:1px solid var(--border2);border-radius:var(--rad);background:var(--input-bg);color:var(--text);width:200px">
+                  <button class="btn btn-default btn-sm" onclick="scCopy()"><i class="bi bi-clipboard"></i> Copy</button>
+                  <button class="btn btn-info btn-sm" onclick="scExport('csv')"><i class="bi bi-download"></i> CSV</button>
+                  <button class="btn btn-success btn-sm" onclick="scExport('xlsx')"><i class="bi bi-file-earmark-excel-fill"></i> XLSX</button>
+                </div>
+              </div>
+              <div id="sc-tbl-wrap">
+                <table id="sc-tbl">
+                  <thead id="sc-thead"></thead>
+                  <tbody id="sc-tbody"></tbody>
+                </table>
+              </div>
+              <div class="sc-pager" id="sc-pager"></div>
+            </div>
+          </div>
+        </div>
+      </div><!-- /page-sc -->
+
       <!-- ════ PAGE: DATA FILTER ════ -->
       <div id="page-df" class="page-sec">
         <style>
@@ -4572,7 +4691,8 @@
         att: { el: 'page-att', title: 'Attendance Dashboard', bc: 'Attendance', nb: 2 },
         reg: { el: 'page-reg', title: 'Registration Checker', bc: 'Reg Checker', nb: 3 },
         diff: { el: 'page-diff', title: 'Score Diff', bc: 'Score Diff', nb: 4 },
-        df:   { el: 'page-df',   title: 'Data Filter', bc: 'Data Filter', nb: 6 },
+        sc:   { el: 'page-sc',   title: 'Score Cross Check', bc: 'Score Cross Check', nb: 5 },
+        df:   { el: 'page-df',   title: 'Data Filter', bc: 'Data Filter', nb: 7 },
       };
       const PAGES_EXTRA = {
       };
@@ -4595,6 +4715,7 @@
         document.querySelectorAll('.nb').forEach((nb, i) => nb.classList.toggle('active', i === p.nb));
         currentPage = name;
         window.scrollTo(0, 0);
+        if (name === 'sc') setTimeout(scOnShow, 0);
       }
 
       // ════════════════════════════════════════════════════════
@@ -4621,7 +4742,7 @@
         document.getElementById('page-title').textContent = 'Manual/Programming Dashboard';
         document.getElementById('bc-active').textContent = 'Manual/Programming';
         // Highlight nav button
-        document.querySelectorAll('.nb').forEach((nb, i) => nb.classList.toggle('active', i === 9));
+        document.querySelectorAll('.nb').forEach((nb, i) => nb.classList.toggle('active', i === 6));
         currentPage = 'prescoring';
         // Show PSO section, scroll to it
         const sec = document.getElementById('pso-section');
@@ -6560,6 +6681,8 @@ self.onmessage = function(e) {
           $('score-ref-t').textContent = '✓ Assignment dump loaded';
           $('score-ref-sub').textContent = `${store.rowCount.toLocaleString()} rows · ${origCols.length} cols`;
           if (toolData.reg) { $('reg-run-btn').disabled = false; buildRegCourseDropdown(); }
+          scUpdateDumpBox();
+          scBuildCourses();
         }
       }
 
@@ -6807,8 +6930,10 @@ self.onmessage = function(e) {
                 const ov = oRow[cc.old]; const nv = nRow[cc.new];
                 let isDiff = false;
                 if (cc.isNum) {
-                  const ovn = parseFloat(ov) || 0; const nvn = parseFloat(nv) || 0;
-                  isDiff = Math.abs(ovn - nvn) > 0.001;
+                  const ovn = parseFloat(ov); const nvn = parseFloat(nv);
+                  const ovVal = isNaN(ovn) ? 0 : ovn;
+                  const nvVal = isNaN(nvn) ? 0 : nvn;
+                  isDiff = Math.abs(ovVal - nvVal) > 0.001;
                 } else {
                   isDiff = String(ov || '').trim() !== String(nv || '').trim();
                 }
@@ -7196,8 +7321,8 @@ self.onmessage = function(e) {
         if (!r1 && !r2) { toast('Configure at least one course', 'w'); return; }
         showOv('Running Analysis', 'Starting...', 5); await delay(30);
         let tM = 0, tW = 0, bR = false;
-        if (r1) { pOv(20, 'Processing Course #1...'); await delay(20); PSO.results[0] = psoProcess(1); tM += Object.keys(PSO.results[0].renamedMap).length; tW += PSO.results[0].weeksCreated.length; if (PSO.results[0].bestScoreCol) bR = true; psoSdot(1, 'r', 'done'); }
-        if (r2) { pOv(60, 'Processing Course #2...'); await delay(20); PSO.results[1] = psoProcess(2); tM += Object.keys(PSO.results[1].renamedMap).length; tW += PSO.results[1].weeksCreated.length; if (PSO.results[1].bestScoreCol) bR = true; psoSdot(2, 'r', 'done'); }
+        if (r1) { pOv(20, 'Processing Course #1...'); await delay(20); PSO.results[0] = psoProcess(1); tM += Object.keys(PSO.results[0].renamedMap).length; tW += PSO.results[0].weeksCreated.length; if (PSO.results[0].bestScoreCol) bR = true; psoSdot(1, 'r', PSO.results[0].diag.notFound ? 'err' : 'done'); }
+        if (r2) { pOv(60, 'Processing Course #2...'); await delay(20); PSO.results[1] = psoProcess(2); tM += Object.keys(PSO.results[1].renamedMap).length; tW += PSO.results[1].weeksCreated.length; if (PSO.results[1].bestScoreCol) bR = true; psoSdot(2, 'r', PSO.results[1].diag.notFound ? 'err' : 'done'); }
         pOv(90, 'Rendering...'); await delay(20);
         document.getElementById('pso-k-courses').textContent = (r1 ? 1 : 0) + (r2 ? 1 : 0);
         document.getElementById('pso-k-mapped').textContent = tM;
@@ -7224,11 +7349,16 @@ self.onmessage = function(e) {
       function psoProcess(n) {
         const mapData=PSO.mapData[n-1], stuData=PSO.stuData[n-1], courseId=PSO.courseId[n-1], scoreChoice=PSO.scoreChoice;
         const cc = mapData.columns.find(c=>/course.?id/i.test(c)) || mapData.columns[0];
-        const mapRow = mapData.rows.find(r=>String(r[cc]||'').trim().toLowerCase()===courseId.trim().toLowerCase());
-        if (!mapRow) return {columns:stuData.columns,rows:stuData.rows.map(r=>Object.assign({},r)),renamedMap:{},renamedList:[],weeksCreated:[],bestScoreCol:null,mappingIdCount:0,formulaDesc:{},diag:{matchCount:0}};
+        // Normalize: trim all whitespace including non-breaking spaces (U+00A0)
+        const normStr = s => String(s||'').replace(/[\s\u00A0]+/g,' ').trim().toLowerCase();
+        const mapRow = mapData.rows.find(r=>normStr(r[cc])===normStr(courseId));
+        if (!mapRow){
+          toast('Course ID "'+courseId+'" not found in mapping sheet. Check mapping file has matching Course ID column.','e');
+          return {columns:stuData.columns,rows:stuData.rows.map(r=>Object.assign({},r)),renamedMap:{},renamedList:[],weeksCreated:[],bestScoreCol:null,mappingIdCount:0,formulaDesc:{},diag:{matchCount:0,notFound:true}};
+        }
 
         // ── 1. Build id→label from mapping sheet ──
-        const weekCols  = mapData.columns.filter(c=>/^week\s*\d+$/i.test(c));
+        const weekCols  = mapData.columns.filter(c=>/^week[\s_\-]*\d+$/i.test(c));
         const assignCols= mapData.columns.filter(c=>/assign/i.test(c)&&!/score|avg|total/i.test(c));
         const idToLabel={}, weekToLabels={};
         weekCols.forEach(wc=>{
@@ -7246,11 +7376,24 @@ self.onmessage = function(e) {
 
         // ── 2. Rename score-dump columns ──
         const newCols=[], renamedMap={}, renamedList=[], seen={};
+        // Build a Set of all known assignment IDs from the mapping (for safe matching)
+        const knownIds = new Set(Object.keys(idToLabel));
         stuData.columns.forEach(col=>{
           const raw=String(col);
-          // match trailing numeric ID in various formats: (123), #123, _123, space+123
-          const m=raw.match(/\((\d+)\)\s*$|#(\d+)\s*$|_(\d+)\s*$|\s(\d+)\s*$/);
-          const nid=m?(m[1]||m[2]||m[3]||m[4]):null;
+          // Match trailing numeric ID in explicit formats: (123), #123
+          // For _123 suffix: only match if the extracted number is actually a known assignment ID
+          // This prevents false matches on columns like "User_Name_1", "Score_2", "Week_1" etc.
+          const mParen = raw.match(/\((\d+)\)\s*$/);
+          const mHash  = raw.match(/#(\d+)\s*$/);
+          const mUnder = raw.match(/_(\d+)\s*$/);
+          let nid = null;
+          if      (mParen && knownIds.has(mParen[1])) nid = mParen[1];
+          else if (mHash  && knownIds.has(mHash[1]))  nid = mHash[1];
+          else if (mUnder && knownIds.has(mUnder[1])
+                   // Extra guard: reject short ambiguous numbers (1-3 digits) for _N suffix
+                   // unless the full column name is ONLY a prefix+number pattern (no other words)
+                   && (mUnder[1].length >= 4 || /^[a-z0-9_\-]+$/i.test(raw.replace(/_\d+\s*$/,'')))
+                  ) nid = mUnder[1];
           if(nid && idToLabel[nid]){
             const tgt=idToLabel[nid];
             seen[tgt]=(seen[tgt]||0)+1;
@@ -7308,7 +7451,9 @@ self.onmessage = function(e) {
               else                   s=vals.reduce((a,b)=>a+b,0)/vals.length; // avg default
               r[wName]=+s.toFixed(_rnd);
             });
-            resultCols.push(wName); weeksCreated.push(wName);
+            // Only add Week column to resultCols if not already present (prevents duplicate columns)
+            if(!resultCols.includes(wName)) resultCols.push(wName);
+            weeksCreated.push(wName);
             // Build formula description matching the chosen aggregation
             const inner = _aggr==='avg'  ? 'SUM('+avail.join(',')+')/'+avail.length
                         : _aggr==='sum'  ? 'SUM('+avail.join(',')+')'
@@ -7372,6 +7517,12 @@ self.onmessage = function(e) {
           html+='</tbody></table></div></div>';
         }
 
+        if(res.diag && res.diag.notFound){
+          html='<div style="padding:12px 14px;background:#fff3cd;border:1px solid #ffc107;border-radius:4px;color:#856404;font-size:12px">'
+            +'<b><i class="bi bi-exclamation-triangle-fill"></i> Course ID not found in mapping sheet</b><br>'
+            +'No column renaming or week calculation was performed. Please verify the Course ID selected matches a row in your mapping file.</div>'
+            + html;
+        }
         body.innerHTML=html;
         if(!window._psoPreviewPending) window._psoPreviewPending=[];
         window._psoPreviewPending.push({n,res});
@@ -7421,7 +7572,7 @@ self.onmessage = function(e) {
           tblWrap.style.cssText = 'overflow:auto;max-height:340px;width:100%';
           div.appendChild(tblWrap);
 
-          psoRenderPreviewTable(n, res.rows, exportCols, tblWrap, 25);
+          psoRenderPreviewTable(n, res.rows, exportCols, tblWrap, 100);
           wrap.appendChild(div);
         });
 
@@ -7446,8 +7597,10 @@ self.onmessage = function(e) {
         if (!q) {
           filtered = res.rows;
         } else {
-          const sCols = exportCols.slice(0, Math.min(5, exportCols.length));
-          filtered = res.rows.filter(row => sCols.some(col => String(row[col.dataKey] || '').toLowerCase().includes(q)));
+          // Search across text-type columns (user id, email, name) + all columns for numbers
+          const textCols = exportCols.filter(col => PSO_TEXT_COLS.test(col.header));
+          const searchCols = textCols.length > 0 ? textCols : exportCols.slice(0, Math.min(8, exportCols.length));
+          filtered = res.rows.filter(row => searchCols.some(col => String(row[col.dataKey] || '').toLowerCase().includes(q)));
         }
         const countEl = document.getElementById('pso-search-count-' + n);
         if (countEl) {
@@ -7467,7 +7620,7 @@ self.onmessage = function(e) {
         tbl += exportCols.map(col => {
           const isOrig = col.dataKey.startsWith('__orig__');
           const bg = isOrig ? 'background:#fffbe6;' : '';
-          return '<th style="position:sticky;top:0;z-index:2;padding:5px 10px;border:1px solid var(--border);font-weight:700;min-width:80px;' + bg + '" title="' + escHtml(col.header) + '">' + escHtml(col.header) + '</th>';
+          return '<th style="position:sticky;top:0;z-index:2;padding:5px 10px;border:1px solid var(--border);font-weight:700;min-width:80px;max-width:160px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;' + bg + '" title="' + escHtml(col.header) + '">' + escHtml(col.header) + '</th>';
         }).join('');
         tbl += '</tr></thead><tbody>';
         if (showRows.length === 0) {
@@ -7480,7 +7633,7 @@ self.onmessage = function(e) {
               const v = String(row[col.dataKey] !== undefined ? row[col.dataKey] : '');
               const isNum = v !== '' && !isNaN(parseFloat(v)) && isFinite(v);
               const cellBg = isOrig ? (i % 2 === 0 ? '#fffdf0' : '#fffbe6') : '';
-              return '<td style="padding:3px 10px;border:1px solid #eee;text-align:' + (isNum ? 'right' : 'left') + ';background:' + cellBg + '">' + (v === '' || v === '--' ? '<span style="color:#ccc">&#8212;</span>' : escHtml(v)) + '</td>';
+              return '<td style="padding:3px 10px;border:1px solid #eee;text-align:' + (isNum ? 'right' : 'left') + ';background:' + cellBg + ';max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="' + escHtml(v) + '">' + (v === '' || v === '--' ? '<span style="color:#ccc">&#8212;</span>' : escHtml(v)) + '</td>';
             }).join('') + '</tr>';
           }).join('');
         }
@@ -7488,9 +7641,9 @@ self.onmessage = function(e) {
         tblWrap.innerHTML = tbl;
         if (rows.length > limit) {
           const foot = document.createElement('div');
-          foot.style.cssText = 'padding:5px 12px;font-size:11px;color:var(--text3);background:#f9f9f9;border-top:1px solid var(--border);display:flex;justify-content:space-between';
-          foot.innerHTML = '<span>Showing <b>' + Math.min(showRows.length, limit).toLocaleString() + '</b> of <b>' + rows.length.toLocaleString() + '</b> rows</span>'
-            + (rows.length > limit ? '<span style="color:var(--blue)">Use search to filter rows</span>' : '');
+          foot.style.cssText = 'padding:5px 12px;font-size:11px;color:var(--text3);background:#f9f9f9;border-top:1px solid var(--border);display:flex;justify-content:space-between;align-items:center';
+          foot.innerHTML = '<span>Showing <b>' + Math.min(showRows.length, limit).toLocaleString() + '</b> of <b>' + rows.length.toLocaleString() + '</b> rows — all rows included in export</span>'
+            + '<button onclick="psoRenderPreviewTable(' + n + ',window._psoPreviewDataMap[' + n + '].res.rows,window._psoPreviewDataMap[' + n + '].exportCols,document.getElementById(\'pso-tbl-wrap-' + n + '\'),' + rows.length + ')" style="font-size:11px;padding:2px 8px;border:1px solid var(--blue);border-radius:3px;background:#fff;color:var(--blue);cursor:pointer">Show all ' + rows.length.toLocaleString() + ' rows</button>';
           tblWrap.appendChild(foot);
         }
       }
@@ -7548,20 +7701,22 @@ self.onmessage = function(e) {
         const totalRows = (r1 ? r1.rows.length : 0) + (r2 ? r2.rows.length : 0);
         if (totalRows > 1048576) { toast('Dataset exceeds Excel row limit (1M). Use CSV ZIP for full data.', 'w'); return; }
         showOv('Building Excel', 'Preparing\u2026', 3); await delay(20);
+        // Sanitize Excel sheet names: strip illegal chars [ ] : * ? / \, max 31 chars
+        const psoSanitizeSheet = (s, fb) => String(s||fb||'Sheet').replace(/[\[\]:*?\/\\]/g,'_').replace(/\s+/g,' ').trim().slice(0,31) || String(fb||'Sheet').slice(0,31);
         try {
           const wb = XLSX.utils.book_new();
           if (r1) {
             pOv(5, 'Building Course #1 (' + r1.rows.length.toLocaleString() + ' rows)\u2026'); await delay(0);
             const ws1 = await psoBuildDataSheetAsync(r1, p => pOv(Math.round(5 + p * 40), 'Course #1: ' + Math.round(p * 100) + '%\u2026'));
-            XLSX.utils.book_append_sheet(wb, ws1, (PSO.courseId[0] || 'Course1').slice(0, 31));
+            XLSX.utils.book_append_sheet(wb, ws1, psoSanitizeSheet(PSO.courseId[0], 'Course1'));
           }
           if (r2) {
             pOv(50, 'Building Course #2 (' + r2.rows.length.toLocaleString() + ' rows)\u2026'); await delay(0);
             const ws2 = await psoBuildDataSheetAsync(r2, p => pOv(Math.round(50 + p * 40), 'Course #2: ' + Math.round(p * 100) + '%\u2026'));
-            XLSX.utils.book_append_sheet(wb, ws2, (PSO.courseId[1] || 'Course2').slice(0, 31));
+            XLSX.utils.book_append_sheet(wb, ws2, psoSanitizeSheet(PSO.courseId[1], 'Course2'));
           }
           pOv(93, 'Writing file\u2026'); await delay(0);
-          const fname = (r1 && r2) ? 'NPTEL_PreScoring_Combined.xlsx' : 'NPTEL_PreScoring_' + (PSO.courseId[r1 ? 0 : 1] || 'Course') + '.xlsx';
+          const fname = (r1 && r2) ? 'NPTEL_PreScoring_Combined.xlsx' : 'NPTEL_PreScoring_' + (PSO.courseId[r1 ? 0 : 1] || 'Course').replace(/[^\w\-. ]/g,'_') + '.xlsx';
           XLSX.writeFile(wb, fname);
           hideOv(); toast('Excel downloaded: ' + fname, 's');
         } catch (e) { hideOv(); toast('Export failed: ' + e.message, 'e'); }
@@ -8363,6 +8518,456 @@ function doFilter({colFilters,textFilters,gs,sortColName,sortDir}){
 
         return { handleFile, reset, clear, sort, exportCSV, copyTable, changePS, removeTag };
       })();
+
+      // ═══════════════════════════════════════════════════════════════
+      // SCORE CROSS CHECK
+      // ═══════════════════════════════════════════════════════════════
+      let _scSheetData = null;
+      let _scAllResults = [];
+      let _scFiltered = [];
+      let _scColFilters = {};
+      let _scStatusFilter = 'all';
+      let _scGlobalSearch = '';
+      let _scCommonACols = [];
+      let _scHasOut25 = false;
+      let _scCourseAll = [];
+      let _scCourseSelected = new Set();
+      const SC_PAGE = 100;
+      let _scPage = 1;
+
+      function scOnShow() {
+        scUpdateDumpBox();
+        if (store) scBuildCourses();
+        scCheckRunReady();
+      }
+
+      function scUpdateDumpBox() {
+        const box = $('sc-dump-box');
+        if (!box) return;
+        if (store) {
+          box.classList.add('loaded');
+          $('sc-dump-ico').innerHTML = '<i class="bi bi-database-fill"></i>';
+          $('sc-dump-ico').style.color = 'var(--green)';
+          $('sc-dump-t').textContent = '✓ Assignment dump loaded';
+          $('sc-dump-sub').textContent = `${store.rowCount.toLocaleString()} rows · ${origCols.length} cols`;
+        } else {
+          box.classList.remove('loaded');
+          $('sc-dump-ico').innerHTML = '<i class="bi bi-database"></i>';
+          $('sc-dump-ico').style.color = '#ccc';
+          $('sc-dump-t').textContent = 'Load assignment dump first';
+          $('sc-dump-sub').textContent = 'Use the Dashboard upload to load the score file';
+        }
+      }
+
+      function scBuildCourses() {
+        if (!store) return;
+        const courseCol = findCourseCol(origCols) || 'new_courseid';
+        const seen = new Set();
+        for (let i = 0; i < store.rowCount; i++) {
+          const c = getStr(courseCol, i);
+          if (c) seen.add(c);
+        }
+        _scCourseAll = [...seen].sort();
+        _scCourseSelected = new Set(_scCourseAll);
+        scRenderCourseList();
+        $('sc-course-panel').style.display = 'block';
+        scUpdateCourseLabel();
+      }
+
+      function scRenderCourseList(filter) {
+        const list = $('sc-course-list');
+        if (!list) return;
+        const fl = (filter || '').toLowerCase();
+        const items = _scCourseAll.map((c, i) => ({ c, i })).filter(({ c }) => !fl || c.toLowerCase().includes(fl));
+        list.innerHTML = items.map(({ c, i }) => `
+          <label style="display:flex;align-items:center;gap:8px;padding:5px 10px;cursor:pointer;font-size:12px">
+            <input type="checkbox" style="cursor:pointer" ${_scCourseSelected.has(c) ? 'checked' : ''}
+              onchange="scToggleCourse(${i})">
+            <span style="font-family:var(--mono);font-size:11px">${escHtml2(c)}</span>
+          </label>`).join('');
+        if ($('sc-course-count')) $('sc-course-count').textContent = `${_scCourseSelected.size} / ${_scCourseAll.length} selected`;
+      }
+
+      function scToggleCourse(idx) {
+        const c = _scCourseAll[idx];
+        if (!c) return;
+        if (_scCourseSelected.has(c)) _scCourseSelected.delete(c);
+        else _scCourseSelected.add(c);
+        scUpdateCourseLabel();
+        if ($('sc-course-count')) $('sc-course-count').textContent = `${_scCourseSelected.size} / ${_scCourseAll.length} selected`;
+      }
+
+      function scFilterCourseList() { scRenderCourseList(($('sc-course-search') || {}).value); }
+
+      function scCourseSelectAll() {
+        _scCourseSelected = new Set(_scCourseAll);
+        scRenderCourseList(($('sc-course-search') || {}).value);
+        scUpdateCourseLabel();
+        if ($('sc-course-count')) $('sc-course-count').textContent = `${_scCourseSelected.size} / ${_scCourseAll.length} selected`;
+      }
+
+      function scCourseSelectNone() {
+        _scCourseSelected.clear();
+        scRenderCourseList(($('sc-course-search') || {}).value);
+        scUpdateCourseLabel();
+        if ($('sc-course-count')) $('sc-course-count').textContent = `0 / ${_scCourseAll.length} selected`;
+      }
+
+      function scUpdateCourseLabel() {
+        const lbl = $('sc-course-label');
+        if (!lbl) return;
+        if (_scCourseSelected.size === 0) lbl.textContent = '— No courses selected —';
+        else if (_scCourseSelected.size === _scCourseAll.length) lbl.textContent = '— All Courses —';
+        else lbl.textContent = `${_scCourseSelected.size} course(s) selected`;
+      }
+
+      function scToggleCourseDropdown() {
+        const dd = $('sc-course-dd'), ch = $('sc-course-chevron');
+        if (!dd) return;
+        const open = dd.style.display !== 'none';
+        dd.style.display = open ? 'none' : 'block';
+        if (ch) ch.style.transform = open ? '' : 'rotate(180deg)';
+      }
+
+      function scSheetDrop(ev) {
+        ev.preventDefault();
+        $('sc-sheet-uz').classList.remove('drag');
+        const f = ev.dataTransfer.files[0];
+        if (f) scLoadSheet(f);
+      }
+
+      async function scLoadSheet(file) {
+        if (!file) return;
+        try {
+          showOv('Parsing score sheet…');
+          await delay(10);
+          _scSheetData = await parseFile(file);
+          $('sc-sheet-uz').classList.add('loaded');
+          $('sc-sheet-t').textContent = `✓ ${file.name}`;
+          $('sc-sheet-fn').textContent = `${_scSheetData.rows.length.toLocaleString()} rows · ${_scSheetData.cols.length} cols`;
+          hideOv();
+          toast(`Score sheet loaded: ${_scSheetData.rows.length.toLocaleString()} rows`, 's');
+          scCheckRunReady();
+        } catch (e) { hideOv(); toast('Error loading sheet: ' + e.message, 'e'); }
+      }
+
+      function scCheckRunReady() {
+        const btn = $('sc-run-btn'), hint = $('sc-run-hint');
+        if (!btn) return;
+        if (store && _scSheetData) {
+          btn.disabled = false;
+          hint.textContent = 'Both files ready — click Run Cross Check';
+        } else {
+          btn.disabled = true;
+          hint.textContent = !store ? 'Load assignment dump on Dashboard first' : 'Upload a score sheet to enable';
+        }
+      }
+
+      async function scRunCheck() {
+        if (!store || !_scSheetData) { toast('Load both files first', 'w'); return; }
+        if (_scCourseSelected.size === 0) { toast('Select at least one course', 'w'); return; }
+        const btn = $('sc-run-btn');
+        btn.disabled = true;
+        btn.innerHTML = '<i class="bi bi-hourglass-split"></i> Checking…';
+        try {
+          showOv('Running cross-check…');
+          await delay(20);
+
+          const dEmailCol = findEmailCol(origCols) || 'EmailId';
+          const dCourseCol = findCourseCol(origCols) || 'new_courseid';
+          const dAsnCols  = getAsnCols(origCols);
+          const dOut25Col = origCols.find(c => /out_of_25/i.test(c));
+
+          const sCols     = _scSheetData.cols;
+          const sEmailCol = findEmailCol(sCols) || sCols[0];
+          const sCourseCol= findCourseCol(sCols);
+          const sAsnCols  = getAsnCols(sCols);
+          const sOut25Col = sCols.find(c => /out_of_25|out25/i.test(c));
+
+          _scHasOut25     = !!sOut25Col;
+          _scCommonACols  = dAsnCols.filter(c => sAsnCols.includes(c));
+          const useSheetCourse = !!sCourseCol;
+
+          pOv(10, 'Building sheet index…');
+          await delay(10);
+
+          const sheetMap = new Map();
+          for (let i = 0; i < _scSheetData.rows.length; i++) {
+            const row    = _scSheetData.rows[i];
+            const email  = String(row[sEmailCol] || '').trim().toLowerCase();
+            const course = useSheetCourse ? String(row[sCourseCol] || '').trim().toLowerCase() : '';
+            const key    = useSheetCourse ? `${email}||${course}` : email;
+            if (email) sheetMap.set(key, row);
+          }
+
+          pOv(20, 'Scanning dump rows…');
+          await delay(10);
+
+          const results  = [];
+          const CHUNK    = 20000;
+          const seenKeys = new Set();
+
+          for (let i = 0; i < store.rowCount; i++) {
+            if (i > 0 && i % CHUNK === 0) {
+              pOv(20 + Math.round(60 * i / store.rowCount), `Row ${i.toLocaleString()} / ${store.rowCount.toLocaleString()}…`);
+              await delay(0);
+            }
+            const course = getStr(dCourseCol, i);
+            if (!_scCourseSelected.has(course)) continue;
+            const email  = getStr(dEmailCol, i);
+            const emailL = email.toLowerCase();
+            const key    = useSheetCourse ? `${emailL}||${course.toLowerCase()}` : emailL;
+            const sRow   = sheetMap.get(key);
+            if (!sRow) {
+              results.push({ _status: 'miss_sheet', _email: email, _course: course, _dVals: {}, _sVals: {} });
+              continue;
+            }
+            seenKeys.add(key);
+            const dVals = {}, sVals = {};
+            let allMatch = true;
+            for (const ac of _scCommonACols) {
+              const dv   = getNum(ac, i);
+              const svRaw= sRow[ac];
+              const sv   = (svRaw === '' || svRaw == null) ? NaN : parseFloat(svRaw);
+              dVals[ac]  = isNaN(dv)  ? '' : dv;
+              sVals[ac]  = isNaN(sv)  ? '' : sv;
+              // blank and 0 are treated as equal — only flag diff on actual numeric mismatch
+              const dvN  = isNaN(dv)  ? 0 : dv;
+              const svN  = isNaN(sv)  ? 0 : sv;
+              if (Math.abs(dvN - svN) > 0.011) allMatch = false;
+            }
+            if (_scHasOut25) {
+              const dv   = dOut25Col ? getNum(dOut25Col, i) : NaN;
+              const svRaw= sRow[sOut25Col];
+              const sv   = (svRaw === '' || svRaw == null) ? NaN : parseFloat(svRaw);
+              dVals['_out25'] = isNaN(dv) ? '' : dv;
+              sVals['_out25'] = isNaN(sv) ? '' : sv;
+              const dvN  = isNaN(dv)  ? 0 : dv;
+              const svN  = isNaN(sv)  ? 0 : sv;
+              if (Math.abs(dvN - svN) > 0.011) allMatch = false;
+            }
+            results.push({ _status: allMatch ? 'match' : 'diff', _email: email, _course: course, _dVals: dVals, _sVals: sVals });
+          }
+
+          pOv(83, 'Collecting sheet-only rows…');
+          await delay(0);
+
+          for (let i = 0; i < _scSheetData.rows.length; i++) {
+            const row    = _scSheetData.rows[i];
+            const email  = String(row[sEmailCol] || '').trim();
+            if (!email) continue;
+            const course = useSheetCourse ? String(row[sCourseCol] || '').trim() : '';
+            const key    = useSheetCourse ? `${email.toLowerCase()}||${course.toLowerCase()}` : email.toLowerCase();
+            if (seenKeys.has(key)) continue;
+            if (useSheetCourse && !_scCourseSelected.has(course)) continue;
+            const sVals  = {};
+            for (const ac of _scCommonACols) {
+              const sv2 = (row[ac] === '' || row[ac] == null) ? NaN : parseFloat(row[ac]);
+              sVals[ac] = isNaN(sv2) ? '' : sv2;
+            }
+            if (_scHasOut25) {
+              const sv2 = (row[sOut25Col] === '' || row[sOut25Col] == null) ? NaN : parseFloat(row[sOut25Col]);
+              sVals['_out25'] = isNaN(sv2) ? '' : sv2;
+            }
+            results.push({ _status: 'miss_dump', _email: email, _course: course, _dVals: {}, _sVals: sVals });
+          }
+
+          pOv(93, 'Rendering results…');
+          await delay(10);
+
+          _scAllResults = results;
+          _scFiltered   = results;
+          _scStatusFilter = 'all';
+          _scGlobalSearch = '';
+          _scColFilters   = {};
+          _scPage = 1;
+          if ($('sc-global-search')) $('sc-global-search').value = '';
+
+          scRenderSummary();
+          scRenderTable();
+          $('sc-results').style.display = 'block';
+
+          pOv(100, 'Done!');
+          await delay(250); hideOv();
+          const cnt = results.reduce((a, r) => { a[r._status] = (a[r._status] || 0) + 1; return a; }, {});
+          toast(`Done: ${cnt.match||0} match · ${cnt.diff||0} diff · ${cnt.miss_sheet||0} miss-sheet · ${cnt.miss_dump||0} miss-dump`, 's', 6000);
+        } catch (e) {
+          hideOv(); toast('Error: ' + e.message, 'e', 8000); console.error(e);
+        } finally {
+          btn.disabled = false;
+          btn.innerHTML = '<i class="bi bi-play-circle-fill"></i> Run Cross Check';
+        }
+      }
+
+      function scRenderSummary() {
+        const cnt   = _scAllResults.reduce((a, r) => { a[r._status] = (a[r._status] || 0) + 1; return a; }, {});
+        const total = _scAllResults.length;
+        const defs  = [
+          { k: 'all',        label: 'Total',           val: total,               color: 'var(--blue)' },
+          { k: 'match',      label: 'Match',            val: cnt.match      || 0, color: 'var(--green)' },
+          { k: 'diff',       label: 'Diff',             val: cnt.diff       || 0, color: 'var(--red)' },
+          { k: 'miss_sheet', label: 'Missing in Sheet', val: cnt.miss_sheet || 0, color: '#c77a00' },
+          { k: 'miss_dump',  label: 'Missing in Dump',  val: cnt.miss_dump  || 0, color: 'var(--purple)' },
+        ];
+        $('sc-sum-row').innerHTML = defs.map(d => `
+          <div class="sc-sum-card${_scStatusFilter === d.k ? ' sc-sum-active' : ''}" onclick="scSetStatus('${d.k}')" title="Click to filter by ${d.label}">
+            <div class="sc-sum-val" style="color:${d.color}">${d.val.toLocaleString()}</div>
+            <div class="sc-sum-lbl">${d.label}</div>
+          </div>`).join('');
+      }
+
+      function scSetStatus(k) { _scStatusFilter = k; _scPage = 1; scApplyFilters(); }
+
+      function scApplyFilters() {
+        const gs = ($('sc-global-search') ? $('sc-global-search').value : '').toLowerCase();
+        _scGlobalSearch = gs;
+        let rows = _scAllResults;
+        if (_scStatusFilter !== 'all') rows = rows.filter(r => r._status === _scStatusFilter);
+        if (gs) rows = rows.filter(r => {
+          if (r._email.toLowerCase().includes(gs) || r._course.toLowerCase().includes(gs) || r._status.includes(gs)) return true;
+          for (const ac of _scCommonACols) {
+            if (String(r._dVals[ac] ?? '').includes(gs) || String(r._sVals[ac] ?? '').includes(gs)) return true;
+          }
+          return false;
+        });
+        for (const [col, fv] of Object.entries(_scColFilters)) {
+          if (!fv) continue;
+          const fl = fv.toLowerCase();
+          if (col === '_status')  rows = rows.filter(r => r._status.includes(fl));
+          else if (col === '_email')  rows = rows.filter(r => r._email.toLowerCase().includes(fl));
+          else if (col === '_course') rows = rows.filter(r => r._course.toLowerCase().includes(fl));
+          else if (col.endsWith('_D')) { const ac = col.slice(0,-2); rows = rows.filter(r => String(r._dVals[ac] ?? '').includes(fl)); }
+          else if (col.endsWith('_S')) { const ac = col.slice(0,-2); rows = rows.filter(r => String(r._sVals[ac] ?? '').includes(fl)); }
+        }
+        _scFiltered = rows;
+        const mp = Math.max(1, Math.ceil(_scFiltered.length / SC_PAGE));
+        if (_scPage > mp) _scPage = mp;
+        scRenderSummary();
+        scRenderTable();
+      }
+
+      function scBuildCols() {
+        const cols = ['_status', '_email', '_course'];
+        const labels = { _status: 'Status', _email: 'EmailId', _course: 'CourseId' };
+        for (const ac of _scCommonACols) {
+          cols.push(`${ac}_D`, `${ac}_S`);
+          labels[`${ac}_D`] = `${ac} Dump`;
+          labels[`${ac}_S`] = `${ac} Sheet`;
+        }
+        if (_scHasOut25) {
+          cols.push('_out25_D', '_out25_S');
+          labels['_out25_D'] = 'Out25 Dump';
+          labels['_out25_S'] = 'Out25 Sheet';
+        }
+        return { cols, labels };
+      }
+
+      function scFmtNum(v) {
+        if (v === '' || v == null) return '';
+        const n = parseFloat(v);
+        return isNaN(n) ? String(v) : n.toFixed(2);
+      }
+
+      function scCellCls(r, col) {
+        if (r._status === 'miss_sheet' || r._status === 'miss_dump') return '';
+        const ac  = col.slice(0, -2);
+        const dv  = parseFloat(r._dVals[ac]);
+        const sv  = parseFloat(r._sVals[ac]);
+        const dvB = isNaN(dv), svB = isNaN(sv);
+        if (dvB && svB) return 'sc-match';
+        if (dvB !== svB) return 'sc-diff';
+        return Math.abs(dv - sv) <= 0.011 ? 'sc-match' : 'sc-diff';
+      }
+
+      const SC_STATUS_HTML = {
+        match:      '<span class="sc-pill sc-pill-match">Match</span>',
+        diff:       '<span class="sc-pill sc-pill-diff">Diff</span>',
+        miss_sheet: '<span class="sc-pill sc-pill-miss">Miss Sheet</span>',
+        miss_dump:  '<span class="sc-pill sc-pill-dump">Miss Dump</span>',
+      };
+
+      function scRenderTable() {
+        const { cols, labels } = scBuildCols();
+        const thead = $('sc-thead'), tbody = $('sc-tbody'), pager = $('sc-pager'), lbl = $('sc-result-label');
+        if (!thead) return;
+        thead.innerHTML = '<tr>' + cols.map(c => `<th>
+          <div style="font-weight:700;margin-bottom:3px;font-size:11px">${escHtml2(labels[c])}</div>
+          <input class="sc-col-flt" placeholder="Filter…" value="${escHtml2(_scColFilters[c] || '')}"
+            oninput="scColFilter('${c}',this.value)" onclick="event.stopPropagation()">
+          </th>`).join('') + '</tr>';
+        const start    = (_scPage - 1) * SC_PAGE;
+        const pageRows = _scFiltered.slice(start, start + SC_PAGE);
+        tbody.innerHTML = pageRows.map(r => '<tr>' + cols.map(c => {
+          if (c === '_status')  return `<td style="text-align:center;white-space:nowrap">${SC_STATUS_HTML[r._status] || r._status}</td>`;
+          if (c === '_email')   return `<td style="font-size:11px">${escHtml2(r._email)}</td>`;
+          if (c === '_course')  return `<td style="font-family:var(--mono);font-size:11px">${escHtml2(r._course)}</td>`;
+          if (c.endsWith('_D') || c.endsWith('_S')) {
+            const cls = scCellCls(r, c);
+            const map = c.endsWith('_D') ? r._dVals : r._sVals;
+            return `<td class="${cls}" style="font-family:var(--mono);text-align:right;font-size:11px">${escHtml2(scFmtNum(map[c.slice(0,-2)]))}</td>`;
+          }
+          return '<td></td>';
+        }).join('') + '</tr>').join('');
+        const total   = _scFiltered.length;
+        const maxPage = Math.max(1, Math.ceil(total / SC_PAGE));
+        if (lbl) lbl.textContent = `Showing ${total === 0 ? 0 : start+1}–${Math.min(start+SC_PAGE,total)} of ${total.toLocaleString()} rows`;
+        const btns = [];
+        btns.push(`<button ${_scPage<=1?'disabled':''} onclick="scGoPage(${_scPage-1})">‹ Prev</button>`);
+        scPageRange(_scPage, maxPage).forEach(p => {
+          if (p === '…') btns.push('<span style="padding:3px 6px;color:var(--text3)">…</span>');
+          else btns.push(`<button class="${p===_scPage?'sc-pg-active':''}" onclick="scGoPage(${p})">${p}</button>`);
+        });
+        btns.push(`<button ${_scPage>=maxPage?'disabled':''} onclick="scGoPage(${_scPage+1})">Next ›</button>`);
+        btns.push(`<span style="font-size:11px;color:var(--text2);margin-left:6px">Page ${_scPage}/${maxPage}</span>`);
+        if (pager) pager.innerHTML = btns.join('');
+      }
+
+      function scPageRange(cur, max) {
+        if (max <= 7) return Array.from({ length: max }, (_, i) => i + 1);
+        const r = [1];
+        if (cur > 3) r.push('…');
+        for (let p = Math.max(2, cur-1); p <= Math.min(max-1, cur+1); p++) r.push(p);
+        if (cur < max-2) r.push('…');
+        r.push(max);
+        return r;
+      }
+
+      function scGoPage(p) { _scPage = p; scRenderTable(); }
+
+      function scColFilter(col, val) { _scColFilters[col] = val; _scPage = 1; scApplyFilters(); }
+
+      function scGetExportData() {
+        const { cols, labels } = scBuildCols();
+        const headers = cols.map(c => labels[c]);
+        const rows = _scFiltered.map(r => cols.map(c => {
+          if (c === '_status')  return r._status;
+          if (c === '_email')   return r._email;
+          if (c === '_course')  return r._course;
+          if (c.endsWith('_D') || c.endsWith('_S')) {
+            const map = c.endsWith('_D') ? r._dVals : r._sVals;
+            return map[c.slice(0,-2)] ?? '';
+          }
+          return '';
+        }));
+        return [headers, ...rows];
+      }
+
+      function scCopy() {
+        const text = scGetExportData().map(row => row.join('\t')).join('\n');
+        navigator.clipboard.writeText(text).then(() => toast('Copied to clipboard', 's')).catch(() => toast('Copy failed', 'w'));
+      }
+
+      function scExport(fmt) {
+        const data = scGetExportData();
+        if (fmt === 'csv') {
+          const csv = data.map(row => row.map(c => `"${String(c ?? '').replace(/"/g,'""')}"`).join(',')).join('\n');
+          dlBlob(new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8' }), 'sc_crosscheck.csv');
+        } else {
+          const wb = XLSX.utils.book_new();
+          XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(data), 'Cross Check');
+          XLSX.writeFile(wb, 'sc_crosscheck.xlsx');
+        }
+      }
 
     </script>
   </body>
