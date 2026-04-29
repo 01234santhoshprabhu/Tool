@@ -8766,6 +8766,11 @@ self.onmessage = function(e) {
                 let sortCol = null, sortDir = 1, pg = 1, ps = 25;
                 let debT = null, worker = null;
                 let panels = [];       // track portaled panels for cleanup
+                let chunkAckResolver = null;
+                let loadFailed = false;
+                let latestFilterSeq = 0;
+                let lastAppliedFilterState = null;
+                const pendingFilterStates = new Map();
 
                 /* ── Progress helpers ── */
                 function dfProg(lbl, pct, detail) {
@@ -8782,6 +8787,33 @@ self.onmessage = function(e) {
 
                 /* ── Toast ── */
                 function dfToast(msg, type) { toast(msg, type || 's'); }
+                function waitChunkAck() { return new Promise(res => { chunkAckResolver = res; }); }
+                function normaliseFilterState(colFilters, textFilters, gs) {
+                    const multi = {};
+                    const text = {};
+                    colFilters.forEach(f => { multi[f.col] = [...f.vals].sort(); });
+                    textFilters.forEach(f => { text[f.col] = String(f.q || '').toLowerCase(); });
+                    return { multi, text, gs: String(gs || '').toLowerCase() };
+                }
+                function isNarrowerFilterState(nextState, prevState) {
+                    if (!prevState) return false;
+                    const prevMultiKeys = Object.keys(prevState.multi);
+                    const prevTextKeys = Object.keys(prevState.text);
+                    for (const col of prevMultiKeys) {
+                        const prevVals = prevState.multi[col];
+                        const nextVals = nextState.multi[col];
+                        if (!nextVals || nextVals.length > prevVals.length) return false;
+                        const prevSet = new Set(prevVals);
+                        for (const v of nextVals) if (!prevSet.has(v)) return false;
+                    }
+                    for (const col of prevTextKeys) {
+                        const prevQ = prevState.text[col];
+                        const nextQ = nextState.text[col];
+                        if (!nextQ || !nextQ.includes(prevQ)) return false;
+                    }
+                    if (prevState.gs && (!nextState.gs || !nextState.gs.includes(prevState.gs))) return false;
+                    return true;
+                }
 
                 /* ── Web Worker: parse + index + filter + page + export all off main thread ── */
                 function buildWorker() {
@@ -8789,19 +8821,21 @@ self.onmessage = function(e) {
 'use strict';
 let store=null;
 let currentView=null;
+let csvState=null;
 const MAX_DROPDOWN=${MAX_DROPDOWN};
 self.onmessage=function(e){
   const {type,payload}=e.data;
-  if(type==='LOAD_CSV'){
+  if(type==='INIT_CSV'){
+    csvState=createCSVState(payload&&payload.totalBytes?payload.totalBytes:0);
+    store=null;
+    currentView=null;
+    self.postMessage({type:'PROGRESS',label:'Preparing CSV stream\u2026',pct:2,detail:'Chunked parse in background worker'});
+  }
+  else if(type==='APPEND_CSV_CHUNK'){
     try{
-      self.postMessage({type:'PROGRESS',label:'Parsing CSV\u2026',pct:5,detail:'Running in background thread'});
-      const r=parseCSVToColArrays(payload.buffer);
-      if(!r.n){self.postMessage({type:'ERROR',msg:'No data rows found'});return;}
-      self.postMessage({type:'PROGRESS',label:'Building indexes\u2026',pct:22,detail:r.n.toLocaleString()+' rows \u00b7 '+r.headers.length+' columns'});
-      store=buildStoreFromCols(r.headers,r.colArrs,r.n);
-      currentView=null;
-      const meta=buildMeta(store);
-      self.postMessage({type:'STORE_META',meta});
+      if(!csvState)csvState=createCSVState(payload&&payload.totalBytes?payload.totalBytes:0);
+      consumeCSVChunk(payload.buffer,payload.loadedBytes||0,payload.totalBytes||0,!!payload.final);
+      self.postMessage({type:'CHUNK_ACK'});
     }catch(ex){self.postMessage({type:'ERROR',msg:ex.message});}
   }
   else if(type==='LOAD_COLS'){
@@ -8817,7 +8851,7 @@ self.onmessage=function(e){
   else if(type==='FILTER'){
     if(!store){currentView=null;self.postMessage({type:'RESULT',count:0});return;}
     const count=doFilter(payload);
-    self.postMessage({type:'RESULT',count});
+    self.postMessage({type:'RESULT',count,seq:payload.seq||0});
   }
   else if(type==='GET_PAGE'){
     if(!store){self.postMessage({type:'PAGE_DATA',rows:[]});return;}
@@ -8871,47 +8905,163 @@ function buildMeta(store){
   return meta;
 }
 
-/* Fast column-oriented CSV parser — no row objects, minimal GC pressure */
-function parseCSVToColArrays(buffer){
-  const text=new TextDecoder().decode(buffer);
-  let pos=0,len=text.length;
-  const headers=[];
-  let field='',inQ=false;
-  /* header line */
-  outer:while(pos<len){
-    const ch=text[pos++];
-    if(inQ){
-      if(ch==='"'&&text[pos]==='"'){field+='"';pos++;}
-      else if(ch==='"'){inQ=false;}
-      else field+=ch;
-    }else if(ch==='"'){inQ=true;}
-    else if(ch===','){headers.push(field.trim());field='';}
-    else if(ch==='\\n'||(ch==='\\r'&&text[pos]==='\\n')){if(ch==='\\r')pos++;headers.push(field.trim());field='';break outer;}
-    else field+=ch;
+function createCSVState(totalBytes){
+  return{
+    totalBytes:totalBytes||0,
+    loadedBytes:0,
+    decoder:new TextDecoder(),
+    headers:null,
+    builder:null,
+    field:'',
+    row:[],
+    inQ:false,
+    skipLF:false,
+    rows:0
+  };
+}
+
+function consumeCSVChunk(buffer,loadedBytes,totalBytes,final){
+  const st=csvState;
+  if(!st)throw new Error('CSV parser not initialised');
+  if(totalBytes)st.totalBytes=totalBytes;
+  const text=st.decoder.decode(buffer,{stream:!final});
+  parseCSVText(st,text);
+  st.loadedBytes=loadedBytes||Math.min(st.totalBytes||0,(st.loadedBytes||0)+buffer.byteLength);
+  if(final){
+    if(st.field!==''||st.row.length){
+      st.row.push(st.field);
+      st.field='';
+      commitCSVRow(st,st.row);
+      st.row=[];
+    }
+    if(!st.builder||!st.builder.n)throw new Error('No data rows found');
+    self.postMessage({type:'PROGRESS',label:'Compacting indexes\u2026',pct:82,detail:st.builder.n.toLocaleString()+' rows'});
+    store=finalizeStreamingStore(st.builder);
+    currentView=null;
+    csvState=null;
+    self.postMessage({type:'PROGRESS',label:'Finalising\u2026',pct:96,detail:'Preparing filter metadata'});
+    self.postMessage({type:'STORE_META',meta:buildMeta(store)});
+    return;
   }
-  if(!headers.length)return{headers:[],colArrs:[],n:0};
-  const nc=headers.length;
-  const colArrs=Array.from({length:nc},()=>[]);
-  let ci=0;field='';inQ=false;
-  /* data rows */
-  while(pos<len){
-    const ch=text[pos++];
-    if(inQ){
-      if(ch==='"'&&text[pos]==='"'){field+='"';pos++;}
-      else if(ch==='"'){inQ=false;}
-      else field+=ch;
-    }else if(ch==='"'){inQ=true;}
-    else if(ch===','){if(ci<nc)colArrs[ci].push(field);ci++;field='';}
-    else if(ch==='\\n'||(ch==='\\r'&&text[pos]==='\\n')){
-      if(ch==='\\r')pos++;
-      if(ci<nc)colArrs[ci].push(field);
-      else if(field&&ci===nc)colArrs[nc-1][colArrs[nc-1].length-1]+='\\n'+field;
-      ci=0;field='';
-    }else field+=ch;
+  const pct=st.totalBytes?Math.min(78,4+Math.round((st.loadedBytes/st.totalBytes)*72)):40;
+  self.postMessage({
+    type:'PROGRESS',
+    label:'Streaming CSV\u2026',
+    pct,
+    detail:(st.loadedBytes||0).toLocaleString()+' / '+(st.totalBytes||0).toLocaleString()+' bytes \u00b7 '+st.rows.toLocaleString()+' rows'
+  });
+}
+
+function parseCSVText(st,text){
+  for(let i=0;i<text.length;i++){
+    const ch=text[i];
+    if(st.skipLF){
+      st.skipLF=false;
+      if(ch==='\\n')continue;
+    }
+    if(st.inQ){
+      if(ch==='"'){
+        if(text[i+1]==='"'){st.field+='"';i++;}
+        else st.inQ=false;
+      }else st.field+=ch;
+      continue;
+    }
+    if(ch==='"'){st.inQ=true;continue;}
+    if(ch===','){st.row.push(st.field);st.field='';continue;}
+    if(ch==='\\n'){
+      st.row.push(st.field);
+      st.field='';
+      commitCSVRow(st,st.row);
+      st.row=[];
+      continue;
+    }
+    if(ch==='\\r'){
+      st.row.push(st.field);
+      st.field='';
+      commitCSVRow(st,st.row);
+      st.row=[];
+      if(text[i+1]==='\\n')i++;
+      else st.skipLF=true;
+      continue;
+    }
+    st.field+=ch;
   }
-  if((field!==''||ci>0)&&ci<nc)colArrs[ci].push(field);
-  const n=colArrs[0]?colArrs[0].length:0;
-  return{headers,colArrs,n};
+}
+
+function commitCSVRow(st,row){
+  let hasData=false;
+  for(let i=0;i<row.length;i++){if(row[i]!==''&&row[i]!=null){hasData=true;break;}}
+  if(!hasData)return;
+  if(!st.headers){
+    st.headers=row.map((v,i)=>i===0?String(v||'').replace(/^\\uFEFF/,'').trim():String(v||'').trim());
+    st.builder=createStreamingStoreBuilder(st.headers);
+    return;
+  }
+  appendStreamingRow(st.builder,row);
+  st.rows=st.builder.n;
+}
+
+function createStreamingStoreBuilder(cols){
+  const colBuilders=new Array(cols.length);
+  for(let i=0;i<cols.length;i++)colBuilders[i]=createColBuilder();
+  return{cols,colBuilders,n:0};
+}
+
+function createColBuilder(){
+  return{dict:[],map:new Map(),chunks:[new Uint32Array(262144)],chunkPos:0};
+}
+
+function appendStreamingRow(builder,row){
+  const cols=builder.cols.length;
+  const colBuilders=builder.colBuilders;
+  for(let ci=0;ci<cols;ci++){
+    const cb=colBuilders[ci];
+    const v=ci<row.length&&row[ci]!=null?row[ci]:'';
+    let di=cb.map.get(v);
+    if(di===undefined){di=cb.dict.length;cb.map.set(v,di);cb.dict.push(v);}
+    if(cb.chunkPos===262144){cb.chunks.push(new Uint32Array(262144));cb.chunkPos=0;}
+    cb.chunks[cb.chunks.length-1][cb.chunkPos++]=di;
+  }
+  builder.n++;
+}
+
+function finalizeStreamingStore(builder){
+  const cols=builder.cols;
+  const n=builder.n;
+  const colData={};
+  for(let ci=0;ci<cols.length;ci++){
+    const col=cols[ci];
+    const cb=builder.colBuilders[ci];
+    const dictSize=cb.dict.length;
+    const isMulti=dictSize<=MAX_DROPDOWN;
+    let dict=cb.dict;
+    let revMap=null;
+    let remap=null;
+    if(ci%5===0)self.postMessage({type:'PROGRESS',label:'Compacting: '+col,pct:82+Math.round((ci/cols.length)*12),detail:(ci+1)+'/'+cols.length+' cols \u00b7 '+n.toLocaleString()+' rows'});
+    if(isMulti){
+      dict=cb.dict.slice().sort((a,b)=>{const na=+a,nb=+b;if(!isNaN(na)&&!isNaN(nb))return na-nb;return a<b?-1:a>b?1:0;});
+      remap=new Uint32Array(dictSize);
+      revMap=new Map();
+      for(let ni=0;ni<dict.length;ni++){const v=dict[ni];const old=cb.map.get(v);remap[old]=ni;revMap.set(v,ni);}
+    }
+    const Typed=dictSize<=256?Uint8Array:dictSize<=65536?Uint16Array:Uint32Array;
+    const idx=new Typed(n);
+    let pos=0;
+    for(let k=0;k<cb.chunks.length;k++){
+      const chunk=cb.chunks[k];
+      const len=k===cb.chunks.length-1?cb.chunkPos:262144;
+      if(isMulti){
+        for(let i=0;i<len;i++)idx[pos++]=remap[chunk[i]];
+      }else if(Typed===Uint32Array){
+        idx.set(chunk.subarray(0,len),pos);
+        pos+=len;
+      }else{
+        for(let i=0;i<len;i++)idx[pos++]=chunk[i];
+      }
+    }
+    colData[col]={dict,idx,revMap,uniqueCount:dictSize,isMulti,lowerDict:null,numDict:null,maskCache:Object.create(null)};
+  }
+  return{cols,n,colData};
 }
 
 /* Build column-oriented dict-encoded store — runs entirely in worker */
@@ -8953,9 +9103,11 @@ function buildStoreFromCols(cols,colArrs,n){
   return{cols,n,colData};
 }
 
-function doFilter({colFilters,textFilters,gs,sortColName,sortDir}){
+function doFilter({colFilters,textFilters,gs,sortColName,sortDir,narrowOnly}){
   if(!store||!store.n){currentView=null;return 0;}
   const n=store.n;
+  const source=(narrowOnly&&currentView)?currentView:null;
+  const scanLen=source?source.length:n;
   const masks=colFilters.map(f=>{
     const cd=store.colData[f.col];if(!cd)return null;
     const mask=new Uint8Array(cd.dict.length);
@@ -8970,17 +9122,21 @@ function doFilter({colFilters,textFilters,gs,sortColName,sortDir}){
   const gsCols=gsLow?store.cols.map(c=>{const cd=store.colData[c];return{idx:cd.idx,mask:getMaskForQuery(cd,gsLow)};}):null;
   const hasFilters=masks.length>0||textF.length>0||!!gsLow;
   if(!hasFilters&&!sortColName){currentView=null;return n;}
-  const result=new Uint32Array(n);
+  const result=new Uint32Array(scanLen);
   let outLen=0;
-  for(let i=0;i<n;i++){
+  for(let i=0;i<scanLen;i++){
+    const rowIdx=source?source[i]:i;
     let ok=true;
-    for(let m=0;m<masks.length;m++){if(!masks[m].mask[masks[m].idx[i]]){ok=false;break;}}
-    if(ok&&textF.length){for(let t=0;t<textF.length;t++){if(!textF[t].mask[textF[t].idx[i]]){ok=false;break;}}}
-    if(ok&&gsCols){let found=false;for(let c=0;c<gsCols.length;c++){if(gsCols[c].mask[gsCols[c].idx[i]]){found=true;break;}}if(!found)ok=false;}
-    if(ok)result[outLen++]=i;
+    for(let m=0;m<masks.length;m++){if(!masks[m].mask[masks[m].idx[rowIdx]]){ok=false;break;}}
+    if(ok&&textF.length){for(let t=0;t<textF.length;t++){if(!textF[t].mask[textF[t].idx[rowIdx]]){ok=false;break;}}}
+    if(ok&&gsCols){let found=false;for(let c=0;c<gsCols.length;c++){if(gsCols[c].mask[gsCols[c].idx[rowIdx]]){found=true;break;}}if(!found)ok=false;}
+    if(ok)result[outLen++]=rowIdx;
   }
   if(outLen===0){currentView=new Uint32Array(0);return 0;}
-  if(outLen===n&&!sortColName){currentView=null;return n;}
+  if(!sortColName){
+    if(source&&outLen===source.length)return outLen;
+    if(!source&&outLen===n){currentView=null;return n;}
+  }
   currentView=result.subarray(0,outLen).slice();
   if(sortColName&&outLen>1)sortIndexArray(currentView,sortColName,sortDir);
   return outLen;
@@ -9059,6 +9215,11 @@ function sortView(sortColName,sortDir){
                     const ext = (file.name.split('.').pop() || '').toLowerCase();
                     dfEl('df-file-inp').disabled = true;
                     store = null; filteredCount = 0; fmap = {};
+                    chunkAckResolver = null;
+                    loadFailed = false;
+                    latestFilterSeq = 0;
+                    lastAppliedFilterState = null;
+                    pendingFilterStates.clear();
                     if (worker) { try { worker.terminate(); } catch (e) { } worker = null; }
                     worker = buildWorker();
                     if (!worker) {
@@ -9067,18 +9228,42 @@ function sortView(sortColName,sortDir){
                     }
                     worker.onmessage = onWorkerMessage;
                     worker.onerror = err => {
+                        loadFailed = true;
+                        if (chunkAckResolver) {
+                            const fn = chunkAckResolver;
+                            chunkAckResolver = null;
+                            fn();
+                        }
                         dfProgHide(); dfEl('df-file-inp').disabled = false;
                         dfToast('Worker error: ' + (err.message || err), 'e');
                     };
                     try {
                         dfProg('Reading ' + file.name + '\u2026', 3, 'Handing off to background thread');
-                        const ab = await file.arrayBuffer();
                         if (ext === 'csv') {
-                            /* Zero-copy transfer — ArrayBuffer moves to worker, main thread has nothing to parse */
-                            dfProg('CSV sent to worker\u2026', 6, 'Parse + index runs fully off main thread');
-                            worker.postMessage({ type: 'LOAD_CSV', payload: { buffer: ab } }, [ab]);
+                            const CHUNK_BYTES = 8 * 1024 * 1024;
+                            dfProg('Starting CSV stream\u2026', 4, 'Chunked parse + index in worker');
+                            worker.postMessage({ type: 'INIT_CSV', payload: { totalBytes: file.size } });
+                            for (let start = 0; start < file.size; start += CHUNK_BYTES) {
+                                const end = Math.min(start + CHUNK_BYTES, file.size);
+                                const ab = await file.slice(start, end).arrayBuffer();
+                                const ack = waitChunkAck();
+                                worker.postMessage({
+                                    type: 'APPEND_CSV_CHUNK',
+                                    payload: {
+                                        buffer: ab,
+                                        loadedBytes: end,
+                                        totalBytes: file.size,
+                                        final: end >= file.size
+                                    }
+                                }, [ab]);
+                                await ack;
+                                if (loadFailed) break;
+                                if (start && start % (CHUNK_BYTES * 4) === 0) await dfYield();
+                            }
+                            if (loadFailed) return;
                         } else {
                             /* XLSX/XLS: XLSX.js must run on main thread, then send column arrays to worker */
+                            const ab = await file.arrayBuffer();
                             dfProg('Parsing spreadsheet\u2026', 10, 'XLSX parse on main thread');
                             await dfYield();
                             let rows;
@@ -9116,6 +9301,13 @@ function sortView(sortColName,sortDir){
                     if (type === 'PROGRESS') {
                         dfProg(msg.label, msg.pct, msg.detail);
                     }
+                    else if (type === 'CHUNK_ACK') {
+                        if (chunkAckResolver) {
+                            const fn = chunkAckResolver;
+                            chunkAckResolver = null;
+                            fn();
+                        }
+                    }
                     else if (type === 'STORE_META') {
                         /* Worker finished building store; main thread gets light meta (dicts, no idx) */
                         store = msg.meta; /* {cols, n, colData:{col:{uniqueCount, dict?}}} */
@@ -9146,7 +9338,12 @@ function sortView(sortColName,sortDir){
                         renderTable();
                     }
                     else if (type === 'RESULT') {
+                        if (msg.seq && msg.seq !== latestFilterSeq) return;
                         filteredCount = msg.count || 0;
+                        if (msg.seq && pendingFilterStates.has(msg.seq)) {
+                            lastAppliedFilterState = pendingFilterStates.get(msg.seq);
+                            pendingFilterStates.forEach((_, key) => { if (key <= msg.seq) pendingFilterStates.delete(key); });
+                        }
                         pg = 1;
                         updStats(); updBadge(); renderChips(); renderTable();
                         const fs = dfEl('df-filter-status'); if (fs) fs.textContent = '';
@@ -9169,6 +9366,12 @@ function sortView(sortColName,sortDir){
                         if (lbl) { lbl.textContent = 'Copied!'; setTimeout(() => lbl.textContent = 'Copy', 2000); }
                     }
                     else if (type === 'ERROR') {
+                        loadFailed = true;
+                        if (chunkAckResolver) {
+                            const fn = chunkAckResolver;
+                            chunkAckResolver = null;
+                            fn();
+                        }
                         dfProgHide(); dfEl('df-file-inp').disabled = false;
                         dfToast('Worker error: ' + msg.msg, 'e'); console.error('DF Worker:', msg.msg);
                     }
@@ -9197,7 +9400,7 @@ function sortView(sortColName,sortDir){
                     grid.appendChild(frag);
                     // Global search
                     const gs = dfEl('df-gsearch');
-                    if (gs) { gs.oninput = () => { clearTimeout(debT); debT = setTimeout(schedFilter, 220); }; }
+                    if (gs) { gs.oninput = schedFilter; }
                 }
 
                 /* ── Text filter input ── */
@@ -9209,7 +9412,7 @@ function sortView(sortColName,sortDir){
                     inp.oninput = () => {
                         fmap[col].txt = inp.value;
                         inp.classList.toggle('df-active', !!inp.value);
-                        clearTimeout(debT); debT = setTimeout(schedFilter, 220);
+                        schedFilter();
                     };
                     return inp;
                 }
@@ -9219,7 +9422,7 @@ function sortView(sortColName,sortDir){
                 function makeMultiSelect(col) {
                     const vals = store.colData[col].dict;
                     const outer = document.createElement('div'); outer.className = 'df-ms-outer';
-                    const state = { open: false, q: '', filtered: vals.slice(), rendered: 0 };
+                    const state = { open: false, q: '', filtered: vals, rendered: 0 };
                     const trigger = document.createElement('div');
                     trigger.className = 'df-ms-trig'; trigger.id = 'df-ms-' + col;
                     trigger.tabIndex = 0;
@@ -9375,8 +9578,12 @@ function sortView(sortColName,sortDir){
                         if (f.mode === 'multi' && f.sel.size > 0) colFilters.push({ col, vals: [...f.sel] });
                         else if (f.mode === 'text' && f.txt) textFilters.push({ col, q: f.txt });
                     });
+                    const seq = ++latestFilterSeq;
+                    const state = normaliseFilterState(colFilters, textFilters, gs);
+                    const narrowOnly = isNarrowerFilterState(state, lastAppliedFilterState);
+                    pendingFilterStates.set(seq, state);
                     /* Always use worker — it has the idx arrays, main thread does not */
-                    worker.postMessage({ type: 'FILTER', payload: { colFilters, textFilters, gs, sortColName: sortCol, sortDir } });
+                    worker.postMessage({ type: 'FILTER', payload: { colFilters, textFilters, gs, sortColName: sortCol, sortDir, narrowOnly, seq } });
                 }
 
                 /* ── Stats ── */
@@ -9532,6 +9739,9 @@ function sortView(sortColName,sortDir){
 
                 function clear() {
                     store = null; filteredCount = 0; fmap = {}; sortCol = null; sortDir = 1; pg = 1;
+                    latestFilterSeq = 0;
+                    lastAppliedFilterState = null;
+                    pendingFilterStates.clear();
                     if (worker) { try { worker.terminate(); } catch (e) { } worker = null; }
                     panels.forEach(p => { try { p.remove(); } catch (e) { } }); panels = [];
                     dfEl('df-up-sec').style.display = 'block';
