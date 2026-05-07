@@ -7,7 +7,7 @@
     <title>NPTEL Score Splitter v16</title>
     <link rel="icon" href="https://nptel.ac.in/assets/img/nptel_logo.png">
     <link
-        href="https://fonts.googleapis.com/css2?family=Source+Sans+Pro:wght@300;400;600;700&family=Source+Code+Pro:wght@400;600&display=swap"
+        href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Manrope:wght@400;500;600;700;800&display=swap"
         rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
@@ -19,62 +19,60 @@
    ADMINLTE-STYLE THEME — NPTEL Score Dashboard
    ════════════════════════════════════════════════ */
         :root {
-            --sb-width: 250px;
-            --sb-mini: 56px;
-            --topbar-h: 50px;
-            --font: 'Source Sans Pro', 'Segoe UI', sans-serif;
-            --mono: 'Source Code Pro', 'Courier New', monospace;
+            --sb-width: 262px;
+            --sb-mini: 68px;
+            --topbar-h: 72px;
+            --font: 'Manrope', 'Segoe UI', sans-serif;
+            --mono: 'IBM Plex Mono', 'Source Code Pro', monospace;
 
-            /* AdminLTE dark sidebar + light body */
-            --sb-bg: #2c3e50;
-            --sb-bg2: #263544;
-            --sb-hover: #1a252f;
-            --sb-active: #1a252f;
-            --sb-text: rgba(255, 255, 255, .8);
-            --sb-text2: rgba(255, 255, 255, .5);
-            --sb-border: rgba(255, 255, 255, .07);
-            --sb-header-bg: #1a252f;
+            --sb-bg: #0d1628;
+            --sb-bg2: #172238;
+            --sb-hover: rgba(116, 162, 255, .14);
+            --sb-active: rgba(116, 162, 255, .2);
+            --sb-text: rgba(241, 245, 252, .84);
+            --sb-text2: rgba(196, 210, 230, .56);
+            --sb-border: rgba(167, 189, 220, .12);
+            --sb-header-bg: rgba(9, 16, 29, .92);
 
-            --top-bg: #3c8dbc;
-            --top-text: #fff;
+            --top-bg: rgba(11, 20, 36, .78);
+            --top-text: #f6f9ff;
 
-            --body-bg: #ecf0f5;
-            --content-bg: #ecf0f5;
-            --card-bg: #fff;
-            --card-border: #f4f4f4;
-            --card-head: #f4f4f4;
-            --card-title: #444;
-            --text: #333;
-            --text2: #666;
-            --text3: #999;
-            --border: #ddd;
-            --border2: #ccc;
-            --input-bg: #fff;
+            --body-bg: #edf2f8;
+            --content-bg: transparent;
+            --card-bg: rgba(255, 255, 255, .86);
+            --card-border: rgba(129, 145, 171, .18);
+            --card-head: linear-gradient(180deg, rgba(255, 255, 255, .94), rgba(245, 248, 252, .92));
+            --card-title: #152338;
+            --text: #1a2940;
+            --text2: #5f6f86;
+            --text3: #8b98ab;
+            --border: rgba(139, 153, 175, .28);
+            --border2: rgba(128, 144, 170, .38);
+            --input-bg: rgba(255, 255, 255, .88);
 
-            /* AdminLTE brand colors */
-            --blue: #3c8dbc;
-            --blue2: #367fa9;
-            --green: #00a65a;
-            --green2: #008d4c;
-            --yellow: #f39c12;
-            --yellow2: #e08e0b;
-            --red: #dd4b39;
-            --red2: #d33724;
-            --purple: #605ca8;
-            --purple2: #555299;
-            --teal: #39cccc;
-            --teal2: #30bbbb;
-            --navy: #001f3f;
-            --maroon: #d81b60;
-            --lime: #01ff70;
-            --fuchsia: #f012be;
-            --muted: #777;
-            --black: #111;
+            --blue: #186fd6;
+            --blue2: #1255a6;
+            --green: #0c9a73;
+            --green2: #0a785a;
+            --yellow: #d78720;
+            --yellow2: #b16b13;
+            --red: #d94a60;
+            --red2: #b73c4f;
+            --purple: #4d66c9;
+            --purple2: #394fa8;
+            --teal: #0f87b2;
+            --teal2: #0d698a;
+            --navy: #0c1730;
+            --maroon: #b93f66;
+            --lime: #7ac943;
+            --fuchsia: #c645a5;
+            --muted: #6d7a8d;
+            --black: #08111f;
 
-            --shad: 0 1px 1px rgba(0, 0, 0, .1);
-            --shad2: 0 2px 6px rgba(0, 0, 0, .12);
-            --rad: 3px;
-            --tr: .2s ease;
+            --shad: 0 18px 40px rgba(9, 19, 36, .08);
+            --shad2: 0 28px 56px rgba(9, 19, 36, .14);
+            --rad: 20px;
+            --tr: .24s ease;
         }
 
         /* ── BASE ── */
@@ -93,10 +91,25 @@
 
         body {
             font-family: var(--font);
-            background: var(--body-bg);
+            background:
+                radial-gradient(circle at top left, rgba(24, 111, 214, .14), transparent 34%),
+                radial-gradient(circle at 85% 14%, rgba(15, 135, 178, .12), transparent 28%),
+                linear-gradient(180deg, #f6f8fc 0%, #edf2f8 45%, #e7edf6 100%);
             color: var(--text);
             font-size: 14px;
-            line-height: 1.42857;
+            line-height: 1.5;
+            letter-spacing: -.01em;
+            position: relative;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            inset: 0;
+            pointer-events: none;
+            background:
+                linear-gradient(135deg, rgba(255, 255, 255, .34), transparent 40%),
+                radial-gradient(circle at bottom right, rgba(217, 74, 96, .06), transparent 26%);
         }
 
         a {
@@ -120,16 +133,16 @@
         }
 
         ::-webkit-scrollbar-track {
-            background: #f1f1f1;
+            background: rgba(226, 232, 242, .72);
         }
 
         ::-webkit-scrollbar-thumb {
-            background: #ccc;
-            border-radius: 3px;
+            background: rgba(122, 137, 164, .5);
+            border-radius: 999px;
         }
 
         ::-webkit-scrollbar-thumb:hover {
-            background: #999;
+            background: rgba(95, 111, 134, .72);
         }
 
         /* ════════════════════════════════
@@ -141,7 +154,7 @@
 
         #sidebar {
             width: var(--sb-width);
-            background: var(--sb-bg);
+            background: linear-gradient(180deg, rgba(8, 15, 28, .98) 0%, rgba(17, 28, 48, .96) 48%, rgba(13, 22, 40, .98) 100%);
             flex-shrink: 0;
             position: fixed;
             top: 0;
@@ -152,6 +165,19 @@
             transition: width .3s ease-in-out;
             display: flex;
             flex-direction: column;
+            box-shadow: 20px 0 44px rgba(6, 12, 24, .22);
+            backdrop-filter: blur(18px);
+        }
+
+        #sidebar::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            right: 0;
+            bottom: 0;
+            width: 1px;
+            background: linear-gradient(180deg, rgba(112, 184, 255, .08), rgba(255, 255, 255, .02), rgba(112, 184, 255, .12));
+            pointer-events: none;
         }
 
         #sidebar.collapsed {
@@ -160,30 +186,45 @@
 
         /* Logo / Brand */
         .sb-brand {
-            background: var(--sb-header-bg);
+            background: linear-gradient(135deg, rgba(13, 22, 40, .95), rgba(20, 35, 60, .82));
             height: var(--topbar-h);
             display: flex;
             align-items: center;
-            padding: 0 15px;
+            padding: 0 18px;
             gap: 10px;
             flex-shrink: 0;
             text-decoration: none;
             border-bottom: 1px solid var(--sb-border);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .sb-brand::after {
+            content: '';
+            position: absolute;
+            inset: auto -22px -28px auto;
+            width: 130px;
+            height: 130px;
+            background: radial-gradient(circle, rgba(24, 111, 214, .26), transparent 70%);
+            pointer-events: none;
         }
 
         .sb-brand-logo {
-            width: 30px;
-            height: 30px;
-            background: var(--blue);
-            border-radius: 3px;
+            width: 38px;
+            height: 38px;
+            background: linear-gradient(135deg, var(--blue), var(--teal));
+            border-radius: 12px;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 16px;
+            font-size: 15px;
             font-weight: 700;
             color: #fff;
             flex-shrink: 0;
             font-family: var(--mono);
+            box-shadow: 0 12px 24px rgba(24, 111, 214, .35);
+            position: relative;
+            z-index: 1;
         }
 
         .sb-brand-text {
@@ -193,14 +234,17 @@
 
         .sb-brand-title {
             font-size: 15px;
-            font-weight: 700;
+            font-weight: 800;
             color: #fff;
             display: block;
+            letter-spacing: -.02em;
         }
 
         .sb-brand-sub {
-            font-size: 10px;
+            font-size: 11px;
             color: var(--sb-text2);
+            letter-spacing: .08em;
+            text-transform: uppercase;
         }
 
         #sidebar.collapsed .sb-brand-text,
@@ -218,17 +262,17 @@
             flex: 1;
             overflow-y: auto;
             overflow-x: hidden;
-            padding-bottom: 10px;
+            padding: 14px 10px 16px;
         }
 
         .sb-sec-lbl {
             display: block;
-            padding: 12px 15px 4px;
+            padding: 16px 16px 8px;
             font-size: 10px;
             font-weight: 700;
             color: var(--sb-text2);
             text-transform: uppercase;
-            letter-spacing: 1px;
+            letter-spacing: .18em;
             white-space: nowrap;
         }
 
@@ -236,19 +280,21 @@
             display: flex;
             align-items: center;
             gap: 0;
-            padding: 11px 15px 11px 15px;
+            padding: 12px 14px;
             color: var(--sb-text);
             cursor: pointer;
             transition: var(--tr);
             font-size: 13px;
-            font-weight: 400;
+            font-weight: 600;
             white-space: nowrap;
             border: none;
             background: none;
-            width: 100%;
+            width: calc(100% - 16px);
             text-align: left;
-            border-left: 3px solid transparent;
+            border-left: none;
             position: relative;
+            margin: 4px 8px;
+            border-radius: 16px;
         }
 
         .nb i {
@@ -256,19 +302,31 @@
             text-align: center;
             font-size: 15px;
             flex-shrink: 0;
-            margin-right: 10px;
-            opacity: .75;
+            margin-right: 12px;
+            opacity: .9;
         }
 
         .nb:hover {
             background: var(--sb-hover);
             color: #fff;
+            transform: translateX(2px);
         }
 
         .nb.active {
-            background: var(--sb-active);
+            background: linear-gradient(135deg, rgba(24, 111, 214, .22), rgba(15, 135, 178, .18));
             color: #fff;
-            border-left-color: var(--blue);
+            box-shadow: inset 0 0 0 1px rgba(143, 196, 255, .14), 0 10px 22px rgba(5, 10, 20, .24);
+        }
+
+        .nb.active::before {
+            content: '';
+            position: absolute;
+            left: 8px;
+            top: 12px;
+            bottom: 12px;
+            width: 4px;
+            border-radius: 999px;
+            background: linear-gradient(180deg, #70b8ff, #0c9a73);
         }
 
         .nb.active i {
@@ -279,15 +337,19 @@
             margin-left: auto;
             font-size: 10px;
             padding: 1px 6px;
-            border-radius: 10px;
+            border-radius: 999px;
             font-weight: 700;
+            background: rgba(255, 255, 255, .12);
+            color: #fff;
+            border: 1px solid rgba(255, 255, 255, .14);
         }
 
         /* Sidebar footer */
         .sb-foot {
-            padding: 10px 15px;
+            padding: 14px 16px 16px;
             border-top: 1px solid var(--sb-border);
             flex-shrink: 0;
+            background: linear-gradient(180deg, rgba(9, 16, 29, .08), rgba(9, 16, 29, .28));
         }
 
         .sb-ver {
@@ -301,12 +363,12 @@
             display: flex;
             align-items: center;
             gap: 8px;
-            padding: 7px 10px;
-            background: var(--sb-hover);
+            padding: 10px 12px;
+            background: rgba(255, 255, 255, .06);
             border: 1px solid var(--sb-border);
             color: var(--sb-text);
             cursor: pointer;
-            border-radius: var(--rad);
+            border-radius: 14px;
             font-size: 12px;
             font-family: var(--font);
             width: 100%;
@@ -314,8 +376,9 @@
         }
 
         .theme-btn:hover {
-            background: #111;
+            background: rgba(255, 255, 255, .1);
             color: #fff;
+            transform: translateY(-1px);
         }
 
         /* ════════════════════════════════
@@ -323,45 +386,68 @@
    ════════════════════════════════ */
         #topbar {
             height: var(--topbar-h);
-            background: var(--blue);
+            background: var(--top-bg);
             position: sticky;
             top: 0;
             z-index: 800;
             display: flex;
             align-items: center;
-            padding: 0 15px;
-            gap: 12px;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, .2);
+            padding: 0 22px;
+            gap: 16px;
+            box-shadow: 0 18px 40px rgba(8, 15, 26, .12);
             width: 100%;
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid rgba(129, 145, 171, .14);
+        }
+
+        #topbar::after {
+            content: '';
+            position: absolute;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            height: 1px;
+            background: linear-gradient(90deg, rgba(112, 184, 255, 0), rgba(112, 184, 255, .5), rgba(112, 184, 255, 0));
         }
 
         #sbt {
-            background: transparent;
-            border: none;
-            color: rgba(255, 255, 255, .85);
+            background: rgba(255, 255, 255, .06);
+            border: 1px solid rgba(255, 255, 255, .09);
+            color: rgba(255, 255, 255, .9);
             font-size: 20px;
             cursor: pointer;
-            padding: 6px 8px;
-            border-radius: var(--rad);
+            width: 44px;
+            height: 44px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 14px;
             transition: var(--tr);
             line-height: 1;
         }
 
         #sbt:hover {
-            background: rgba(0, 0, 0, .15);
+            background: rgba(255, 255, 255, .12);
             color: #fff;
+            transform: translateY(-1px);
+        }
+
+        .tb-copy {
+            min-width: 0;
         }
 
         .tb-title {
-            font-size: 15px;
-            font-weight: 600;
+            font-size: 18px;
+            font-weight: 800;
             color: #fff;
+            letter-spacing: -.03em;
         }
 
         .tb-sub {
-            font-size: 11px;
-            color: rgba(255, 255, 255, .65);
-            margin-top: 1px;
+            font-size: 12px;
+            color: rgba(223, 232, 248, .74);
+            margin-top: 3px;
+            max-width: 720px;
         }
 
         .tb-spacer {
@@ -370,32 +456,35 @@
 
         .mem-badge {
             font-size: 11px;
-            background: rgba(0, 0, 0, .2);
-            border: 1px solid rgba(255, 255, 255, .2);
-            color: rgba(255, 255, 255, .85);
-            border-radius: 3px;
-            padding: 3px 9px;
+            background: rgba(255, 255, 255, .08);
+            border: 1px solid rgba(255, 255, 255, .12);
+            color: rgba(246, 249, 255, .9);
+            border-radius: 999px;
+            padding: 7px 12px;
             font-family: var(--mono);
+            backdrop-filter: blur(14px);
         }
 
         .btn-reset {
-            background: var(--red);
+            background: linear-gradient(135deg, var(--red), #ef6676);
             color: #fff;
-            border: none;
-            border-radius: var(--rad);
-            padding: 5px 14px;
+            border: 1px solid rgba(255, 255, 255, .12);
+            border-radius: 14px;
+            padding: 9px 16px;
             font-size: 12px;
-            font-weight: 600;
+            font-weight: 700;
             cursor: pointer;
             font-family: var(--font);
             display: flex;
             align-items: center;
-            gap: 5px;
+            gap: 6px;
             transition: var(--tr);
+            box-shadow: 0 12px 24px rgba(217, 74, 96, .28);
         }
 
         .btn-reset:hover {
-            background: var(--red2);
+            background: linear-gradient(135deg, var(--red2), var(--red));
+            transform: translateY(-1px);
         }
 
         /* ════════════════════════════════
@@ -406,7 +495,8 @@
             transition: margin-left .3s ease-in-out;
             min-width: 0;
             min-height: 100vh;
-            background: var(--body-bg);
+            background: transparent;
+            position: relative;
         }
 
         #sidebar.collapsed~#main-wrapper {
@@ -425,49 +515,260 @@
         }
 
         #page-main.page-sec.active {
-            padding: 0;
+            padding: 0 0 34px;
         }
 
         #pg {
-            padding: 20px;
+            padding: 24px;
             flex: 1;
             min-width: 0;
             overflow-x: hidden;
+            position: relative;
         }
 
         /* Breadcrumb header */
         .content-header {
-            padding: 10px 20px;
-            background: #fff;
-            border-bottom: 1px solid #e7e7e7;
+            margin: 20px 20px 0;
+            padding: 18px 24px;
+            background: linear-gradient(135deg, rgba(11, 20, 36, .96), rgba(18, 34, 57, .92) 58%, rgba(24, 111, 214, .84));
+            border: 1px solid rgba(255, 255, 255, .08);
+            border-radius: 26px;
             display: flex;
-            align-items: center;
+            align-items: flex-end;
             justify-content: space-between;
+            gap: 16px;
+            box-shadow: var(--shad2);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .content-header::before {
+            content: '';
+            position: absolute;
+            inset: -40% -10% auto 40%;
+            height: 220px;
+            background: radial-gradient(circle, rgba(255, 255, 255, .18), transparent 60%);
+            pointer-events: none;
+        }
+
+        .content-title-wrap {
+            position: relative;
+            z-index: 1;
+        }
+
+        .content-kicker {
+            font-size: 11px;
+            font-weight: 800;
+            color: rgba(236, 243, 255, .62);
+            text-transform: uppercase;
+            letter-spacing: .18em;
+            margin-bottom: 6px;
         }
 
         .content-header h1 {
-            font-size: 20px;
-            font-weight: 400;
-            color: #444;
+            font-size: 30px;
+            font-weight: 800;
+            color: #fff;
+            letter-spacing: -.04em;
         }
 
         .breadcrumb {
             display: flex;
             align-items: center;
-            gap: 6px;
-            font-size: 12px;
-            color: var(--text2);
+            gap: 10px;
+            font-size: 11px;
+            color: rgba(236, 243, 255, .8);
             list-style: none;
+            flex-wrap: wrap;
+            position: relative;
+            z-index: 1;
         }
 
         .breadcrumb li::after {
-            content: '/';
-            margin-left: 6px;
-            color: #ccc;
+            content: '';
+            margin-left: 0;
         }
 
         .breadcrumb li:last-child::after {
             content: '';
+        }
+
+        .breadcrumb li {
+            padding: 8px 12px;
+            border-radius: 999px;
+            border: 1px solid rgba(255, 255, 255, .12);
+            background: rgba(255, 255, 255, .08);
+            backdrop-filter: blur(10px);
+        }
+
+        .breadcrumb li.active {
+            background: linear-gradient(135deg, rgba(112, 184, 255, .94), rgba(85, 160, 255, .78));
+            color: #08203f;
+            font-weight: 800;
+            border-color: transparent;
+        }
+
+        .dash-hero {
+            display: grid;
+            grid-template-columns: minmax(0, 1.25fr) minmax(280px, .75fr);
+            gap: 18px;
+            margin: 4px 0 22px;
+        }
+
+        .dash-hero-main,
+        .dash-hero-side {
+            position: relative;
+            overflow: hidden;
+            border-radius: 28px;
+            border: 1px solid rgba(129, 145, 171, .16);
+            box-shadow: var(--shad);
+        }
+
+        .dash-hero-main {
+            padding: 28px 28px 24px;
+            background: linear-gradient(135deg, rgba(11, 20, 36, .96), rgba(18, 34, 57, .92) 55%, rgba(24, 111, 214, .84));
+            color: #f5f8ff;
+        }
+
+        .dash-hero-main::after {
+            content: '';
+            position: absolute;
+            width: 220px;
+            height: 220px;
+            right: -40px;
+            top: -60px;
+            background: radial-gradient(circle, rgba(255, 255, 255, .22), transparent 68%);
+        }
+
+        .dash-eyebrow {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 7px 12px;
+            border-radius: 999px;
+            background: rgba(255, 255, 255, .08);
+            border: 1px solid rgba(255, 255, 255, .12);
+            font-size: 11px;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: .18em;
+            color: rgba(241, 246, 255, .9);
+        }
+
+        .dash-hero-title {
+            font-size: 34px;
+            line-height: 1.06;
+            font-weight: 800;
+            letter-spacing: -.05em;
+            max-width: 16ch;
+            margin: 18px 0 12px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .dash-hero-copy p {
+            max-width: 60ch;
+            color: rgba(231, 238, 249, .78);
+            font-size: 14px;
+            line-height: 1.75;
+            position: relative;
+            z-index: 1;
+        }
+
+        .dash-chip-row {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin: 16px 0 20px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .dash-chip {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 12px;
+            border-radius: 999px;
+            background: rgba(255, 255, 255, .08);
+            border: 1px solid rgba(255, 255, 255, .12);
+            font-size: 12px;
+            color: #fff;
+        }
+
+        .dash-hero-actions {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-top: 18px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .dash-ghost-btn {
+            background: rgba(255, 255, 255, .1);
+            color: #fff;
+            border-color: rgba(255, 255, 255, .14);
+            box-shadow: none;
+        }
+
+        .dash-ghost-btn:hover {
+            background: rgba(255, 255, 255, .16);
+            color: #fff;
+            border-color: rgba(255, 255, 255, .18);
+        }
+
+        .dash-hero-side {
+            padding: 22px;
+            background: linear-gradient(180deg, rgba(255, 255, 255, .94), rgba(245, 248, 252, .96));
+        }
+
+        .dash-side-label {
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: .18em;
+            color: var(--blue);
+            font-weight: 800;
+            margin-bottom: 10px;
+        }
+
+        .hero-metric-list {
+            display: grid;
+            gap: 12px;
+        }
+
+        .hero-metric {
+            padding: 16px;
+            border-radius: 20px;
+            border: 1px solid rgba(129, 145, 171, .16);
+            background: linear-gradient(180deg, #fff, rgba(244, 247, 251, .88));
+            box-shadow: inset 0 1px 0 rgba(255, 255, 255, .5);
+        }
+
+        .hero-metric span {
+            display: block;
+            font-size: 11px;
+            letter-spacing: .16em;
+            text-transform: uppercase;
+            color: var(--text3);
+            font-weight: 800;
+            margin-bottom: 8px;
+        }
+
+        .hero-metric strong {
+            display: block;
+            font-size: 18px;
+            font-weight: 800;
+            color: var(--text);
+            letter-spacing: -.03em;
+        }
+
+        .hero-metric small {
+            display: block;
+            margin-top: 4px;
+            font-size: 12px;
+            color: var(--text2);
+            line-height: 1.5;
         }
 
         /* ════════════════════════════════
@@ -476,174 +777,231 @@
         .info-box-row {
             display: grid;
             grid-template-columns: repeat(5, 1fr);
-            gap: 15px;
-            margin-bottom: 20px;
+            gap: 18px;
+            margin-bottom: 22px;
         }
 
         .info-box {
-            background: var(--card-bg);
-            border-radius: var(--rad);
+            background: linear-gradient(180deg, rgba(255, 255, 255, .96), rgba(247, 250, 253, .92));
+            border-radius: 24px;
             box-shadow: var(--shad);
             display: flex;
-            min-height: 90px;
+            min-height: 128px;
             overflow: hidden;
             cursor: default;
             transition: var(--tr);
+            border: 1px solid rgba(129, 145, 171, .16);
+            padding: 18px;
+            gap: 16px;
+            align-items: center;
+            position: relative;
+        }
+
+        .info-box::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(135deg, rgba(255, 255, 255, .45), transparent 58%);
+            pointer-events: none;
         }
 
         .info-box:hover {
             box-shadow: var(--shad2);
-            transform: translateY(-1px);
+            transform: translateY(-4px);
         }
 
         .info-box-icon {
-            width: 90px;
+            width: 74px;
+            height: 74px;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 40px;
+            font-size: 30px;
             color: #fff;
             flex-shrink: 0;
-            border-radius: var(--rad) 0 0 var(--rad);
+            border-radius: 22px;
+            box-shadow: inset 0 1px 0 rgba(255, 255, 255, .35), 0 18px 28px rgba(9, 19, 36, .12);
         }
 
         .info-box-icon.bg-blue {
-            background: var(--blue);
+            background: linear-gradient(135deg, var(--blue), #4fb4ff);
         }
 
         .info-box-icon.bg-green {
-            background: var(--green);
+            background: linear-gradient(135deg, var(--green), #34c88f);
         }
 
         .info-box-icon.bg-yellow {
-            background: var(--yellow);
+            background: linear-gradient(135deg, var(--yellow), #f0ad4d);
         }
 
         .info-box-icon.bg-red {
-            background: var(--red);
+            background: linear-gradient(135deg, var(--red), #ef6c7d);
         }
 
         .info-box-icon.bg-purple {
-            background: var(--purple);
+            background: linear-gradient(135deg, var(--purple), #6f88ee);
         }
 
         .info-box-icon.bg-teal {
-            background: var(--teal);
+            background: linear-gradient(135deg, var(--teal), #3cb7dc);
         }
 
         .info-box-content {
-            padding: 10px 14px;
+            padding: 0;
             display: flex;
             flex-direction: column;
             justify-content: center;
             min-width: 0;
+            gap: 4px;
         }
 
         .info-box-text {
             font-size: 11px;
-            font-weight: 700;
+            font-weight: 800;
             text-transform: uppercase;
-            letter-spacing: .5px;
-            color: var(--text2);
+            letter-spacing: .18em;
+            color: var(--text3);
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
         }
 
         .info-box-number {
-            font-size: 26px;
-            font-weight: 700;
+            font-size: 34px;
+            font-weight: 800;
             color: var(--text);
             font-family: var(--mono);
             line-height: 1.1;
-            letter-spacing: -1px;
+            letter-spacing: -.06em;
         }
 
         .info-box-sub {
-            font-size: 10px;
-            color: var(--text3);
-            margin-top: 2px;
+            font-size: 12px;
+            color: var(--text2);
+            margin-top: 0;
         }
 
         /* ════════════════════════════════
    BOXES (AdminLTE box component)
    ════════════════════════════════ */
         .box {
-            background: var(--card-bg);
+            background: linear-gradient(180deg, rgba(255, 255, 255, .96), rgba(245, 248, 252, .94));
             border: 1px solid var(--card-border);
-            border-radius: var(--rad);
+            border-radius: 26px;
             box-shadow: var(--shad);
-            margin-bottom: 20px;
+            margin-bottom: 22px;
             position: relative;
+            overflow: hidden;
         }
 
         .box-header {
             display: flex;
             align-items: center;
-            padding: 10px 15px;
-            border-bottom: 1px solid var(--card-border);
+            padding: 18px 22px;
+            border-bottom: 1px solid rgba(129, 145, 171, .14);
             background: var(--card-head);
-            border-radius: var(--rad) var(--rad) 0 0;
+            border-radius: 26px 26px 0 0;
         }
 
         .box-header .box-title {
-            font-size: 15px;
-            font-weight: 600;
+            font-size: 16px;
+            font-weight: 800;
             color: var(--card-title);
             margin: 0;
             flex: 1;
             display: flex;
             align-items: center;
             gap: 8px;
+            letter-spacing: -.02em;
         }
 
         .box-header .box-title i {
             color: var(--blue);
-            font-size: 15px;
+            font-size: 16px;
         }
 
         .box-tools {
             display: flex;
             align-items: center;
-            gap: 5px;
+            gap: 8px;
         }
 
         .box-body {
-            padding: 15px;
+            padding: 22px;
         }
 
         .box-footer {
-            padding: 8px 15px;
+            padding: 12px 22px;
             background: var(--card-head);
             border-top: 1px solid var(--card-border);
-            border-radius: 0 0 var(--rad) var(--rad);
+            border-radius: 0 0 26px 26px;
             font-size: 12px;
             color: var(--text2);
         }
 
         /* Box color variants (AdminLTE box-primary etc) */
         .box.box-primary {
-            border-top: 3px solid var(--blue);
+            border-top: none;
         }
 
         .box.box-success {
-            border-top: 3px solid var(--green);
+            border-top: none;
         }
 
         .box.box-warning {
-            border-top: 3px solid var(--yellow);
+            border-top: none;
         }
 
         .box.box-danger {
-            border-top: 3px solid var(--red);
+            border-top: none;
         }
 
         .box.box-info {
-            border-top: 3px solid var(--teal);
+            border-top: none;
         }
 
         .box.box-purple {
-            border-top: 3px solid var(--purple);
+            border-top: none;
+        }
+
+        .box.box-primary::before,
+        .box.box-success::before,
+        .box.box-warning::before,
+        .box.box-danger::before,
+        .box.box-info::before,
+        .box.box-purple::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            z-index: 2;
+        }
+
+        .box.box-primary::before {
+            background: linear-gradient(90deg, var(--blue), #67c7ff);
+        }
+
+        .box.box-success::before {
+            background: linear-gradient(90deg, var(--green), #59d9a3);
+        }
+
+        .box.box-warning::before {
+            background: linear-gradient(90deg, var(--yellow), #f3bc62);
+        }
+
+        .box.box-danger::before {
+            background: linear-gradient(90deg, var(--red), #ff8e9d);
+        }
+
+        .box.box-info::before {
+            background: linear-gradient(90deg, var(--teal), #62d0f0);
+        }
+
+        .box.box-purple::before {
+            background: linear-gradient(90deg, var(--purple), #8da1ff);
         }
 
         /* ════════════════════════════════
@@ -807,30 +1165,32 @@
         .fsel {
             display: block;
             width: 100%;
-            padding: 6px 12px;
+            padding: 10px 14px;
             font-size: 13px;
             color: var(--text);
             background: var(--input-bg);
             border: 1px solid var(--border2);
-            border-radius: var(--rad);
+            border-radius: 14px;
             outline: none;
             font-family: var(--font);
-            transition: border-color var(--tr);
+            transition: border-color var(--tr), box-shadow var(--tr), transform var(--tr);
+            min-height: 42px;
+            box-shadow: inset 0 1px 0 rgba(255, 255, 255, .52);
         }
 
         .form-control:focus,
         .fsel:focus {
             border-color: var(--blue);
-            box-shadow: 0 0 0 3px rgba(60, 141, 188, .15);
+            box-shadow: 0 0 0 4px rgba(24, 111, 214, .12);
         }
 
         .flbl {
-            font-size: 11px;
-            font-weight: 700;
+            font-size: 10px;
+            font-weight: 800;
             color: var(--text2);
             text-transform: uppercase;
-            letter-spacing: .5px;
-            margin-bottom: 5px;
+            letter-spacing: .18em;
+            margin-bottom: 7px;
             display: block;
         }
 
@@ -841,15 +1201,17 @@
             display: inline-flex;
             align-items: center;
             gap: 5px;
-            padding: 6px 14px;
+            padding: 9px 16px;
             font-size: 13px;
-            font-weight: 400;
-            border-radius: var(--rad);
+            font-weight: 700;
+            border-radius: 14px;
             border: 1px solid transparent;
             cursor: pointer;
             font-family: var(--font);
             transition: var(--tr);
             white-space: nowrap;
+            letter-spacing: -.01em;
+            box-shadow: 0 10px 20px rgba(10, 20, 36, .08);
         }
 
         .btn:disabled {
@@ -858,73 +1220,88 @@
         }
 
         .btn-default {
-            background: #f4f4f4;
-            color: #444;
-            border-color: #ddd;
+            background: rgba(255, 255, 255, .84);
+            color: var(--text);
+            border-color: rgba(129, 145, 171, .22);
+            box-shadow: none;
         }
 
         .btn-default:hover {
-            background: #e8e8e8;
+            background: rgba(245, 247, 250, .98);
+            border-color: rgba(129, 145, 171, .3);
+            transform: translateY(-1px);
         }
 
         .btn-primary {
-            background: var(--blue);
+            background: linear-gradient(135deg, var(--blue), #49a5ff);
             color: #fff;
-            border-color: var(--blue2);
+            border-color: transparent;
+            box-shadow: 0 14px 24px rgba(24, 111, 214, .24);
         }
 
         .btn-primary:hover {
-            background: var(--blue2);
+            background: linear-gradient(135deg, var(--blue2), var(--blue));
+            transform: translateY(-1px);
         }
 
         .btn-success {
-            background: var(--green);
+            background: linear-gradient(135deg, var(--green), #35c88f);
             color: #fff;
-            border-color: var(--green2);
+            border-color: transparent;
+            box-shadow: 0 14px 24px rgba(12, 154, 115, .22);
         }
 
         .btn-success:hover {
-            background: var(--green2);
+            background: linear-gradient(135deg, var(--green2), var(--green));
+            transform: translateY(-1px);
         }
 
         .btn-warning {
-            background: var(--yellow);
+            background: linear-gradient(135deg, var(--yellow), #f0ad4d);
             color: #fff;
-            border-color: var(--yellow2);
+            border-color: transparent;
+            box-shadow: 0 14px 24px rgba(215, 135, 32, .22);
         }
 
         .btn-warning:hover {
-            background: var(--yellow2);
+            background: linear-gradient(135deg, var(--yellow2), var(--yellow));
+            transform: translateY(-1px);
         }
 
         .btn-danger {
-            background: var(--red);
+            background: linear-gradient(135deg, var(--red), #ef6c7d);
             color: #fff;
-            border-color: var(--red2);
+            border-color: transparent;
+            box-shadow: 0 14px 24px rgba(217, 74, 96, .22);
         }
 
         .btn-danger:hover {
-            background: var(--red2);
+            background: linear-gradient(135deg, var(--red2), var(--red));
+            transform: translateY(-1px);
         }
 
         .btn-info {
-            background: var(--teal);
+            background: linear-gradient(135deg, var(--teal), #4dbbd9);
             color: #fff;
-            border-color: var(--teal2);
+            border-color: transparent;
+            box-shadow: 0 14px 24px rgba(15, 135, 178, .22);
         }
 
         .btn-info:hover {
-            background: var(--teal2);
+            background: linear-gradient(135deg, var(--teal2), var(--teal));
+            transform: translateY(-1px);
         }
 
         .btn-purple {
-            background: var(--purple);
+            background: linear-gradient(135deg, var(--purple), #7f93f3);
             color: #fff;
-            border-color: var(--purple2);
+            border-color: transparent;
+            box-shadow: 0 14px 24px rgba(77, 102, 201, .22);
         }
 
         .btn-purple:hover {
-            background: var(--purple2);
+            background: linear-gradient(135deg, var(--purple2), var(--purple));
+            transform: translateY(-1px);
         }
 
         .btn-flat {
@@ -933,7 +1310,7 @@
         }
 
         .btn-sm {
-            padding: 4px 10px;
+            padding: 6px 12px;
             font-size: 12px;
         }
 
@@ -953,10 +1330,10 @@
    ════════════════════════════════ */
         .label {
             display: inline-block;
-            padding: 2px 8px;
+            padding: 4px 10px;
             font-size: 11px;
-            font-weight: 700;
-            border-radius: var(--rad);
+            font-weight: 800;
+            border-radius: 999px;
         }
 
         .label-primary {
@@ -1040,26 +1417,39 @@
    UPLOAD ZONE
    ════════════════════════════════ */
         .upload-zone {
-            border: 2px dashed var(--border2);
-            border-radius: var(--rad);
-            padding: 30px 20px;
+            border: 1.5px dashed var(--border2);
+            border-radius: 24px;
+            padding: 34px 24px;
             text-align: center;
             cursor: pointer;
             transition: var(--tr);
             position: relative;
-            background: #fafafa;
+            background: linear-gradient(180deg, rgba(255, 255, 255, .84), rgba(243, 247, 251, .94));
+            box-shadow: inset 0 1px 0 rgba(255, 255, 255, .75), 0 18px 30px rgba(9, 19, 36, .06);
+            overflow: hidden;
+        }
+
+        .upload-zone::before {
+            content: '';
+            position: absolute;
+            inset: auto -15% -40% auto;
+            width: 220px;
+            height: 220px;
+            background: radial-gradient(circle, rgba(24, 111, 214, .1), transparent 70%);
+            pointer-events: none;
         }
 
         .upload-zone:hover,
         .upload-zone.drag {
-            border-color: var(--blue);
-            background: rgba(60, 141, 188, .04);
+            border-color: rgba(24, 111, 214, .7);
+            background: linear-gradient(180deg, rgba(248, 252, 255, .94), rgba(236, 245, 255, .94));
+            transform: translateY(-2px);
         }
 
         .upload-zone.loaded {
-            border-color: var(--green);
+            border-color: rgba(12, 154, 115, .65);
             border-style: solid;
-            background: rgba(0, 166, 90, .04);
+            background: linear-gradient(180deg, rgba(243, 253, 249, .92), rgba(236, 249, 244, .96));
         }
 
         .upload-zone input {
@@ -1069,11 +1459,14 @@
             width: 100%;
             height: 100%;
             cursor: pointer;
+            z-index: 2;
         }
 
         .upload-icon {
-            font-size: 38px;
-            margin-bottom: 10px;
+            font-size: 44px;
+            margin-bottom: 12px;
+            position: relative;
+            z-index: 1;
         }
 
         .upload-zone:not(.loaded) .upload-icon {
@@ -1085,24 +1478,32 @@
         }
 
         .upload-title {
-            font-size: 14px;
-            font-weight: 600;
+            font-size: 16px;
+            font-weight: 800;
             color: var(--text);
+            position: relative;
+            z-index: 1;
         }
 
         .upload-sub {
             font-size: 12px;
             color: var(--text3);
-            margin-top: 5px;
-            line-height: 1.6;
+            margin-top: 8px;
+            line-height: 1.75;
+            max-width: 64ch;
+            margin-inline: auto;
+            position: relative;
+            z-index: 1;
         }
 
         .upload-fn {
-            font-size: 11px;
+            font-size: 12px;
             color: var(--green);
-            font-weight: 700;
-            margin-top: 6px;
+            font-weight: 800;
+            margin-top: 10px;
             font-family: var(--mono);
+            position: relative;
+            z-index: 1;
         }
 
         /* ════════════════════════════════
@@ -1746,6 +2147,10 @@
         }
 
         @media(max-width:1100px) {
+            .dash-hero {
+                grid-template-columns: 1fr;
+            }
+
             .layout-main {
                 flex-direction: column;
             }
@@ -2527,27 +2932,77 @@
             }
         }
 
+        @media(max-width:760px) {
+            #topbar {
+                height: auto;
+                min-height: var(--topbar-h);
+                padding: 12px 14px;
+                flex-wrap: wrap;
+            }
+
+            .tb-copy {
+                width: calc(100% - 60px);
+            }
+
+            .content-header {
+                margin: 16px 14px 0;
+                padding: 18px;
+                align-items: flex-start;
+            }
+
+            #pg {
+                padding: 16px;
+            }
+
+            .dash-hero-main,
+            .dash-hero-side {
+                padding: 22px 18px;
+            }
+
+            .dash-hero-title {
+                font-size: 28px;
+                max-width: none;
+            }
+
+            .info-box-row {
+                grid-template-columns: 1fr;
+            }
+        }
+
         .tool-upload-zone {
-            border: 2px dashed var(--border2);
-            border-radius: var(--rad);
+            border: 1.5px dashed var(--border2);
+            border-radius: 22px;
             padding: 22px 16px;
             text-align: center;
             cursor: pointer;
             transition: var(--tr);
             position: relative;
-            background: #fafafa;
+            background: linear-gradient(180deg, rgba(255, 255, 255, .84), rgba(243, 247, 251, .94));
+            overflow: hidden;
+            box-shadow: inset 0 1px 0 rgba(255, 255, 255, .75), 0 16px 28px rgba(9, 19, 36, .05);
+        }
+
+        .tool-upload-zone::before {
+            content: '';
+            position: absolute;
+            inset: auto -15% -45% auto;
+            width: 190px;
+            height: 190px;
+            background: radial-gradient(circle, rgba(24, 111, 214, .08), transparent 70%);
+            pointer-events: none;
         }
 
         .tool-upload-zone:hover,
         .tool-upload-zone.drag {
-            border-color: var(--blue);
-            background: rgba(60, 141, 188, .04);
+            border-color: rgba(24, 111, 214, .7);
+            background: linear-gradient(180deg, rgba(248, 252, 255, .94), rgba(236, 245, 255, .94));
+            transform: translateY(-2px);
         }
 
         .tool-upload-zone.loaded {
-            border-color: var(--green);
+            border-color: rgba(12, 154, 115, .65);
             border-style: solid;
-            background: rgba(0, 166, 90, .04);
+            background: linear-gradient(180deg, rgba(243, 253, 249, .92), rgba(236, 249, 244, .96));
         }
 
         .tool-upload-zone input {
@@ -2574,23 +3029,29 @@
 
         .tool-uz-title {
             font-size: 13px;
-            font-weight: 700;
+            font-weight: 800;
             color: var(--text);
             margin-bottom: 4px;
+            position: relative;
+            z-index: 1;
         }
 
         .tool-uz-sub {
             font-size: 11px;
             color: var(--text3);
             line-height: 1.6;
+            position: relative;
+            z-index: 1;
         }
 
         .tool-uz-fn {
             font-size: 11px;
             color: var(--green);
-            font-weight: 700;
+            font-weight: 800;
             margin-top: 5px;
             font-family: var(--mono);
+            position: relative;
+            z-index: 1;
         }
 
         .tool-uz-badge {
@@ -2629,13 +3090,13 @@
         }
 
         .btn-run {
-            background: var(--blue);
+            background: linear-gradient(135deg, var(--blue), #49a5ff);
             color: #fff;
             border: none;
-            border-radius: var(--rad);
+            border-radius: 14px;
             padding: 9px 22px;
             font-size: 13px;
-            font-weight: 700;
+            font-weight: 800;
             cursor: pointer;
             display: flex;
             align-items: center;
@@ -2643,11 +3104,12 @@
             gap: 7px;
             font-family: var(--font);
             transition: var(--tr);
-            box-shadow: 0 2px 6px rgba(60, 141, 188, .3);
+            box-shadow: 0 14px 24px rgba(24, 111, 214, .24);
         }
 
         .btn-run:hover:not(:disabled) {
-            background: var(--blue2);
+            background: linear-gradient(135deg, var(--blue2), var(--blue));
+            transform: translateY(-1px);
         }
 
         .btn-run:disabled {
@@ -3132,23 +3594,25 @@
         }
 
         .btn-purple {
-            background: var(--purple);
+            background: linear-gradient(135deg, var(--purple), #7f93f3);
             color: #fff;
             border: none;
-            border-radius: var(--rad);
-            padding: 6px 14px;
+            border-radius: 14px;
+            padding: 9px 16px;
             font-size: 13px;
-            font-weight: 600;
+            font-weight: 800;
             cursor: pointer;
             font-family: var(--font);
             display: inline-flex;
             align-items: center;
             gap: 5px;
             transition: var(--tr);
+            box-shadow: 0 14px 24px rgba(77, 102, 201, .22);
         }
 
         .btn-purple:hover {
-            background: var(--purple2);
+            background: linear-gradient(135deg, var(--purple2), var(--purple));
+            transform: translateY(-1px);
         }
 
         .btn-purple:disabled {
@@ -3237,7 +3701,7 @@
             <!-- Topbar -->
             <nav id="topbar">
                 <button id="sbt" onclick="toggleSb()"><i class="bi bi-list"></i></button>
-                <div>
+                <div class="tb-copy">
                     <div class="tb-title">NPTEL Scoring Internal Tool</div>
                     <div class="tb-sub">Assignment Score Dump, Registration Dump, Attendance Tally Cross check</div>
                 </div>
@@ -3249,7 +3713,10 @@
 
             <!-- Content Header (breadcrumb) -->
             <div class="content-header" id="content-header">
-                <h1 id="page-title" style="font-size:18px;font-weight:600;color:#444">Dashboard</h1>
+                <div class="content-title-wrap">
+                    <div class="content-kicker">Operational Intelligence Suite</div>
+                    <h1 id="page-title">Dashboard</h1>
+                </div>
                 <ol class="breadcrumb" id="breadcrumb">
                     <li>NPTEL</li>
                     <li class="active" id="bc-active">Dashboard</li>
@@ -3259,6 +3726,7 @@
             <!-- ════ PAGE: MAIN DASHBOARD ════ -->
             <div id="page-main" class="page-sec active">
                 <div id="pg">
+
 
                     <!-- Info Boxes / KPIs -->
                     <div class="info-box-row">
@@ -5706,7 +6174,7 @@
                 document.getElementById('page-title').textContent = 'Manual/Programming Dashboard';
                 document.getElementById('bc-active').textContent = 'Manual/Programming';
                 // Highlight nav button
-                document.querySelectorAll('.nb').forEach((nb, i) => nb.classList.toggle('active', i === 6));
+                document.querySelectorAll('.nb').forEach((nb, i) => nb.classList.toggle('active', i === 0));
                 currentPage = 'prescoring';
                 // Show PSO section, scroll to it
                 const sec = document.getElementById('pso-section');
@@ -5835,6 +6303,27 @@
             let origCols = [];
             let baseCols = [];
             let groups = [];
+            let storeIndex = null;
+
+            function normCell(v) { return String(v == null ? '' : v).trim(); }
+            function normKey(v) { return normCell(v).toLowerCase(); }
+            function sanitizeCols(cols) {
+                const out = (cols || []).map(c => String(c == null ? '' : c));
+                if (out.length) out[0] = out[0].replace(/^\uFEFF/, '');
+                return out;
+            }
+            function normalizeParsedRows(rows, rawCols, safeCols) {
+                let changed = false;
+                for (let i = 0; i < safeCols.length; i++) {
+                    if (safeCols[i] !== String(rawCols[i] == null ? '' : rawCols[i])) { changed = true; break; }
+                }
+                if (!changed) return rows;
+                return rows.map(row => {
+                    const out = {};
+                    safeCols.forEach((c, i) => { out[c] = row[rawCols[i]] != null ? row[rawCols[i]] : ''; });
+                    return out;
+                });
+            }
 
             function buildStore(rows, cols) {
                 const N = rows.length;
@@ -5870,6 +6359,96 @@
                 return s;
             }
 
+            function buildStoreIndex() {
+                if (!store) return null;
+                const emailCol = findEmailCol(origCols) || 'EmailId';
+                const courseCol = findCourseCol(origCols) || 'new_courseid';
+                const emailSet = new Set();
+                const courseSetLower = new Set();
+                const emailCourseSet = new Set();
+                const courseRows = new Map();
+                for (let i = 0; i < store.rowCount; i++) {
+                    const email = normKey(getStr(emailCol, i));
+                    const courseRaw = normCell(getStr(courseCol, i));
+                    const course = courseRaw.toLowerCase();
+                    if (email) emailSet.add(email);
+                    if (courseRaw) {
+                        courseSetLower.add(course);
+                        if (!courseRows.has(courseRaw)) courseRows.set(courseRaw, []);
+                        courseRows.get(courseRaw).push(i);
+                    }
+                    if (email && course) emailCourseSet.add(`${email}|${course}`);
+                }
+                const courseList = [...courseRows.keys()].sort();
+                const courseCounts = {};
+                courseList.forEach(c => { courseCounts[c] = courseRows.get(c).length; });
+                return { emailCol, courseCol, emailSet, courseSetLower, emailCourseSet, courseRows, courseList, courseCounts };
+            }
+
+            function buildKeyedRowIndex(rows, cols) {
+                const emailCol = findEmailCol(cols) || '';
+                const courseCol = findCourseCol(cols) || '';
+                const semCol = findSemCol(cols) || '';
+                const keyToRow = new Map();
+                const keySet = new Set();
+                const emailSet = new Set();
+                const courseSetLower = new Set();
+                const courseCounts = {};
+                const rowsByCourse = new Map();
+                for (let i = 0; i < rows.length; i++) {
+                    const row = rows[i];
+                    const email = normKey(emailCol ? row[emailCol] : '');
+                    const courseRaw = normCell(courseCol ? row[courseCol] : '');
+                    const course = courseRaw.toLowerCase();
+                    if (courseRaw) {
+                        courseSetLower.add(course);
+                        courseCounts[courseRaw] = (courseCounts[courseRaw] || 0) + 1;
+                        if (!rowsByCourse.has(courseRaw)) rowsByCourse.set(courseRaw, []);
+                        rowsByCourse.get(courseRaw).push(row);
+                    }
+                    if (email) {
+                        emailSet.add(email);
+                        const key = courseCol ? `${email}|${course}` : email;
+                        keySet.add(key);
+                        keyToRow.set(key, row);
+                    }
+                }
+                return {
+                    emailCol, courseCol, semCol,
+                    keyToRow, keySet, emailSet, courseSetLower,
+                    courseCounts, rowsByCourse,
+                    courseList: Object.keys(courseCounts).sort()
+                };
+            }
+
+            function finalizeMainLoadUI(fileName) {
+                storeIndex = buildStoreIndex();
+                const total = store ? store.rowCount : 0;
+                const uniqueCourses = storeIndex ? storeIndex.courseList.length : 0;
+                const extR = groups.filter(g => g.isExt).reduce((s, g) => s + g.rows.length, 0);
+
+                buildInsights();
+                buildDurStrip();
+                buildDropdown();
+                buildCheckboxes();
+                buildAssignmentLogicUI();
+                $('al-sec').style.display = 'block';
+                updateToolScoreRef();
+
+                $('kT').textContent = total.toLocaleString();
+                $('kC').textContent = uniqueCourses.toLocaleString();
+                $('kG').textContent = groups.length;
+                $('kS').textContent = (total - extR).toLocaleString();
+                $('kE').textContent = extR.toLocaleString();
+
+                $('uz').classList.add('loaded');
+                $('uz-fn').textContent = `✓ ${fileName} — ${total.toLocaleString()} rows`;
+                $('uz-t').textContent = 'File loaded successfully';
+                $('orig-info').textContent = `${total.toLocaleString()} rows · ${origCols.length} columns · original untouched`;
+                $('results').style.display = 'block';
+                goto('vw-sec');
+            }
+
             function getStr(col, i) { return store.strings[col]?.[i] ?? ''; }
             function getNum(col, i) {
                 if (FLOAT64_COLS.has(col)) return store.doubles[col]?.[i];
@@ -5878,6 +6457,175 @@
             function getSemDisplay(i) { return store.semDisplay[store.semIdx[i]] ?? ''; }
             function getSemExcel(i) { return store.semExcel[store.semIdx[i]] ?? ''; }
             function getSemRaw(i) { return store.semRaw[store.semIdx[i]] ?? ''; }
+
+            function createMainCsvBuilder(cols, rawCols) {
+                const numCols = cols.filter(c => NUMERIC_COLS.has(c) && !FLOAT64_COLS.has(c));
+                const dblCols = cols.filter(c => FLOAT64_COLS.has(c));
+                const strCols = cols.filter(c => !NUMERIC_COLS.has(c) && c !== 'sem');
+                const rawColMap = {};
+                cols.forEach((c, i) => { rawColMap[c] = rawCols && rawCols[i] != null ? String(rawCols[i]) : c; });
+                const builder = {
+                    cols,
+                    numCols, dblCols, strCols,
+                    rawColMap,
+                    strings: {}, floatRows: {}, doubleRows: {},
+                    semMap: new Map(), semIdx: [], semRaw: [], semDisplay: [], semExcel: [],
+                    gmapArr: {}, total: 0
+                };
+                for (const c of numCols) builder.floatRows[c] = [];
+                for (const c of dblCols) builder.doubleRows[c] = [];
+                for (const c of strCols) builder.strings[c] = [];
+                return builder;
+            }
+
+            function appendMainCsvRows(builder, rows) {
+                for (let r = 0; r < rows.length; r++) {
+                    const row = rows[r];
+                    const i = builder.total++;
+                    for (const c of builder.numCols) {
+                        const v = parseFloat(row[builder.rawColMap[c]]);
+                        builder.floatRows[c][i] = isNaN(v) ? NaN : v;
+                    }
+                    for (const c of builder.dblCols) {
+                        const v = parseFloat(row[builder.rawColMap[c]]);
+                        builder.doubleRows[c][i] = isNaN(v) ? NaN : v;
+                    }
+                    for (const c of builder.strCols) {
+                        const rawKey = builder.rawColMap[c];
+                        builder.strings[c][i] = row[rawKey] != null ? String(row[rawKey]) : '';
+                    }
+
+                    const semKey = builder.rawColMap['sem'] || 'sem';
+                    const semRaw = row[semKey] != null ? String(row[semKey]) : '';
+                    if (!builder.semMap.has(semRaw)) {
+                        builder.semMap.set(semRaw, builder.semMap.size);
+                        builder.semRaw.push(semRaw);
+                        builder.semDisplay.push(fmtSem(semRaw));
+                        builder.semExcel.push(semToStr(semRaw));
+                    }
+                    builder.semIdx[i] = builder.semMap.get(semRaw);
+
+                    const durStr = builder.strings['Duration']?.[i] ?? '';
+                    let dw = parseDurationWeeks(durStr);
+                    const tav = builder.floatRows['Total_Assignments']?.[i];
+                    const ta = (!isNaN(tav) && tav > 0) ? Math.round(tav) : (dw || 0);
+                    if (!dw && ta > 0) dw = ta <= 4 ? 4 : ta <= 8 ? 8 : ta <= 12 ? 12 : ta;
+
+                    const bnv = builder.floatRows['best_assignments']?.[i];
+                    const builtIn = getBuiltInBestN(dw, ta);
+                    const bn = builtIn !== null ? builtIn : (!isNaN(bnv) && bnv > 0) ? Math.round(bnv) : Math.ceil(ta * 0.75) || 1;
+                    const isExt = ta > dw && dw > 0;
+                    const key = `${dw}_${ta}`;
+
+                    if (!builder.gmapArr[key]) {
+                        const weekPart = dw > 0 ? `${dw}W` : '?W';
+                        const asnPart = `A1-A${ta}`;
+                        builder.gmapArr[key] = {
+                            key,
+                            label: isExt ? `${weekPart} Extended ${asnPart}` : `${weekPart} Standard ${asnPart}`,
+                            shortLabel: isExt ? `${dw > 0 ? dw : '?'}-Week Extended` : `${dw > 0 ? dw : '?'}-Week Standard`,
+                            durLabel: `${dw > 0 ? dw : '?'} Weeks`,
+                            isExt, dw, maxA: ta || 1, bestN: bn,
+                            _tmp: [], _summary: new Map()
+                        };
+                    }
+                    const g = builder.gmapArr[key];
+                    g._tmp.push(i);
+
+                    const cid = builder.strings['new_courseid']?.[i] || builder.strings['Course Id']?.[i] || 'Unknown';
+                    if (!g._summary.has(cid)) {
+                        g._summary.set(cid, {
+                            Duration: builder.strings['Duration']?.[i] || '',
+                            sem: builder.semDisplay[builder.semIdx[i]] || '',
+                            semExcel: builder.semExcel[builder.semIdx[i]] || '',
+                            ta: builder.floatRows['Total_Assignments']?.[i] || '',
+                            bn: builder.floatRows['best_assignments']?.[i] || '',
+                            count: 0, scoreSum: 0
+                        });
+                    }
+                    const sum = g._summary.get(cid);
+                    sum.count++;
+                    const s25v = builder.doubleRows['out_of_25']?.[i];
+                    sum.scoreSum += isNaN(s25v) ? 0 : s25v;
+                }
+            }
+
+            function finalizeMainCsvBuilder(builder) {
+                const total = builder.total;
+                const nextStore = {
+                    rowCount: total,
+                    cols: builder.cols,
+                    strings: builder.strings,
+                    floats: {},
+                    doubles: {},
+                    semRaw: builder.semRaw,
+                    semDisplay: builder.semDisplay,
+                    semExcel: builder.semExcel,
+                    semIdx: builder.semMap.size <= 65535 ? Uint16Array.from(builder.semIdx) : Uint32Array.from(builder.semIdx)
+                };
+                for (const c of builder.numCols) nextStore.floats[c] = Float32Array.from(builder.floatRows[c]);
+                for (const c of builder.dblCols) nextStore.doubles[c] = Float64Array.from(builder.doubleRows[c]);
+
+                const nextGroups = Object.values(builder.gmapArr).sort((a, b) => a.dw - b.dw || a.isExt - b.isExt || a.maxA - b.maxA);
+                for (const g of nextGroups) {
+                    g.rows = Int32Array.from(g._tmp);
+                    delete g._tmp;
+                    g.hdrs = [...baseCols];
+                    for (let i = 1; i <= g.maxA; i++) g.hdrs.push(`A${i}`);
+                    g.summary = [...g._summary.entries()]
+                        .map(([cid, v]) => ({ cid, ...v, avg: Math.round(v.scoreSum / v.count * 100) / 100 }))
+                        .sort((a, b) => b.count - a.count);
+                    delete g._summary;
+                }
+                return { store: nextStore, groups: nextGroups, total };
+            }
+
+            function processMainCsvFile(file) {
+                return new Promise((resolve, reject) => {
+                    let builder = null;
+                    let rowCount = 0;
+                    Papa.parse(file, {
+                        header: true,
+                        worker: true,
+                        skipEmptyLines: true,
+                        chunkSize: 8 * 1024 * 1024,
+                        chunk: (results, parser) => {
+                            try {
+                                const rows = results.data || [];
+                                if (!rows.length) return;
+                                if (!builder) {
+                                    const rawCols = (results.meta.fields || Object.keys(rows[0] || {})).map(c => String(c == null ? '' : c));
+                                    const cols = sanitizeCols(rawCols);
+                                    if (!cols.length) return;
+                                    origCols = cols;
+                                    baseCols = origCols.filter(c => !/^A\d+$/i.test(c.trim()));
+                                    builder = createMainCsvBuilder(origCols, rawCols);
+                                }
+                                appendMainCsvRows(builder, rows);
+                                rowCount = builder.total;
+                                const cursor = results.meta && typeof results.meta.cursor === 'number' ? results.meta.cursor : 0;
+                                const pct = Math.min(78, 8 + Math.round((cursor / file.size) * 68));
+                                pOv(pct, `Parsed ${rowCount.toLocaleString()} rows`, 'Streaming CSV into column store…');
+                                if (rowCount && rowCount % 200000 === 0) {
+                                    parser.pause();
+                                    setTimeout(() => parser.resume(), 0);
+                                }
+                            } catch (err) {
+                                parser.abort();
+                                reject(err);
+                            }
+                        },
+                        complete: () => {
+                            try {
+                                if (!builder || !builder.total) { resolve({ store: null, groups: [], total: 0 }); return; }
+                                pOv(82, `Parsed ${builder.total.toLocaleString()} rows`, 'Finalising store…');
+                                resolve(finalizeMainCsvBuilder(builder));
+                            } catch (err) { reject(err); }
+                        },
+                        error: reject
+                    });
+                });
+            }
 
             // ═══════════════════════════════════════════════════════════════
             // SCORE CACHE — per group, per blankMode
@@ -5925,8 +6673,12 @@
                 return new Promise((res, rej) => {
                     if (file.name.toLowerCase().endsWith('.csv')) {
                         Papa.parse(file, {
-                            header: true, skipEmptyLines: true,
-                            complete: r => res({ cols: r.meta.fields || [], rows: r.data }), error: rej
+                            header: true, skipEmptyLines: true, worker: true,
+                            complete: r => {
+                                const rawCols = (r.meta.fields || []).map(c => String(c == null ? '' : c));
+                                const cols = sanitizeCols(rawCols);
+                                res({ cols, rows: normalizeParsedRows(r.data, rawCols, cols) });
+                            }, error: rej
                         });
                     } else {
                         const rd = new FileReader();
@@ -5936,10 +6688,11 @@
                                 const ws = wb.Sheets[wb.SheetNames[0]];
                                 const json = XLSX.utils.sheet_to_json(ws, { raw: false, defval: '' });
                                 if (!json.length) { res({ cols: [], rows: [] }); return; }
-                                const cols = Object.keys(json[0]);
+                                const rawCols = Object.keys(json[0]);
+                                const cols = sanitizeCols(rawCols);
                                 const rows = json.map(row => {
                                     const r = {};
-                                    cols.forEach(c => { let v = row[c]; if (v === null || v === undefined) v = ''; r[c] = String(v); });
+                                    cols.forEach((c, i) => { let v = row[rawCols[i]]; if (v === null || v === undefined) v = ''; r[c] = String(v); });
                                     return r;
                                 });
                                 res({ cols, rows });
@@ -5960,92 +6713,89 @@
             async function processFile(file) {
                 try {
                     startMemMonitor();
+                    invalidateScoreCache();
+                    storeIndex = null;
                     showOv('Reading File', 'Parsing data…', 5, 'Loading into memory');
                     await delay(40);
+                    if (file.name.toLowerCase().endsWith('.csv')) {
+                        const built = await processMainCsvFile(file);
+                        if (!built.store || !built.total) throw new Error('No data rows found');
+                        store = built.store;
+                        groups = built.groups;
+                    } else {
+                        const data = await parseFile(file);
+                        const rawRows = data.rows;
+                        origCols = data.cols;
+                        baseCols = origCols.filter(c => !/^A\d+$/i.test(c.trim()));
 
-                    const data = await parseFile(file);
-                    const rawRows = data.rows;
-                    origCols = data.cols;
-                    baseCols = origCols.filter(c => !/^A\d+$/i.test(c.trim()));
+                        const total = rawRows.length;
+                        pOv(18, `Parsed ${total.toLocaleString()} rows`, 'Building columnar store…');
+                        await delay(30);
 
-                    const total = rawRows.length;
-                    pOv(18, `Parsed ${total.toLocaleString()} rows`, 'Building columnar store…');
-                    await delay(30);
+                        store = buildStore(rawRows, origCols);
 
-                    store = buildStore(rawRows, origCols);
+                        pOv(40, 'Store built', 'Grouping by Duration + Total_Assignments…');
+                        await delay(20);
 
-                    pOv(40, 'Store built', 'Grouping by Duration + Total_Assignments…');
-                    await delay(20);
+                        const gmapArr = {};
+                        const CHUNK = 100000;
 
-                    // ─── Chunked grouping ───
-                    const gmapArr = {};
-                    const CHUNK = 100000;
+                        for (let start = 0; start < total; start += CHUNK) {
+                            const end = Math.min(start + CHUNK, total);
+                            for (let i = start; i < end; i++) {
+                                const durStr = store.strings['Duration']?.[i] ?? '';
+                                let dw = parseDurationWeeks(durStr);
+                                const tav = store.floats['Total_Assignments']?.[i];
+                                const ta = (!isNaN(tav) && tav > 0) ? Math.round(tav) : (dw || 0);
+                                if (!dw && ta > 0) dw = ta <= 4 ? 4 : ta <= 8 ? 8 : ta <= 12 ? 12 : ta;
 
-                    for (let start = 0; start < total; start += CHUNK) {
-                        const end = Math.min(start + CHUNK, total);
-                        for (let i = start; i < end; i++) {
-                            // FIX #1: robust duration parsing
-                            const durStr = store.strings['Duration']?.[i] ?? '';
-                            let dw = parseDurationWeeks(durStr);
+                                const bnv = store.floats['best_assignments']?.[i];
+                                const builtIn = getBuiltInBestN(dw, ta);
+                                const bn = builtIn !== null ? builtIn : (!isNaN(bnv) && bnv > 0) ? Math.round(bnv) : Math.ceil(ta * 0.75) || 1;
+                                const isExt = ta > dw && dw > 0;
+                                const key = `${dw}_${ta}`;
 
-                            const tav = store.floats['Total_Assignments']?.[i];
-                            const ta = (!isNaN(tav) && tav > 0) ? Math.round(tav) : (dw || 0);
-
-                            // If dw still 0 (blank Duration field), infer from Total_Assignments
-                            if (!dw && ta > 0) {
-                                // guess: 4→4W, 8→8W, 12→12W, else use ta
-                                dw = ta <= 4 ? 4 : ta <= 8 ? 8 : ta <= 12 ? 12 : ta;
+                                if (!gmapArr[key]) {
+                                    const weekPart = dw > 0 ? `${dw}W` : '?W';
+                                    const asnPart = `A1-A${ta}`;
+                                    gmapArr[key] = {
+                                        key,
+                                        label: isExt ? `${weekPart} Extended ${asnPart}` : `${weekPart} Standard ${asnPart}`,
+                                        shortLabel: isExt ? `${dw > 0 ? dw : '?'}-Week Extended` : `${dw > 0 ? dw : '?'}-Week Standard`,
+                                        durLabel: `${dw > 0 ? dw : '?'} Weeks`,
+                                        isExt, dw, maxA: ta || 1, bestN: bn,
+                                        _tmp: []
+                                    };
+                                }
+                                gmapArr[key]._tmp.push(i);
                             }
+                            pOv(40 + Math.round((end / total) * 25), `Grouped ${end.toLocaleString()} / ${total.toLocaleString()} rows`, `Chunk ${Math.ceil(end / CHUNK)}…`);
+                            await delay(0);
+                        }
 
-                            const bnv = store.floats['best_assignments']?.[i];
-                            // 3-tier: built-in → data column → 75% fallback
-                            const builtIn = getBuiltInBestN(dw, ta);
-                            const bn = builtIn !== null ? builtIn : (!isNaN(bnv) && bnv > 0) ? Math.round(bnv) : Math.ceil(ta * 0.75) || 1;
+                        groups = Object.values(gmapArr).sort((a, b) => a.dw - b.dw || a.isExt - b.isExt || a.maxA - b.maxA);
+                        for (const g of groups) { g.rows = new Int32Array(g._tmp); delete g._tmp; }
 
-                            const isExt = ta > dw && dw > 0;
-                            const key = `${dw}_${ta}`;
+                        pOv(68, 'Building summaries…');
+                        await delay(20);
 
-                            if (!gmapArr[key]) {
-                                // FIX #1: Proper label using actual dw, not "0-Week"
-                                const weekPart = dw > 0 ? `${dw}W` : '?W';
-                                const asnPart = `A1-A${ta}`;
-                                gmapArr[key] = {
-                                    key,
-                                    label: isExt ? `${weekPart} Extended ${asnPart}` : `${weekPart} Standard ${asnPart}`,
-                                    shortLabel: isExt ? `${dw > 0 ? dw : '?'}-Week Extended` : `${dw > 0 ? dw : '?'}-Week Standard`,
-                                    durLabel: `${dw > 0 ? dw : '?'} Weeks`,
-                                    isExt, dw, maxA: ta || 1, bestN: bn,
-                                    _tmp: []
-                                };
+                        for (const g of groups) {
+                            const cm = {};
+                            g.hdrs = [...baseCols];
+                            for (let i = 1; i <= g.maxA; i++) g.hdrs.push(`A${i}`);
+
+                            for (let ri = 0; ri < g.rows.length; ri++) {
+                                const si = g.rows[ri];
+                                const cid = getStr('new_courseid', si) || getStr('Course Id', si) || 'Unknown';
+                                if (!cm[cid]) cm[cid] = { Duration: getStr('Duration', si), sem: getSemDisplay(si), semExcel: getSemExcel(si), ta: getNum('Total_Assignments', si) || '', bn: getNum('best_assignments', si) || '', count: 0, scoreSum: 0 };
+                                cm[cid].count++;
+                                const s25v = getNum('out_of_25', si);
+                                cm[cid].scoreSum += isNaN(s25v) ? 0 : s25v;
                             }
-                            gmapArr[key]._tmp.push(i);
+                            g.summary = Object.entries(cm)
+                                .map(([cid, v]) => ({ cid, ...v, avg: Math.round(v.scoreSum / v.count * 100) / 100 }))
+                                .sort((a, b) => b.count - a.count);
                         }
-                        pOv(40 + Math.round((end / total) * 25), `Grouped ${end.toLocaleString()} / ${total.toLocaleString()} rows`, `Chunk ${Math.ceil(end / CHUNK)}…`);
-                        await delay(0);
-                    }
-
-                    groups = Object.values(gmapArr).sort((a, b) => a.dw - b.dw || a.isExt - b.isExt || a.maxA - b.maxA);
-                    for (const g of groups) { g.rows = new Int32Array(g._tmp); delete g._tmp; }
-
-                    pOv(68, 'Building summaries…');
-                    await delay(20);
-
-                    for (const g of groups) {
-                        const cm = {};
-                        g.hdrs = [...baseCols];
-                        for (let i = 1; i <= g.maxA; i++) g.hdrs.push(`A${i}`);
-
-                        for (let ri = 0; ri < g.rows.length; ri++) {
-                            const si = g.rows[ri];
-                            const cid = getStr('new_courseid', si) || getStr('Course Id', si) || 'Unknown';
-                            if (!cm[cid]) cm[cid] = { Duration: getStr('Duration', si), sem: getSemDisplay(si), semExcel: getSemExcel(si), ta: getNum('Total_Assignments', si) || '', bn: getNum('best_assignments', si) || '', count: 0, scoreSum: 0 };
-                            cm[cid].count++;
-                            const s25v = getNum('out_of_25', si);
-                            cm[cid].scoreSum += isNaN(s25v) ? 0 : s25v;
-                        }
-                        g.summary = Object.entries(cm)
-                            .map(([cid, v]) => ({ cid, ...v, avg: Math.round(v.scoreSum / v.count * 100) / 100 }))
-                            .sort((a, b) => b.count - a.count);
                     }
 
                     pOv(82, 'Priming score cache…');
@@ -6054,35 +6804,11 @@
 
                     pOv(90, 'Building UI…');
                     await delay(15);
-
-                    const allCSet = new Set();
-                    for (let i = 0; i < total; i++) { const c = getStr('new_courseid', i); if (c) allCSet.add(c); }
-                    const extR = groups.filter(g => g.isExt).reduce((s, g) => s + g.rows.length, 0);
-
-                    $('kT').textContent = total.toLocaleString();
-                    $('kC').textContent = allCSet.size.toLocaleString();
-                    $('kG').textContent = groups.length;
-                    $('kS').textContent = (total - extR).toLocaleString();
-                    $('kE').textContent = extR.toLocaleString();
-
-                    buildInsights();
-                    buildDurStrip();
-                    buildDropdown();
-                    buildCheckboxes();
-                    buildAssignmentLogicUI();
-                    $('al-sec').style.display = 'block';
-                    updateToolScoreRef();
-
-                    $('uz').classList.add('loaded');
-                    $('uz-fn').textContent = `✓ ${file.name} — ${total.toLocaleString()} rows`;
-                    $('uz-t').textContent = 'File loaded successfully';
-                    $('orig-info').textContent = `${total.toLocaleString()} rows · ${origCols.length} columns · original untouched`;
-                    $('results').style.display = 'block';
-                    goto('vw-sec');
+                    finalizeMainLoadUI(file.name);
 
                     pOv(100, 'Done!');
                     await delay(280); hideOv();
-                    toast(`${total.toLocaleString()} rows · ${groups.length} groups · ready`, 's');
+                    toast(`${store.rowCount.toLocaleString()} rows · ${groups.length} groups · ready`, 's');
                 } catch (e) { hideOv(); toast('Error: ' + e.message, 'e', 8000); console.error(e); }
             }
 
@@ -7464,7 +8190,7 @@ self.onmessage = function(e) {
                     zone.classList.remove('loaded');
                     $(titleId).textContent = 'Loading…';
                     const data = await parseFile(file);
-                    toolData[key] = { rows: data.rows, cols: data.cols, fileName: file.name };
+                    toolData[key] = { rows: data.rows, cols: data.cols, fileName: file.name, index: buildKeyedRowIndex(data.rows, data.cols) };
                     zone.classList.add('loaded');
                     $(titleId).textContent = '✓ ' + file.name;
                     $(fnId).textContent = `${data.rows.length.toLocaleString()} rows · ${data.cols.length} columns`;
@@ -7485,34 +8211,16 @@ self.onmessage = function(e) {
 
             function buildRegCourseDropdown() {
                 if (!toolData.reg) return;
-                const regRows = toolData.reg.rows;
-                const regCols = toolData.reg.cols;
-                const findCol = (cols, name) => cols.find(c => c.toLowerCase().replace(/[\s_]/g, '') === name.toLowerCase().replace(/[\s_]/g, '')) || null;
-                _regCourseFindCol = findCol(regCols, 'new_courseid') || findCol(regCols, 'courseid') || findCol(regCols, 'courseId') || findCol(regCols, 'course_id');
+                const regIdx = toolData.reg.index;
+                _regCourseFindCol = regIdx ? regIdx.courseCol : null;
                 if (_regCourseFindCol) {
-                    // Single pass: build count map AND row-bucket map simultaneously
-                    _regCourseCounts = {};
-                    _regCourseRowMap = new Map();
-                    for (let i = 0; i < regRows.length; i++) {
-                        const cid = String(regRows[i][_regCourseFindCol] || '').trim();
-                        if (!cid) continue;
-                        _regCourseCounts[cid] = (_regCourseCounts[cid] || 0) + 1;
-                        if (!_regCourseRowMap.has(cid)) _regCourseRowMap.set(cid, []);
-                        _regCourseRowMap.get(cid).push(regRows[i]);
-                    }
-                    _regCourseAll = Object.keys(_regCourseCounts).sort();
+                    _regCourseCounts = regIdx.courseCounts;
+                    _regCourseRowMap = regIdx.rowsByCourse;
+                    _regCourseAll = regIdx.courseList;
                     _regCourseSelected = new Set();
-                    // Auto-select if assignment dump has exactly 1 course
-                    if (store) {
-                        const dumpCourses = new Set();
-                        for (let i = 0; i < store.rowCount; i++) {
-                            const cid = getStr('new_courseid', i) || '';
-                            if (cid) dumpCourses.add(cid.trim());
-                        }
-                        if (dumpCourses.size === 1) {
-                            const only = [...dumpCourses][0];
-                            if (_regCourseAll.includes(only)) _regCourseSelected.add(only);
-                        }
+                    if (storeIndex && storeIndex.courseList.length === 1) {
+                        const only = storeIndex.courseList[0];
+                        if (_regCourseAll.includes(only)) _regCourseSelected.add(only);
                     }
                     $('reg-course-count').textContent = `${_regCourseAll.length} unique course${_regCourseAll.length !== 1 ? 's' : ''} in reg dump`;
                     $('reg-course-panel').style.display = 'block';
@@ -7658,23 +8366,20 @@ self.onmessage = function(e) {
             async function runRegCheck() {
                 if (!store) { toast('Load assignment dump first', 'w'); return; }
                 if (!toolData.reg) { toast('Load registration dump first', 'w'); return; }
+                if (!storeIndex) storeIndex = buildStoreIndex();
                 const btn = $('reg-run-btn');
                 btn.disabled = true; btn.innerHTML = '<i class="bi bi-hourglass-split"></i> Checking…';
 
                 await delay(20);
                 const regAllRows = toolData.reg.rows;
-                const regCols = toolData.reg.cols;
+                const regIdx = toolData.reg.index || buildKeyedRowIndex(toolData.reg.rows, toolData.reg.cols);
+                toolData.reg.index = regIdx;
+                const emailCol = regIdx.emailCol;
+                const courseCol = regIdx.courseCol;
 
-                // Detect column names (case-insensitive)
-                const findCol = (cols, name) => cols.find(c => c.toLowerCase().replace(/[\s_]/g, '') === name.toLowerCase().replace(/[\s_]/g, '')) || null;
-                const emailCol = findCol(regCols, 'emailid') || findCol(regCols, 'email') || findCol(regCols, 'emailId');
-                const courseCol = findCol(regCols, 'new_courseid') || findCol(regCols, 'courseid') || findCol(regCols, 'courseId') || findCol(regCols, 'course_id');
-
-                // Apply multi-course filter using prebuilt row-bucket map — no full scan needed
                 const hasFilter = _regCourseSelected.size > 0 && courseCol;
                 let regRows;
                 if (hasFilter) {
-                    // Concatenate only the pre-bucketed arrays for selected courses
                     regRows = [];
                     _regCourseSelected.forEach(c => {
                         const bucket = _regCourseRowMap.get(c);
@@ -7689,32 +8394,19 @@ self.onmessage = function(e) {
 
                 if (!emailCol) { toast('Registration file missing EmailId column', 'e', 5000); btn.disabled = false; btn.innerHTML = '<i class="bi bi-play-circle-fill"></i> Run Registration Check'; return; }
 
-                // Build lookup from score dump: "email|courseid" → true
-                const scoreLookup = new Set();
-                const scoreCourseOnly = new Set();
-                const scoreEmailOnly = new Set();
-                for (let i = 0; i < store.rowCount; i++) {
-                    const em = getStr('EmailId', i) || getStr('emailid', i) || '';
-                    const cid = getStr('new_courseid', i) || '';
-                    if (em) scoreLookup.add(`${em.toLowerCase().trim()}|${cid.toLowerCase().trim()}`);
-                    if (em) scoreEmailOnly.add(em.toLowerCase().trim());
-                    if (cid) scoreCourseOnly.add(cid.toLowerCase().trim());
-                }
-
-                // Check each reg row
                 const results = [];
                 const CHUNK = 50000;
                 for (let i = 0; i < regRows.length; i += CHUNK) {
                     const end = Math.min(i + CHUNK, regRows.length);
                     for (let j = i; j < end; j++) {
                         const row = regRows[j];
-                        const email = String(row[emailCol] || '').toLowerCase().trim();
-                        const course = courseCol ? String(row[courseCol] || '').toLowerCase().trim() : '';
+                        const email = normKey(row[emailCol]);
+                        const course = courseCol ? normKey(row[courseCol]) : '';
                         if (!email) continue;
                         const key = `${email}|${course}`;
-                        const hasEmail = scoreEmailOnly.has(email);
-                        const hasCourse = course ? scoreCourseOnly.has(course) : true;
-                        const hasExact = course ? scoreLookup.has(key) : hasEmail;
+                        const hasEmail = storeIndex.emailSet.has(email);
+                        const hasCourse = course ? storeIndex.courseSetLower.has(course) : true;
+                        const hasExact = course ? storeIndex.emailCourseSet.has(key) : hasEmail;
                         let status, statusClass;
                         if (hasExact) { status = '✓ Found'; statusClass = 't-ok'; }
                         else if (hasEmail && !hasCourse) { status = '⚠ Course missing'; statusClass = 't-warn'; }
@@ -7828,6 +8520,8 @@ self.onmessage = function(e) {
             async function runScoreDiff() {
                 const old = toolData['diff-old'], nw = toolData['diff-new'];
                 if (!old || !nw) { toast('Load both files first', 'w'); return; }
+                old.index = old.index || buildKeyedRowIndex(old.rows, old.cols);
+                nw.index = nw.index || buildKeyedRowIndex(nw.rows, nw.cols);
                 const btn = $('diff-run-btn');
                 btn.disabled = true; btn.innerHTML = '<i class="bi bi-hourglass-split"></i> Comparing…';
                 await delay(20);
@@ -7855,13 +8549,7 @@ self.onmessage = function(e) {
                 commonAsn.forEach(c => compareCols.push({ old: c, new: c, label: c, isNum: true }));
                 if (compareOut25) compareCols.push({ old: out25Old, new: out25New, label: 'out_of_25', isNum: true });
 
-                // Build new lookup: "email|course" → row
-                const newLookup = new Map();
-                for (const row of nw.rows) {
-                    const em = String(row[emailNew] || '').toLowerCase().trim();
-                    const cid = courseNew ? String(row[courseNew] || '').toLowerCase().trim() : '';
-                    newLookup.set(`${em}|${cid}`, row);
-                }
+                const newLookup = nw.index.keyToRow;
 
                 diffMissingRows = []; diffAllRows = [];
                 const CHUNK = 30000;
@@ -7869,8 +8557,8 @@ self.onmessage = function(e) {
                     const end = Math.min(i + CHUNK, old.rows.length);
                     for (let j = i; j < end; j++) {
                         const oRow = old.rows[j];
-                        const em = String(oRow[emailOld] || '').toLowerCase().trim();
-                        const cid = courseOld ? String(oRow[courseOld] || '').toLowerCase().trim() : '';
+                        const em = normKey(oRow[emailOld]);
+                        const cid = courseOld ? normKey(oRow[courseOld]) : '';
                         const key = `${em}|${cid}`;
                         const nRow = newLookup.get(key);
 
@@ -7910,16 +8598,10 @@ self.onmessage = function(e) {
                     await delay(0);
                 }
 
-                // Also find rows in NEW but not in OLD
-                const oldLookup = new Set();
-                for (const row of old.rows) {
-                    const em = String(row[emailOld] || '').toLowerCase().trim();
-                    const cid = courseOld ? String(row[courseOld] || '').toLowerCase().trim() : '';
-                    oldLookup.add(`${em}|${cid}`);
-                }
+                const oldLookup = old.index.keySet;
                 const newOnly = nw.rows.filter(row => {
-                    const em = String(row[emailNew] || '').toLowerCase().trim();
-                    const cid = courseNew ? String(row[courseNew] || '').toLowerCase().trim() : '';
+                    const em = normKey(row[emailNew]);
+                    const cid = courseNew ? normKey(row[courseNew]) : '';
                     return !oldLookup.has(`${em}|${cid}`);
                 });
 
@@ -8076,7 +8758,36 @@ self.onmessage = function(e) {
             // ═══════════════════════════════════════════════════════════════
             let attRawRows = [], attRawCols = [], attFilteredRows = [];
             let attSelActions = new Set(), attSelCats = new Set();
-            let attPivotData = null, attFilterToken = 0;
+            let attPivotData = null, attFilterToken = 0, attMeta = null;
+
+            function buildAttendanceMeta(rows, cols) {
+                const fc = n => cols.find(c => c.toLowerCase().replace(/[_\s]/g, '') === n) || cols.find(c => c.toLowerCase().includes(n.replace(/[_\s]/g, ''))) || '';
+                const colMeta = { action: fc('action'), cat: fc('category'), course: fc('courseid') || fc('course'), email: fc('emailid') || fc('email'), date: fc('examdate') || fc('date') };
+                const byAction = new Map(), byCat = new Map();
+                for (let i = 0; i < rows.length; i++) {
+                    const row = rows[i];
+                    const action = String(row[colMeta.action] || '');
+                    const cat = String(row[colMeta.cat] || '');
+                    if (action) {
+                        if (!byAction.has(action)) byAction.set(action, []);
+                        byAction.get(action).push(i);
+                    }
+                    if (cat) {
+                        if (!byCat.has(cat)) byCat.set(cat, []);
+                        byCat.get(cat).push(i);
+                    }
+                }
+                return { cols: colMeta, byAction, byCat, actions: [...byAction.keys()].sort(), cats: [...byCat.keys()].sort() };
+            }
+
+            function attConcatBuckets(map, selected) {
+                const out = [];
+                selected.forEach(v => {
+                    const bucket = map.get(v);
+                    if (bucket) for (let i = 0; i < bucket.length; i++) out.push(bucket[i]);
+                });
+                return out;
+            }
 
             function attDov(e) { e.preventDefault(); document.getElementById('att-uz').classList.add('drag'); }
             function attDlv() { document.getElementById('att-uz').classList.remove('drag'); }
@@ -8090,20 +8801,23 @@ self.onmessage = function(e) {
                     await delay(30);
                     let rows, cols;
                     if (file.name.toLowerCase().endsWith('.csv')) {
-                        const data = await new Promise((res, rej) => { Papa.parse(file, { header: true, skipEmptyLines: true, complete: r => res(r), error: rej }); });
-                        rows = data.data; cols = data.meta.fields || [];
+                        const data = await new Promise((res, rej) => { Papa.parse(file, { header: true, skipEmptyLines: true, worker: true, complete: r => res(r), error: rej }); });
+                        const rawCols = (data.meta.fields || []).map(c => String(c == null ? '' : c));
+                        cols = sanitizeCols(rawCols);
+                        rows = normalizeParsedRows(data.data, rawCols, cols);
                     } else {
                         const ab = await file.arrayBuffer();
                         const wb = XLSX.read(new Uint8Array(ab), { type: 'array' });
                         const ws = wb.Sheets[wb.SheetNames[0]];
                         const json = XLSX.utils.sheet_to_json(ws, { raw: false, defval: '' });
-                        cols = json.length ? Object.keys(json[0]) : [];
-                        rows = json;
+                        const rawCols = json.length ? Object.keys(json[0]) : [];
+                        cols = json.length ? sanitizeCols(rawCols) : [];
+                        rows = json.length ? normalizeParsedRows(json, rawCols, cols) : json;
                     }
                     pOv(70, 'Building filters\u2026'); await delay(10);
                     attRawRows = rows; attRawCols = cols;
-                    const fc = n => cols.find(c => c.toLowerCase().replace(/[_\s]/g, '') === n) || cols.find(c => c.toLowerCase().includes(n.replace(/[_\s]/g, ''))) || '';
-                    window._attCols = { action: fc('action'), cat: fc('category'), course: fc('courseid') || fc('course'), email: fc('emailid') || fc('email'), date: fc('examdate') || fc('date') };
+                    attMeta = buildAttendanceMeta(rows, cols);
+                    window._attCols = attMeta.cols;
                     attBuildFilterPills();
                     document.getElementById('att-uz').classList.add('loaded');
                     document.getElementById('att-uz-t').textContent = '\u2713 ' + file.name;
@@ -8116,12 +8830,11 @@ self.onmessage = function(e) {
             }
 
             function attBuildFilterPills() {
-                const ac = window._attCols.action, cc = window._attCols.cat;
-                const actions = [...new Set(attRawRows.map(r => String(r[ac] || '')).filter(Boolean))].sort();
+                const actions = attMeta ? attMeta.actions : [];
                 attSelActions = new Set(actions);
                 document.getElementById('att-action-pills').innerHTML = actions.map(a => '<span class="att-filter-pill active" data-val="' + escHtml(a) + '" onclick="attTogglePill(this,\'action\')">' + escHtml(a) + '</span>').join('');
                 document.getElementById('att-f-action-count').textContent = '(' + actions.length + ')';
-                const cats = [...new Set(attRawRows.map(r => String(r[cc] || '')).filter(Boolean))].sort();
+                const cats = attMeta ? attMeta.cats : [];
                 attSelCats = new Set(cats);
                 document.getElementById('att-cat-pills').innerHTML = cats.map(c => '<span class="att-filter-pill active" data-val="' + escHtml(c) + '" onclick="attTogglePill(this,\'cat\')">' + escHtml(c) + '</span>').join('');
                 document.getElementById('att-f-cat-count').textContent = '(' + cats.length + ')';
@@ -8141,17 +8854,34 @@ self.onmessage = function(e) {
                 document.getElementById('att-loading').style.display = 'block';
                 await delay(10);
                 const ac = window._attCols.action, cc = window._attCols.cat;
+                const allActions = attMeta ? attMeta.actions.length : 0;
+                const allCats = attMeta ? attMeta.cats.length : 0;
+                const actionFiltered = attMeta && attSelActions.size < allActions;
+                const catFiltered = attMeta && attSelCats.size < allCats;
+                let candidates = null;
+                if (!actionFiltered && !catFiltered) {
+                    attFilteredRows = attRawRows;
+                    document.getElementById('att-loading').style.display = 'none';
+                    attUpdateKPIs(); attRenderSummaryTables(); attRenderPivot();
+                    return;
+                }
+                if (actionFiltered) candidates = attConcatBuckets(attMeta.byAction, attSelActions);
+                if (catFiltered) {
+                    const catCandidates = attConcatBuckets(attMeta.byCat, attSelCats);
+                    if (!candidates || catCandidates.length < candidates.length) candidates = catCandidates;
+                }
+                const source = candidates || Array.from({ length: attRawRows.length }, (_, i) => i);
                 const CHUNK = 200000; const result = [];
-                for (let i = 0; i < attRawRows.length; i += CHUNK) {
+                for (let i = 0; i < source.length; i += CHUNK) {
                     if (attFilterToken !== token) return;
-                    const end = Math.min(i + CHUNK, attRawRows.length);
+                    const end = Math.min(i + CHUNK, source.length);
                     for (let j = i; j < end; j++) {
-                        const r = attRawRows[j];
+                        const r = attRawRows[source[j]];
                         if (attSelActions.size && !attSelActions.has(String(r[ac] || ''))) continue;
                         if (attSelCats.size && !attSelCats.has(String(r[cc] || ''))) continue;
                         result.push(r);
                     }
-                    if (i + CHUNK < attRawRows.length) { document.getElementById('att-loading-msg').textContent = 'Filtering\u2026 ' + Math.min(i + CHUNK, attRawRows.length).toLocaleString() + '/' + attRawRows.length.toLocaleString(); await delay(0); }
+                    if (i + CHUNK < source.length) { document.getElementById('att-loading-msg').textContent = 'Filtering\u2026 ' + Math.min(i + CHUNK, source.length).toLocaleString() + '/' + source.length.toLocaleString(); await delay(0); }
                 }
                 if (attFilterToken !== token) return;
                 attFilteredRows = result;
@@ -8274,8 +9004,8 @@ self.onmessage = function(e) {
             function psoDrop(e, n, type) { e.preventDefault(); const z = 'pso-uz' + n + (type === 'map' ? 'm' : 's'); document.getElementById(z) && document.getElementById(z).classList.remove('drag'); const f = e.dataTransfer.files[0]; if (f) { if (type === 'map') psoMapUp(n, { files: [f] }); else psoStuUp(n, { files: [f] }); } }
             function psoSdot(n, s, state) { const el = document.getElementById('pso-sd' + n + s); if (el) { el.className = 'sdot'; if (state) el.classList.add(state); } }
             function psoBadge(n) { const el = document.getElementById('pso-badge' + n); if (!el) return; const cid = PSO.courseId[n - 1], map = PSO.mapData[n - 1], stu = PSO.stuData[n - 1]; if (cid && map && stu) { el.textContent = cid; el.style.background = 'rgba(0,166,90,.4)'; el.style.color = '#fff'; el.title = 'Course: ' + cid; } else if (cid && map) { el.textContent = 'Awaiting Scores'; el.style.background = ''; el.style.color = ''; el.title = ''; } else if (map) { el.textContent = 'Select Course ID'; el.style.background = ''; el.style.color = ''; el.title = ''; } else { el.textContent = 'Not Configured'; el.style.background = ''; el.style.color = ''; el.title = ''; } }
-            function psoParseFile(file) { return new Promise((res, rej) => { if (file.name.toLowerCase().endsWith('.csv')) { Papa.parse(file, { header: true, skipEmptyLines: true, complete: r => res({ columns: r.meta.fields || [], rows: r.data }), error: rej }); } else { const rd = new FileReader(); rd.onload = e => { try { const wb = XLSX.read(new Uint8Array(e.target.result), { type: 'array' }); const ws = wb.Sheets[wb.SheetNames[0]]; const json = XLSX.utils.sheet_to_json(ws, { raw: false, defval: '' }); res({ columns: json.length ? Object.keys(json[0]) : [], rows: json }); } catch (err) { rej(err); } }; rd.onerror = rej; rd.readAsArrayBuffer(file); } }); }
-            async function psoMapUp(n, input) { const file = input.files[0]; if (!file) return; try { const data = await psoParseFile(file); PSO.mapData[n - 1] = data; document.getElementById('pso-uz' + n + 'm').classList.add('loaded'); document.getElementById('pso-map' + n + 'fn').textContent = file.name; psoSdot(n, 'm', 'done'); const cc = data.columns.find(c => /course.?id/i.test(c)) || data.columns[0]; const ids = [...new Set(data.rows.map(r => String(r[cc] || '').trim()).filter(Boolean))]; const sel = document.getElementById('pso-csel' + n); sel.innerHTML = '<option value="">— Select Course ID —</option>' + ids.map(id => '<option value="' + escHtml(id) + '">' + escHtml(id) + '</option>').join(''); if (ids.length === 1) { sel.value = ids[0]; psoOnCourseSelect(n); } psoBadge(n); toast('Mapping loaded: ' + ids.length + ' course' + (ids.length !== 1 ? 's' : ''), 's'); } catch (e) { toast('Error: ' + e.message, 'e'); } }
+            function psoParseFile(file) { return new Promise((res, rej) => { if (file.name.toLowerCase().endsWith('.csv')) { Papa.parse(file, { header: true, skipEmptyLines: true, worker: true, complete: r => { const rawCols = (r.meta.fields || []).map(c => String(c == null ? '' : c)); const columns = sanitizeCols(rawCols); res({ columns, rows: normalizeParsedRows(r.data, rawCols, columns) }); }, error: rej }); } else { const rd = new FileReader(); rd.onload = e => { try { const wb = XLSX.read(new Uint8Array(e.target.result), { type: 'array' }); const ws = wb.Sheets[wb.SheetNames[0]]; const json = XLSX.utils.sheet_to_json(ws, { raw: false, defval: '' }); const rawCols = json.length ? Object.keys(json[0]) : []; const columns = json.length ? sanitizeCols(rawCols) : []; res({ columns, rows: json.length ? normalizeParsedRows(json, rawCols, columns) : json }); } catch (err) { rej(err); } }; rd.onerror = rej; rd.readAsArrayBuffer(file); } }); }
+            async function psoMapUp(n, input) { const file = input.files[0]; if (!file) return; try { const data = await psoParseFile(file); const cc = data.columns.find(c => /course.?id/i.test(c)) || data.columns[0]; const courseIndex = new Map(); const ids = []; for (let i = 0; i < data.rows.length; i++) { const raw = normCell(data.rows[i][cc]); if (!raw) continue; const key = raw.replace(/[\s\u00A0]+/g, ' ').trim().toLowerCase(); if (!courseIndex.has(key)) { courseIndex.set(key, data.rows[i]); ids.push(raw); } } data._courseCol = cc; data._courseIndex = courseIndex; PSO.mapData[n - 1] = data; document.getElementById('pso-uz' + n + 'm').classList.add('loaded'); document.getElementById('pso-map' + n + 'fn').textContent = file.name; psoSdot(n, 'm', 'done'); const sel = document.getElementById('pso-csel' + n); sel.innerHTML = '<option value="">— Select Course ID —</option>' + ids.map(id => '<option value="' + escHtml(id) + '">' + escHtml(id) + '</option>').join(''); if (ids.length === 1) { sel.value = ids[0]; psoOnCourseSelect(n); } psoBadge(n); toast('Mapping loaded: ' + ids.length + ' course' + (ids.length !== 1 ? 's' : ''), 's'); } catch (e) { toast('Error: ' + e.message, 'e'); } }
             async function psoStuUp(n, input) { const file = input.files[0]; if (!file) return; try { showOv('Loading Score Dump', 'Reading...', '20'); await delay(20); const data = await psoParseFile(file); data.name = file.name; PSO.stuData[n - 1] = data; hideOv(); document.getElementById('pso-uz' + n + 's').classList.add('loaded'); document.getElementById('pso-stu' + n + 'fn').textContent = file.name; psoSdot(n, 's', 'done'); psoBadge(n); psoCheckReady(n); toast('Scores: ' + data.rows.length.toLocaleString() + ' rows', 's'); } catch (e) { hideOv(); toast('Error: ' + e.message, 'e'); } }
             function psoOnCourseSelect(n) { PSO.courseId[n - 1] = document.getElementById('pso-csel' + n).value || null; psoSdot(n, 'c', PSO.courseId[n - 1] ? 'done' : ''); psoBadge(n); psoCheckReady(n); }
             function psoCheckReady(n) { psoSdot(n, 'r', (PSO.mapData[n - 1] && PSO.stuData[n - 1] && PSO.courseId[n - 1]) ? 'act' : ''); }
@@ -8312,10 +9042,9 @@ self.onmessage = function(e) {
             }
             function psoProcess(n) {
                 const mapData = PSO.mapData[n - 1], stuData = PSO.stuData[n - 1], courseId = PSO.courseId[n - 1], scoreChoice = PSO.scoreChoice;
-                const cc = mapData.columns.find(c => /course.?id/i.test(c)) || mapData.columns[0];
                 // Normalize: trim all whitespace including non-breaking spaces (U+00A0)
                 const normStr = s => String(s || '').replace(/[\s\u00A0]+/g, ' ').trim().toLowerCase();
-                const mapRow = mapData.rows.find(r => normStr(r[cc]) === normStr(courseId));
+                const mapRow = mapData._courseIndex ? mapData._courseIndex.get(normStr(courseId)) : mapData.rows.find(r => normStr(r[mapData._courseCol || mapData.columns[0]]) === normStr(courseId));
                 if (!mapRow) {
                     toast('Course ID "' + courseId + '" not found in mapping sheet. Check mapping file has matching Course ID column.', 'e');
                     return { columns: stuData.columns, rows: stuData.rows.map(r => Object.assign({}, r)), renamedMap: {}, renamedList: [], weeksCreated: [], bestScoreCol: null, mappingIdCount: 0, formulaDesc: {}, diag: { matchCount: 0, notFound: true } };
@@ -9775,6 +10504,7 @@ function sortView(sortColName,sortDir){
             // SCORE CROSS CHECK
             // ═══════════════════════════════════════════════════════════════
             let _scSheetData = null;
+            let _scSheetIndex = null;
             let _scAllResults = [];
             let _scFiltered = [];
             let _scColFilters = {};
@@ -9813,13 +10543,8 @@ function sortView(sortColName,sortDir){
 
             function scBuildCourses() {
                 if (!store) return;
-                const courseCol = findCourseCol(origCols) || 'new_courseid';
-                const seen = new Set();
-                for (let i = 0; i < store.rowCount; i++) {
-                    const c = getStr(courseCol, i);
-                    if (c) seen.add(c);
-                }
-                _scCourseAll = [...seen].sort();
+                if (!storeIndex) storeIndex = buildStoreIndex();
+                _scCourseAll = storeIndex ? storeIndex.courseList.slice() : [];
                 _scCourseSelected = new Set(_scCourseAll);
                 scRenderCourseList();
                 $('sc-course-panel').style.display = 'block';
@@ -9894,6 +10619,7 @@ function sortView(sortColName,sortDir){
                     showOv('Parsing score sheet…');
                     await delay(10);
                     _scSheetData = await parseFile(file);
+                    _scSheetIndex = buildKeyedRowIndex(_scSheetData.rows, _scSheetData.cols);
                     $('sc-sheet-uz').classList.add('loaded');
                     $('sc-sheet-t').textContent = `✓ ${file.name}`;
                     $('sc-sheet-fn').textContent = `${_scSheetData.rows.length.toLocaleString()} rows · ${_scSheetData.cols.length} cols`;
@@ -9924,15 +10650,17 @@ function sortView(sortColName,sortDir){
                 try {
                     showOv('Running cross-check…');
                     await delay(20);
+                    if (!storeIndex) storeIndex = buildStoreIndex();
+                    if (!_scSheetIndex && _scSheetData) _scSheetIndex = buildKeyedRowIndex(_scSheetData.rows, _scSheetData.cols);
 
-                    const dEmailCol = findEmailCol(origCols) || 'EmailId';
-                    const dCourseCol = findCourseCol(origCols) || 'new_courseid';
+                    const dEmailCol = (storeIndex && storeIndex.emailCol) || findEmailCol(origCols) || 'EmailId';
+                    const dCourseCol = (storeIndex && storeIndex.courseCol) || findCourseCol(origCols) || 'new_courseid';
                     const dAsnCols = getAsnCols(origCols);
                     const dOut25Col = origCols.find(c => /out_of_25/i.test(c));
 
                     const sCols = _scSheetData.cols;
-                    const sEmailCol = findEmailCol(sCols) || sCols[0];
-                    const sCourseCol = findCourseCol(sCols);
+                    const sEmailCol = (_scSheetIndex && _scSheetIndex.emailCol) || findEmailCol(sCols) || sCols[0];
+                    const sCourseCol = (_scSheetIndex && _scSheetIndex.courseCol) || findCourseCol(sCols);
                     const sAsnCols = getAsnCols(sCols);
                     const sOut25Col = sCols.find(c => /out_of_25|out25/i.test(c));
 
@@ -9943,14 +10671,7 @@ function sortView(sortColName,sortDir){
                     pOv(10, 'Building sheet index…');
                     await delay(10);
 
-                    const sheetMap = new Map();
-                    for (let i = 0; i < _scSheetData.rows.length; i++) {
-                        const row = _scSheetData.rows[i];
-                        const email = String(row[sEmailCol] || '').trim().toLowerCase();
-                        const course = useSheetCourse ? String(row[sCourseCol] || '').trim().toLowerCase() : '';
-                        const key = useSheetCourse ? `${email}||${course}` : email;
-                        if (email) sheetMap.set(key, row);
-                    }
+                    const sheetMap = _scSheetIndex ? _scSheetIndex.keyToRow : new Map();
 
                     pOv(20, 'Scanning dump rows…');
                     await delay(10);
@@ -9958,17 +10679,27 @@ function sortView(sortColName,sortDir){
                     const results = [];
                     const CHUNK = 20000;
                     const seenKeys = new Set();
+                    let dumpRows = null;
+                    if (storeIndex && _scCourseSelected.size > 0 && _scCourseSelected.size < storeIndex.courseList.length) {
+                        dumpRows = [];
+                        _scCourseSelected.forEach(courseId => {
+                            const bucket = storeIndex.courseRows.get(courseId);
+                            if (bucket) for (let i = 0; i < bucket.length; i++) dumpRows.push(bucket[i]);
+                        });
+                    }
+                    const dumpTotal = dumpRows ? dumpRows.length : store.rowCount;
 
-                    for (let i = 0; i < store.rowCount; i++) {
-                        if (i > 0 && i % CHUNK === 0) {
-                            pOv(20 + Math.round(60 * i / store.rowCount), `Row ${i.toLocaleString()} / ${store.rowCount.toLocaleString()}…`);
+                    for (let pos = 0; pos < dumpTotal; pos++) {
+                        if (pos > 0 && pos % CHUNK === 0) {
+                            pOv(20 + Math.round(60 * pos / dumpTotal), `Row ${pos.toLocaleString()} / ${dumpTotal.toLocaleString()}…`);
                             await delay(0);
                         }
+                        const i = dumpRows ? dumpRows[pos] : pos;
                         const course = getStr(dCourseCol, i);
-                        if (!_scCourseSelected.has(course)) continue;
+                        if (!dumpRows && !_scCourseSelected.has(course)) continue;
                         const email = getStr(dEmailCol, i);
-                        const emailL = email.toLowerCase();
-                        const key = useSheetCourse ? `${emailL}||${course.toLowerCase()}` : emailL;
+                        const emailL = normKey(email);
+                        const key = useSheetCourse ? `${emailL}|${normKey(course)}` : emailL;
                         const sRow = sheetMap.get(key);
                         if (!sRow) {
                             results.push({ _status: 'miss_sheet', _email: email, _course: course, _dVals: {}, _sVals: {} });
@@ -10006,10 +10737,10 @@ function sortView(sortColName,sortDir){
 
                     for (let i = 0; i < _scSheetData.rows.length; i++) {
                         const row = _scSheetData.rows[i];
-                        const email = String(row[sEmailCol] || '').trim();
+                        const email = normCell(row[sEmailCol]);
                         if (!email) continue;
-                        const course = useSheetCourse ? String(row[sCourseCol] || '').trim() : '';
-                        const key = useSheetCourse ? `${email.toLowerCase()}||${course.toLowerCase()}` : email.toLowerCase();
+                        const course = useSheetCourse ? normCell(row[sCourseCol]) : '';
+                        const key = useSheetCourse ? `${email.toLowerCase()}|${course.toLowerCase()}` : email.toLowerCase();
                         if (seenKeys.has(key)) continue;
                         if (useSheetCourse && !_scCourseSelected.has(course)) continue;
                         const sVals = {};
