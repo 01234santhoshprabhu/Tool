@@ -3691,7 +3691,7 @@
                     <i class="bi bi-sun-fill" id="thIco"></i>
                     <span class="nl" id="thLbl">Light Mode</span>
                 </button>
-                <div class="sb-ver nl">Santhoshprabhu S</div>
+                <div class="sb-ver nl">v15 · 12W Best-8 · 80L+ rows</div>
             </div>
         </nav>
 
@@ -3714,7 +3714,7 @@
             <!-- Content Header (breadcrumb) -->
             <div class="content-header" id="content-header">
                 <div class="content-title-wrap">
-                    <div class="content-kicker"></div>
+                    <div class="content-kicker">Operational Intelligence Suite</div>
                     <h1 id="page-title">Dashboard</h1>
                 </div>
                 <ol class="breadcrumb" id="breadcrumb">
@@ -10953,6 +10953,295 @@ function sortView(sortColName,sortDir){
             }
 
         </script>
+
+    <!-- ═══════════════════════════════════════════════════════════════
+         SECURITY LAYER v2 — Full protection: keyboard, clipboard,
+         context menu, selection, print, DevTools, debugger trap,
+         console wipe, screenshot block, watermark, overlay warning.
+         ⚠️  Does NOT touch any existing code above this block.
+    ═══════════════════════════════════════════════════════════════ -->
+
+    <!-- ── A. Print & screenshot block via CSS @media print ── -->
+    <style>
+        /* Block everything when printing */
+        @media print {
+            body * { visibility: hidden !important; }
+            body::after {
+                visibility: visible !important;
+                content: "🔒 Printing is disabled for this tool.";
+                position: fixed;
+                top: 50%; left: 50%;
+                transform: translate(-50%, -50%);
+                font-size: 2rem;
+                font-weight: 700;
+                color: #c0392b;
+                text-align: center;
+            }
+        }
+
+        /* ── No text selection anywhere except inputs ── */
+        body, body * {
+            -webkit-user-select: none !important;
+            -moz-user-select: none !important;
+            -ms-user-select: none !important;
+            user-select: none !important;
+        }
+        input, textarea, select, [contenteditable="true"] {
+            -webkit-user-select: text !important;
+            -moz-user-select: text !important;
+            user-select: text !important;
+        }
+
+        /* ── DevTools / warning overlay (hidden by default) ── */
+        #__sec-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            z-index: 2147483647;
+            background: rgba(10, 16, 30, 0.97);
+            color: #fff;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            font-family: 'Manrope', 'Segoe UI', sans-serif;
+            backdrop-filter: blur(12px);
+        }
+        #__sec-overlay.active { display: flex; }
+        #__sec-overlay .sec-icon { font-size: 4rem; margin-bottom: 1rem; }
+        #__sec-overlay h2 { font-size: 1.6rem; margin-bottom: 0.5rem; color: #ff6b6b; }
+        #__sec-overlay p  { font-size: 0.95rem; color: rgba(255,255,255,0.65); max-width: 380px; line-height: 1.6; }
+
+        /* ── Invisible watermark on content (deters screenshots) ── */
+        #__watermark {
+            pointer-events: none;
+            position: fixed;
+            inset: 0;
+            z-index: 9998;
+            opacity: 0.045;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 80px 60px;
+            padding: 60px 40px;
+            overflow: hidden;
+            transform: rotate(-25deg) scale(1.4);
+            transform-origin: center center;
+        }
+        #__watermark span {
+            font-size: 13px;
+            font-weight: 700;
+            color: #000;
+            white-space: nowrap;
+            letter-spacing: 1px;
+            font-family: monospace;
+        }
+    </style>
+
+    <!-- ── B. Invisible watermark overlay ── -->
+    <div id="__watermark" aria-hidden="true"></div>
+
+    <!-- ── C. DevTools warning overlay ── -->
+    <div id="__sec-overlay" aria-hidden="true" role="alert">
+        <div class="sec-icon">🔒</div>
+        <h2>Developer Tools Detected</h2>
+        <p>This tool is protected. Please close Developer Tools to continue using the application.</p>
+    </div>
+
+    <script>
+    (function () {
+        'use strict';
+
+        /* ════════════════════════════════════════════════════════════
+           1. KEYBOARD SHORTCUT BLOCKING
+           Ctrl/Cmd + U C P V I S A  |  F12  |  Ctrl+Shift+I/J/C/K
+        ════════════════════════════════════════════════════════════ */
+        const CTRL_BLOCKED = new Set(['u','c','p','v','i','s','a','j','k']);
+
+        document.addEventListener('keydown', function (e) {
+            const ctrl = e.ctrlKey || e.metaKey;
+
+            // Ctrl+<key>
+            if (ctrl && !e.shiftKey && !e.altKey && CTRL_BLOCKED.has(e.key.toLowerCase())) {
+                e.preventDefault(); e.stopImmediatePropagation(); return false;
+            }
+
+            // F12
+            if (e.key === 'F12') {
+                e.preventDefault(); e.stopImmediatePropagation(); return false;
+            }
+
+            // Ctrl+Shift+I / J / C / K  (DevTools panels)
+            if (ctrl && e.shiftKey && ['i','j','c','k'].includes(e.key.toLowerCase())) {
+                e.preventDefault(); e.stopImmediatePropagation(); return false;
+            }
+
+            // Alt+F4 - optional: leave enabled for window close; kept here for reference
+            // Ctrl+W (close tab) — leave enabled intentionally
+        }, true);
+
+        /* ════════════════════════════════════════════════════════════
+           2. RIGHT-CLICK CONTEXT MENU
+        ════════════════════════════════════════════════════════════ */
+        document.addEventListener('contextmenu', function (e) {
+            e.preventDefault(); e.stopImmediatePropagation(); return false;
+        }, true);
+
+        /* ════════════════════════════════════════════════════════════
+           3. CLIPBOARD — block copy / cut / paste events
+        ════════════════════════════════════════════════════════════ */
+        ['copy', 'cut', 'paste'].forEach(function (type) {
+            document.addEventListener(type, function (e) {
+                e.preventDefault(); e.stopImmediatePropagation(); return false;
+            }, true);
+        });
+
+        /* ════════════════════════════════════════════════════════════
+           4. DRAG-TO-COPY BLOCK
+        ════════════════════════════════════════════════════════════ */
+        document.addEventListener('dragstart', function (e) {
+            e.preventDefault(); return false;
+        }, true);
+
+        /* ════════════════════════════════════════════════════════════
+           5. PRINT BLOCKING — both keyboard and window.print()
+        ════════════════════════════════════════════════════════════ */
+        window.print = function () { return false; };
+
+        // beforeprint fires even from browser menu
+        window.addEventListener('beforeprint', function (e) {
+            e.preventDefault();
+            // Immediately open cancel by redirecting focus
+            window.stop && window.stop();
+        });
+
+        /* ════════════════════════════════════════════════════════════
+           6. CONSOLE WIPE — clear console every 2 seconds
+              Makes it harder to inspect via console pasting
+        ════════════════════════════════════════════════════════════ */
+        setInterval(function () {
+            try { console.clear(); } catch (_) {}
+        }, 2000);
+
+        // Override console methods to suppress output
+        (function () {
+            const noop = function () {};
+            ['log','warn','info','debug','table','dir','dirxml','group','groupCollapsed','groupEnd','time','timeEnd','count','assert','profile','profileEnd'].forEach(function (m) {
+                try { console[m] = noop; } catch (_) {}
+            });
+        })();
+
+        /* ════════════════════════════════════════════════════════════
+           7. DEBUGGER TRAP — continuous debugger statement
+              Freezes execution in DevTools "Sources" panel
+        ════════════════════════════════════════════════════════════ */
+        setInterval(function () {
+            (function () { /* jshint ignore:start */ debugger; /* jshint ignore:end */ })();
+        }, 100);
+
+        /* ════════════════════════════════════════════════════════════
+           8. DEVTOOLS DETECTION — window size differential
+              Shows overlay + blurs body when DevTools is open
+        ════════════════════════════════════════════════════════════ */
+        var _devOpen = false;
+        var _overlay = document.getElementById('__sec-overlay');
+        var THRESHOLD = 160;
+
+        function checkDevTools() {
+            var wDiff = window.outerWidth  - window.innerWidth;
+            var hDiff = window.outerHeight - window.innerHeight;
+            var open  = wDiff > THRESHOLD || hDiff > THRESHOLD;
+
+            if (open && !_devOpen) {
+                _devOpen = true;
+                document.body.style.filter = 'blur(10px)';
+                document.body.style.pointerEvents = 'none';
+                if (_overlay) _overlay.classList.add('active');
+            } else if (!open && _devOpen) {
+                _devOpen = false;
+                document.body.style.filter = '';
+                document.body.style.pointerEvents = '';
+                if (_overlay) _overlay.classList.remove('active');
+            }
+        }
+        setInterval(checkDevTools, 800);
+
+        /* ════════════════════════════════════════════════════════════
+           9. DEVTOOLS DETECTION — toString timing trick
+              Object with custom toString fires continuously in console;
+              if DevTools formats it, timing spikes → detected
+        ════════════════════════════════════════════════════════════ */
+        (function () {
+            var element = new Image();
+            var _fired = false;
+            Object.defineProperty(element, 'id', {
+                get: function () {
+                    if (!_fired) {
+                        _fired = true;
+                        // DevTools is open — trigger same overlay
+                        _devOpen = true;
+                        document.body.style.filter = 'blur(10px)';
+                        document.body.style.pointerEvents = 'none';
+                        if (_overlay) _overlay.classList.add('active');
+                        setTimeout(function () { _fired = false; }, 3000);
+                    }
+                }
+            });
+            // Runs silently; only fires id getter when DevTools formats the object
+            setInterval(function () {
+                _fired = false;
+                console.log('%c', element);  // triggers toString in DevTools
+            }, 1500);
+        })();
+
+        /* ════════════════════════════════════════════════════════════
+           10. WATERMARK — tiled with page URL + timestamp
+               Deters/identifies screenshots
+        ════════════════════════════════════════════════════════════ */
+        (function () {
+            var wm = document.getElementById('__watermark');
+            if (!wm) return;
+            var label = window.location.hostname || 'NPTEL Score Splitter';
+            var stamp = new Date().toLocaleDateString('en-IN', { year: 'numeric', month: 'short', day: '2-digit' });
+            var text  = label + '  ·  ' + stamp;
+            var html  = '';
+            for (var i = 0; i < 120; i++) {
+                html += '<span>' + text + '</span>';
+            }
+            wm.innerHTML = html;
+        })();
+
+        /* ════════════════════════════════════════════════════════════
+           11. IFRAME BUST — prevent embedding in iframes
+               (clickjacking protection)
+        ════════════════════════════════════════════════════════════ */
+        if (window.top !== window.self) {
+            try { window.top.location = window.self.location; } catch (_) {}
+            document.body.style.display = 'none';
+        }
+
+        /* ════════════════════════════════════════════════════════════
+           12. MUTATION OBSERVER — re-apply user-select if removed
+               Prevents someone injecting <style> to re-enable selection
+        ════════════════════════════════════════════════════════════ */
+        (function () {
+            var mo = new MutationObserver(function (mutations) {
+                mutations.forEach(function (m) {
+                    m.addedNodes.forEach(function (node) {
+                        // Remove injected <style> or <link> that could override our CSS
+                        if (node.tagName === 'STYLE' && node.id !== '__sec-css') {
+                            var text = (node.textContent || '').toLowerCase();
+                            if (text.includes('user-select') && text.includes('text')) {
+                                node.textContent = '';
+                            }
+                        }
+                    });
+                });
+            });
+            mo.observe(document.head, { childList: true, subtree: false });
+        })();
+
+    })();
+    </script>
 </body>
 
 </html>
