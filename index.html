@@ -9507,6 +9507,8 @@ self.onmessage = function(e) {
                 let loadedSource = '';
                 let defaultCandidatesLoading = false;
                 const pendingFilterStates = new Map();
+                const DEFAULT_CANDIDATES_CSV = 'candidates_full_export.csv';
+                const DEFAULT_CANDIDATES_MEDIA_URL = 'https://media.githubusercontent.com/media/01234santhoshprabhu/Tool/main/candidates_full_export.csv';
 
                 function setMode(mode) {
                     const isCandidates = mode === 'candidates';
@@ -10105,9 +10107,10 @@ function sortView(sortColName,sortDir){
 
                 function loadDefaultCandidates() {
                     setMode('candidates');
-                    if (loadedSource === 'candidates_full_export.csv' && (store || defaultCandidatesLoading)) return;
+                    if (loadedSource === DEFAULT_CANDIDATES_CSV && (store || defaultCandidatesLoading)) return;
                     defaultCandidatesLoading = true;
-                    loadCsvFromUrl('candidates_full_export.csv', 'candidates_full_export.csv');
+                    const url = location.hostname.endsWith('github.io') ? DEFAULT_CANDIDATES_MEDIA_URL : DEFAULT_CANDIDATES_CSV;
+                    loadCsvFromUrl(url, DEFAULT_CANDIDATES_CSV);
                 }
 
                 /* ── Worker message dispatcher ── */
