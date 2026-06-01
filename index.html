@@ -3682,6 +3682,8 @@
                 <span class="sb-sec-lbl nl" style="margin-top:6px">NPTEL Tools</span>
                 <button class="nb" onclick="showPsoPage()"><i class="bi bi-grid-1x2-fill"></i><span
                         class="nl">Manual/Programming</span></button>
+                <button class="nb" onclick="showPage('cand')"><i class="bi bi-person-lines-fill"></i><span
+                        class="nl">Candidates</span></button>
                 <button class="nb" onclick="showPage('df')"><i class="bi bi-funnel-fill"></i><span class="nl">Data
                         Filter</span></button>
             </div>
@@ -5738,8 +5740,8 @@
                 <div id="df-up-sec">
                     <div class="box box-info">
                         <div class="box-header">
-                            <h3 class="box-title"><i class="bi bi-funnel-fill"></i> Data Filter
-                                <span style="font-size:11px;font-weight:400;color:var(--text3);margin-left:8px">Up to 80
+                            <h3 class="box-title"><i class="bi bi-funnel-fill" id="df-title-icon"></i> <span id="df-title">Data Filter</span>
+                                <span id="df-title-sub" style="font-size:11px;font-weight:400;color:var(--text3);margin-left:8px">Up to 80
                                     lakh rows · zero page freeze</span>
                             </h3>
                         </div>
@@ -5749,8 +5751,8 @@
                                     <div class="df-dz-icon">
                                         <i class="bi bi-cloud-upload-fill" style="font-size:22px;color:var(--blue)"></i>
                                     </div>
-                                    <div class="df-dz-title">Drop file here or click to browse</div>
-                                    <div class="df-dz-sub">Auto-detected columns · Dictionary-encoded · Worker-filtered
+                                    <div class="df-dz-title" id="df-dz-title">Drop file here or click to browse</div>
+                                    <div class="df-dz-sub" id="df-dz-sub">Auto-detected columns · Dictionary-encoded · Worker-filtered
                                     </div>
                                     <div class="df-dz-tags"><span class="df-dz-tag">CSV</span><span
                                             class="df-dz-tag">XLSX</span><span class="df-dz-tag">XLS</span></div>
@@ -6124,7 +6126,8 @@
                 reg: { el: 'page-reg', title: 'Registration Checker', bc: 'Reg Checker', nb: 3 },
                 diff: { el: 'page-diff', title: 'Score Diff', bc: 'Score Diff', nb: 4 },
                 sc: { el: 'page-sc', title: 'Score Cross Check', bc: 'Score Cross Check', nb: 5 },
-                df: { el: 'page-df', title: 'Data Filter', bc: 'Data Filter', nb: 7 },
+                cand: { el: 'page-df', title: 'Candidates Export', bc: 'Candidates', nb: 7 },
+                df: { el: 'page-df', title: 'Data Filter', bc: 'Data Filter', nb: 8 },
             };
             const PAGES_EXTRA = {
             };
@@ -6148,6 +6151,8 @@
                 currentPage = name;
                 window.scrollTo(0, 0);
                 if (name === 'sc') setTimeout(scOnShow, 0);
+                if (name === 'cand') setTimeout(() => DF.loadDefaultCandidates(), 0);
+                if (name === 'df') setTimeout(() => DF.setMode('default'), 0);
             }
 
             // ════════════════════════════════════════════════════════
@@ -9499,7 +9504,56 @@ self.onmessage = function(e) {
                 let loadFailed = false;
                 let latestFilterSeq = 0;
                 let lastAppliedFilterState = null;
+                let loadedSource = '';
+                let defaultCandidatesLoading = false;
                 const pendingFilterStates = new Map();
+
+                function setMode(mode) {
+                    const isCandidates = mode === 'candidates';
+                    const titleIcon = dfEl('df-title-icon');
+                    const title = dfEl('df-title');
+                    const titleSub = dfEl('df-title-sub');
+                    const dzTitle = dfEl('df-dz-title');
+                    const dzSub = dfEl('df-dz-sub');
+                    if (titleIcon) titleIcon.className = isCandidates ? 'bi bi-person-lines-fill' : 'bi bi-funnel-fill';
+                    if (title) title.textContent = isCandidates ? 'Candidates Export' : 'Data Filter';
+                    if (titleSub) titleSub.textContent = isCandidates
+                        ? 'candidates_full_export.csv · loaded by default'
+                        : 'Up to 80 lakh rows · zero page freeze';
+                    if (dzTitle) dzTitle.textContent = isCandidates
+                        ? 'Loading candidates_full_export.csv by default'
+                        : 'Drop file here or click to browse';
+                    if (dzSub) dzSub.textContent = isCandidates
+                        ? 'You can still drop another CSV/XLSX to replace it'
+                        : 'Auto-detected columns · Dictionary-encoded · Worker-filtered';
+                }
+
+                function resetForLoad() {
+                    store = null; filteredCount = 0; fmap = {};
+                    chunkAckResolver = null;
+                    loadFailed = false;
+                    latestFilterSeq = 0;
+                    lastAppliedFilterState = null;
+                    pendingFilterStates.clear();
+                    if (worker) { try { worker.terminate(); } catch (e) { } worker = null; }
+                    worker = buildWorker();
+                    if (!worker) {
+                        dfToast('Web Worker not supported — try Chrome/Edge/Firefox', 'e');
+                        return false;
+                    }
+                    worker.onmessage = onWorkerMessage;
+                    worker.onerror = err => {
+                        loadFailed = true;
+                        if (chunkAckResolver) {
+                            const fn = chunkAckResolver;
+                            chunkAckResolver = null;
+                            fn();
+                        }
+                        dfProgHide(); dfEl('df-file-inp').disabled = false;
+                        dfToast('Worker error: ' + (err.message || err), 'e');
+                    };
+                    return true;
+                }
 
                 /* ── Progress helpers ── */
                 function dfProg(lbl, pct, detail) {
@@ -9943,29 +9997,8 @@ function sortView(sortColName,sortDir){
                     if (!file) return;
                     const ext = (file.name.split('.').pop() || '').toLowerCase();
                     dfEl('df-file-inp').disabled = true;
-                    store = null; filteredCount = 0; fmap = {};
-                    chunkAckResolver = null;
-                    loadFailed = false;
-                    latestFilterSeq = 0;
-                    lastAppliedFilterState = null;
-                    pendingFilterStates.clear();
-                    if (worker) { try { worker.terminate(); } catch (e) { } worker = null; }
-                    worker = buildWorker();
-                    if (!worker) {
-                        dfToast('Web Worker not supported — try Chrome/Edge/Firefox', 'e');
-                        dfEl('df-file-inp').disabled = false; return;
-                    }
-                    worker.onmessage = onWorkerMessage;
-                    worker.onerror = err => {
-                        loadFailed = true;
-                        if (chunkAckResolver) {
-                            const fn = chunkAckResolver;
-                            chunkAckResolver = null;
-                            fn();
-                        }
-                        dfProgHide(); dfEl('df-file-inp').disabled = false;
-                        dfToast('Worker error: ' + (err.message || err), 'e');
-                    };
+                    if (!resetForLoad()) { dfEl('df-file-inp').disabled = false; return; }
+                    loadedSource = file.name;
                     try {
                         dfProg('Reading ' + file.name + '\u2026', 3, 'Handing off to background thread');
                         if (ext === 'csv') {
@@ -10024,6 +10057,59 @@ function sortView(sortColName,sortDir){
                     }
                 }
 
+                async function loadCsvFromUrl(url, label) {
+                    if (!resetForLoad()) { defaultCandidatesLoading = false; return; }
+                    loadedSource = label || url;
+                    const fi = dfEl('df-file-inp'); if (fi) fi.disabled = true;
+                    try {
+                        dfProg('Opening ' + loadedSource + '\u2026', 3, 'Fetching default candidate export');
+                        const res = await fetch(url, { cache: 'no-store' });
+                        if (!res.ok) throw new Error('Could not load ' + url + ' (' + res.status + ')');
+                        if (!res.body || !res.body.getReader) throw new Error('Streaming fetch is unavailable in this browser');
+                        const totalBytes = Number(res.headers.get('content-length')) || 0;
+                        const reader = res.body.getReader();
+                        let loadedBytes = 0;
+                        worker.postMessage({ type: 'INIT_CSV', payload: { totalBytes } });
+                        while (true) {
+                            const { value, done } = await reader.read();
+                            if (done) {
+                                const ack = waitChunkAck();
+                                worker.postMessage({
+                                    type: 'APPEND_CSV_CHUNK',
+                                    payload: { buffer: new ArrayBuffer(0), loadedBytes, totalBytes, final: true }
+                                });
+                                await ack;
+                                break;
+                            }
+                            const ab = (value.byteOffset === 0 && value.byteLength === value.buffer.byteLength)
+                                ? value.buffer
+                                : value.buffer.slice(value.byteOffset, value.byteOffset + value.byteLength);
+                            loadedBytes += ab.byteLength;
+                            const ack = waitChunkAck();
+                            worker.postMessage({
+                                type: 'APPEND_CSV_CHUNK',
+                                payload: { buffer: ab, loadedBytes, totalBytes, final: false }
+                            }, [ab]);
+                            await ack;
+                            if (loadFailed) break;
+                            await dfYield();
+                        }
+                    } catch (err) {
+                        dfProgHide();
+                        if (fi) fi.disabled = false;
+                        defaultCandidatesLoading = false;
+                        dfToast('Default candidates CSV was not found. Keep candidates_full_export.csv beside index.html and open through a local server.', 'e', 6500);
+                        console.error(err);
+                    }
+                }
+
+                function loadDefaultCandidates() {
+                    setMode('candidates');
+                    if (loadedSource === 'candidates_full_export.csv' && (store || defaultCandidatesLoading)) return;
+                    defaultCandidatesLoading = true;
+                    loadCsvFromUrl('candidates_full_export.csv', 'candidates_full_export.csv');
+                }
+
                 /* ── Worker message dispatcher ── */
                 function onWorkerMessage(e) {
                     const msg = e.data, type = msg.type;
@@ -10040,6 +10126,7 @@ function sortView(sortColName,sortDir){
                     else if (type === 'STORE_META') {
                         /* Worker finished building store; main thread gets light meta (dicts, no idx) */
                         store = msg.meta; /* {cols, n, colData:{col:{uniqueCount, dict?}}} */
+                        defaultCandidatesLoading = false;
                         filteredCount = store.n;
                         fmap = {};
                         store.cols.forEach(c => {
@@ -10468,6 +10555,8 @@ function sortView(sortColName,sortDir){
 
                 function clear() {
                     store = null; filteredCount = 0; fmap = {}; sortCol = null; sortDir = 1; pg = 1;
+                    loadedSource = '';
+                    defaultCandidatesLoading = false;
                     latestFilterSeq = 0;
                     lastAppliedFilterState = null;
                     pendingFilterStates.clear();
@@ -10497,7 +10586,7 @@ function sortView(sortColName,sortDir){
                     dz.addEventListener('drop', ev => { ev.preventDefault(); dz.classList.remove('over'); const f = ev.dataTransfer.files[0]; if (f) handleFile(f); });
                 })();
 
-                return { handleFile, reset, clear, sort, exportCSV, copyTable, changePS, removeTag };
+                return { handleFile, reset, clear, sort, exportCSV, copyTable, changePS, removeTag, loadDefaultCandidates, setMode };
             })();
 
             // ═══════════════════════════════════════════════════════════════
