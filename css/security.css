@@ -1,0 +1,72 @@
+        /* Block everything when printing */
+        @media print {
+            body * { visibility: hidden !important; }
+            body::after {
+                visibility: visible !important;
+                content: "🔒 Printing is disabled for this tool.";
+                position: fixed;
+                top: 50%; left: 50%;
+                transform: translate(-50%, -50%);
+                font-size: 2rem;
+                font-weight: 700;
+                color: #c0392b;
+                text-align: center;
+            }
+        }
+
+        /* ── No text selection anywhere except inputs ── */
+        body, body * {
+            -webkit-user-select: none !important;
+            -moz-user-select: none !important;
+            -ms-user-select: none !important;
+            user-select: none !important;
+        }
+        input, textarea, select, [contenteditable="true"] {
+            -webkit-user-select: text !important;
+            -moz-user-select: text !important;
+            user-select: text !important;
+        }
+
+        /* ── DevTools / warning overlay (hidden by default) ── */
+        #__sec-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            z-index: 2147483647;
+            background: rgba(10, 16, 30, 0.97);
+            color: #fff;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            font-family: 'Manrope', 'Segoe UI', sans-serif;
+            backdrop-filter: blur(12px);
+        }
+        #__sec-overlay.active { display: flex; }
+        #__sec-overlay .sec-icon { font-size: 4rem; margin-bottom: 1rem; }
+        #__sec-overlay h2 { font-size: 1.6rem; margin-bottom: 0.5rem; color: #ff6b6b; }
+        #__sec-overlay p  { font-size: 0.95rem; color: rgba(255,255,255,0.65); max-width: 380px; line-height: 1.6; }
+
+        /* ── Invisible watermark on content (deters screenshots) ── */
+        #__watermark {
+            pointer-events: none;
+            position: fixed;
+            inset: 0;
+            z-index: 9998;
+            opacity: 0.045;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 80px 60px;
+            padding: 60px 40px;
+            overflow: hidden;
+            transform: rotate(-25deg) scale(1.4);
+            transform-origin: center center;
+        }
+        #__watermark span {
+            font-size: 13px;
+            font-weight: 700;
+            color: #000;
+            white-space: nowrap;
+            letter-spacing: 1px;
+            font-family: monospace;
+        }

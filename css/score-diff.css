@@ -1,0 +1,154 @@
+                    #sc-tbl-wrap {
+                        overflow: auto;
+                        max-height: 540px;
+                        border: 1px solid var(--border);
+                        border-radius: var(--rad);
+                    }
+
+                    #sc-tbl {
+                        border-collapse: collapse;
+                        width: 100%;
+                        font-size: 12px;
+                    }
+
+                    #sc-tbl th,
+                    #sc-tbl td {
+                        border: 1px solid var(--border);
+                        padding: 4px 7px;
+                        white-space: nowrap;
+                    }
+
+                    #sc-tbl thead th {
+                        background: var(--card-head);
+                        position: sticky;
+                        top: 0;
+                        z-index: 2;
+                        vertical-align: top;
+                    }
+
+                    #sc-tbl tbody tr:hover td {
+                        background: rgba(60, 141, 188, .05);
+                    }
+
+                    .sc-match {
+                        background: rgba(0, 166, 90, .13);
+                    }
+
+                    .sc-diff {
+                        background: rgba(221, 75, 57, .13);
+                    }
+
+                    .sc-col-flt {
+                        width: 100%;
+                        padding: 2px 4px;
+                        font-size: 10px;
+                        border: 1px solid var(--border2);
+                        border-radius: 2px;
+                        background: var(--input-bg);
+                        color: var(--text);
+                        margin-top: 3px;
+                        box-sizing: border-box;
+                    }
+
+                    .sc-pill {
+                        display: inline-block;
+                        padding: 1px 7px;
+                        border-radius: 10px;
+                        font-size: 10px;
+                        font-weight: 700;
+                        text-transform: uppercase;
+                    }
+
+                    .sc-pill-match {
+                        background: rgba(0, 166, 90, .18);
+                        color: var(--green);
+                    }
+
+                    .sc-pill-diff {
+                        background: rgba(221, 75, 57, .18);
+                        color: var(--red);
+                    }
+
+                    .sc-pill-miss {
+                        background: rgba(243, 156, 18, .18);
+                        color: #c77a00;
+                    }
+
+                    .sc-pill-dump {
+                        background: rgba(96, 92, 168, .18);
+                        color: var(--purple);
+                    }
+
+                    .sc-sum-row {
+                        display: flex;
+                        gap: 10px;
+                        flex-wrap: wrap;
+                        margin-bottom: 14px;
+                    }
+
+                    .sc-sum-card {
+                        border: 1px solid var(--border);
+                        border-radius: var(--rad);
+                        padding: 8px 16px;
+                        text-align: center;
+                        min-width: 110px;
+                        cursor: pointer;
+                        transition: var(--tr);
+                    }
+
+                    .sc-sum-card:hover {
+                        box-shadow: var(--shad2);
+                    }
+
+                    .sc-sum-active {
+                        border-color: var(--blue);
+                        background: rgba(60, 141, 188, .07);
+                    }
+
+                    .sc-sum-val {
+                        font-size: 22px;
+                        font-weight: 700;
+                        font-family: var(--mono);
+                    }
+
+                    .sc-sum-lbl {
+                        font-size: 10px;
+                        font-weight: 700;
+                        text-transform: uppercase;
+                        color: var(--text2);
+                        margin-top: 2px;
+                    }
+
+                    .sc-pager {
+                        display: flex;
+                        align-items: center;
+                        gap: 5px;
+                        flex-wrap: wrap;
+                        padding: 8px 0;
+                    }
+
+                    .sc-pager button {
+                        padding: 3px 10px;
+                        font-size: 12px;
+                        border: 1px solid var(--border2);
+                        border-radius: var(--rad);
+                        cursor: pointer;
+                        background: var(--input-bg);
+                        color: var(--text);
+                        font-family: var(--font);
+                    }
+
+                    .sc-pager button:hover:not(:disabled) {
+                        background: var(--body-bg);
+                    }
+
+                    .sc-pg-active {
+                        background: var(--blue) !important;
+                        color: #fff !important;
+                        border-color: var(--blue) !important;
+                    }
+
+                    .sc-pager button:disabled {
+                        opacity: .4;
+                        cursor: default;
+                    }
