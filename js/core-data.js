@@ -732,15 +732,15 @@
                             uniq.add(v);
                         }
                         if (uniq.size <= 200) {
-                            const opts = [...uniq].sort().map(v => `<option value="${v.replace(/"/g, '&quot;')}" ${vsColFilters[h] === v ? 'selected' : ''}>${v || '(blank)'}</option>`).join('');
-                            filterBtn = `<select onchange="setColFilter('${h}',this.value)" style="margin-left:3px;font-size:9px;background:var(--bg3);border:1px solid var(--border);border-radius:3px;color:var(--txt2);cursor:pointer;max-width:68px;outline:none;padding:1px 2px">
+                            const opts = [...uniq].sort().map(v => `<option value="${escHtml(v)}" ${vsColFilters[h] === v ? 'selected' : ''}>${escHtml(v || '(blank)')}</option>`).join('');
+                            filterBtn = `<select onchange="setColFilter(${jsArg(h)},this.value)" style="margin-left:3px;font-size:9px;background:var(--bg3);border:1px solid var(--border);border-radius:3px;color:var(--txt2);cursor:pointer;max-width:68px;outline:none;padding:1px 2px">
           <option value="">All</option>${opts}</select>`;
                         }
                     }
                     th += `<th class="${cls}" style="white-space:nowrap">
       <div style="display:flex;align-items:center;gap:3px;padding:8px 10px">
-        <span onclick="cycleSort('${h}')" style="cursor:pointer;flex:1">${h}</span>
-        <span onclick="cycleSort('${h}')" style="color:${sortClr};cursor:pointer;font-size:10px">${sortIco}</span>
+        <span onclick="cycleSort(${jsArg(h)})" style="cursor:pointer;flex:1">${escHtml(h)}</span>
+        <span onclick="cycleSort(${jsArg(h)})" style="color:${sortClr};cursor:pointer;font-size:10px">${sortIco}</span>
         ${filterBtn}
       </div>
     </th>`;

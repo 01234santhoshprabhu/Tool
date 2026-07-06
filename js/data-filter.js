@@ -5,7 +5,8 @@
             var DF = window.DF = (() => {
                 'use strict';
                 const dfEl = id => document.getElementById(id);
-                const dfEsc = s => String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+                const dfEsc = s => String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+                const dfJsArg = s => dfEsc(JSON.stringify(String(s == null ? '' : s)));
                 const dfYield = () => new Promise(r => setTimeout(r, 0));
                 const MAX_DROPDOWN = 8000; // cols with more uniques → text-search only
 
@@ -833,7 +834,7 @@ function sortView(sortColName,sortDir){
                         let html = '<div class="df-ms-tags">';
                         show.forEach(v => {
                             html += '<span class="df-ms-tag">' + dfEsc(v)
-                                + '<button class="df-ms-tag-x" onmousedown="event.stopPropagation();event.preventDefault();DF.removeTag(\'' + dfEsc(col) + '\',\'' + dfEsc(v) + '\')">&#215;</button></span>';
+                                + '<button class="df-ms-tag-x" onmousedown="event.stopPropagation();event.preventDefault();DF.removeTag(' + dfJsArg(col) + ',' + dfJsArg(v) + ')">&#215;</button></span>';
                         });
                         if (extra > 0) html += '<span class="df-ms-more">+' + extra + '</span>';
                         html += '</div>'; trigger.innerHTML = html;
@@ -940,7 +941,7 @@ function sortView(sortColName,sortDir){
                     const parts = ['<table class="df-tbl"><thead><tr>'];
                     store.cols.forEach(c => {
                         const sorted = sortCol === c;
-                        parts.push('<th class="' + (sorted ? 'df-sorted' : '') + '" onclick="DF.sort(\'' + dfEsc(c) + '\')">'
+                        parts.push('<th class="' + (sorted ? 'df-sorted' : '') + '" onclick="DF.sort(' + dfJsArg(c) + ')">'
                             + dfEsc(c) + ' <span style="opacity:.35;font-size:9px">'
                             + (sorted ? (sortDir === 1 ? '&#9650;' : '&#9660;') : '&#8597;') + '</span></th>');
                     });

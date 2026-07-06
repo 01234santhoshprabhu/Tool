@@ -93,26 +93,27 @@
                     const co = AL_FORMULA_CFG.courses[key];
                     const rnd = co.round !== undefined ? co.round : AL_FORMULA_CFG.global.round;
                     const safeKey = key.replace(/[^a-zA-Z0-9_-]/g, '_');
+                    const keyArg = jsArg(key);
                     html += `<div class="fml-co-row">
             <span style="font-weight:700;color:var(--purple);font-size:11px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${escHtml(key)}">${escHtml(key)}</span>
-            <select onchange="alFmlUpdateAggrCourse('${escHtml(key)}',this.value)" style="border:1px solid var(--border);border-radius:var(--rad);padding:4px 7px;font-size:12px;width:100%">
+            <select onchange="alFmlUpdateAggrCourse(${keyArg},this.value)" style="border:1px solid var(--border);border-radius:var(--rad);padding:4px 7px;font-size:12px;width:100%">
               <option value="avg" ${co.aggr === 'avg' ? 'selected' : ''}>Average (SUM/N)</option>
               <option value="sum" ${co.aggr === 'sum' ? 'selected' : ''}>Sum total</option>
               <option value="max" ${co.aggr === 'max' ? 'selected' : ''}>Max score</option>
               <option value="min" ${co.aggr === 'min' ? 'selected' : ''}>Min score</option>
             </select>
             <div style="display:flex;gap:0">
-              <button class="fml-rnd-btn ${rnd === 0 ? 'active' : ''}" data-scope="${escHtml(key)}" data-v="0" onclick="alFmlSetRound('${escHtml(key)}',0,this)">0</button>
-              <button class="fml-rnd-btn ${rnd === 1 ? 'active' : ''}" data-scope="${escHtml(key)}" data-v="1" onclick="alFmlSetRound('${escHtml(key)}',1,this)">1</button>
-              <button class="fml-rnd-btn ${rnd === 2 ? 'active' : ''}" data-scope="${escHtml(key)}" data-v="2" onclick="alFmlSetRound('${escHtml(key)}',2,this)">2</button>
+              <button class="fml-rnd-btn ${rnd === 0 ? 'active' : ''}" data-scope="${escHtml(key)}" data-v="0" onclick="alFmlSetRound(${keyArg},0,this)">0</button>
+              <button class="fml-rnd-btn ${rnd === 1 ? 'active' : ''}" data-scope="${escHtml(key)}" data-v="1" onclick="alFmlSetRound(${keyArg},1,this)">1</button>
+              <button class="fml-rnd-btn ${rnd === 2 ? 'active' : ''}" data-scope="${escHtml(key)}" data-v="2" onclick="alFmlSetRound(${keyArg},2,this)">2</button>
               <input id="fml-co-rnd-custom-${escHtml(key)}" type="number" min="0" max="6" placeholder="?"
                 style="width:38px;border:1px solid var(--border);border-left:none;border-radius:0 var(--rad) var(--rad) 0;padding:4px 4px;font-size:12px;text-align:center"
-                oninput="alFmlSetRoundCustom('${escHtml(key)}',this.value)">
+                oninput="alFmlSetRoundCustom(${keyArg},this.value)">
             </div>
             <input type="text" placeholder="e.g. A1, A3" value="${escHtml((co.excludeCols || []).join(', '))}"
-              oninput="alFmlUpdateExcludeCols('${escHtml(key)}',this.value)"
+              oninput="alFmlUpdateExcludeCols(${keyArg},this.value)"
               style="border:1px solid var(--border);border-radius:var(--rad);padding:4px 7px;font-size:12px;width:100%">
-            <button onclick="alFmlRemoveCourseOverride('${escHtml(key)}')" style="border:none;background:none;color:var(--red);cursor:pointer;font-size:15px;padding:2px" title="Remove"><i class="bi bi-x-circle-fill"></i></button>
+            <button onclick="alFmlRemoveCourseOverride(${keyArg})" style="border:none;background:none;color:var(--red);cursor:pointer;font-size:15px;padding:2px" title="Remove"><i class="bi bi-x-circle-fill"></i></button>
           </div>`;
                 });
                 wrap.innerHTML = html;
@@ -191,11 +192,11 @@
       <td><code style="font-size:11px;font-family:var(--mono)">${ta}</code></td>
       <td>
         <input class="dr-input" id="dr_${key}" type="number" min="1" max="${ta}" value="${currentBN}"
-          onchange="onDurRuleChange('${key}',this)" oninput="validateDrInput(this,${ta})">
+          onchange="onDurRuleChange(${jsArg(key)},this)" oninput="validateDrInput(this,${ta})">
       </td>
       <td style="font-family:var(--mono);font-size:10px;color:var(--txt3)" id="dr-fml-${key}">${buildLargeFormula(ta, currentBN)}</td>
       <td class="dr-src">${src}${gMatch ? ` · ${gMatch.rows.length.toLocaleString()} rows` : ''}</td>
-      <td>${!isBuiltin ? `<button class="fb-del" onclick="removeDurRule('${key}')"><i class="bi bi-x"></i></button>` : ''}</td>
+      <td>${!isBuiltin ? `<button class="fb-del" onclick="removeDurRule(${jsArg(key)})"><i class="bi bi-x"></i></button>` : ''}</td>
     </tr>`;
                 });
                 tbody.innerHTML = html || '<tr><td colspan="6" style="text-align:center;padding:16px;color:var(--txt3);font-size:11px">Load a file to see detected groups</td></tr>';
@@ -260,9 +261,9 @@
                 if (!store || !groups.length) { bar.innerHTML = '<span style="font-size:10px;color:var(--txt3)">Load a file first</span>'; return; }
                 const g = curGroup() || groups[0];
                 let html = '';
-                baseCols.forEach(c => { html += `<span class="col-tok" onclick="insertTok('${c}')" title="Base">${c}</span>`; });
+                baseCols.forEach(c => { html += `<span class="col-tok" onclick="insertTok(${jsArg(c)})" title="Base">${escHtml(c)}</span>`; });
                 for (let i = 1; i <= g.maxA; i++) { html += `<span class="col-tok asgn" onclick="insertTok('A${i}')">A${i}</span>`; }
-                ['Best_Avg', 'Score_25', 'out_of_25'].forEach(c => { html += `<span class="col-tok calc" onclick="insertTok('${c}')">${c}</span>`; });
+                ['Best_Avg', 'Score_25', 'out_of_25'].forEach(c => { html += `<span class="col-tok calc" onclick="insertTok(${jsArg(c)})">${c}</span>`; });
                 bar.innerHTML = html;
             }
 
@@ -344,7 +345,8 @@
   </div>`;
             }
 
-            function escHtml(s) { return String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'); }
+            function escHtml(s) { return String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;'); }
+            function jsArg(s) { return escHtml(JSON.stringify(String(s == null ? '' : s))); }
 
             function previewFormula(f, g) {
                 if (!f.formula.trim() || !store || !g || !g.rows.length) return {};
@@ -362,25 +364,118 @@
             function evalFml(formula, si, g, ri) {
                 const cache = scoreCache.get(g.key + '|' + $('ck-blank').checked);
                 const vals = { 'Score_25': cache ? cache.score25[ri] : 0, 'Best_Avg': cache ? cache.bestAvg[ri] : 0, 'out_of_25': getNum('out_of_25', si) || 0 };
-                baseCols.forEach(c => { const fv = getNum(c, si); vals[c] = isNaN(fv) ? `"${getStr(c, si)}"` : fv; });
+                baseCols.forEach(c => { const fv = getNum(c, si); vals[c] = isNaN(fv) ? JSON.stringify(getStr(c, si)) : fv; });
                 for (let a = 1; a <= g.maxA; a++) { const fv = getNum(`A${a}`, si); vals[`A${a}`] = isNaN(fv) ? 0 : fv; }
                 let expr = formula;
+                expr = expandFormulaRanges(expr, g);
+                expr = evalCountIf(expr, vals);
                 Object.entries(vals).sort((a, b) => b[0].length - a[0].length).forEach(([k, v]) => {
                     expr = expr.replace(new RegExp(k.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'g'), v);
                 });
                 expr = excelToJS(expr);
-                return new Function(`return (${expr})`)(); // eslint-disable-line
+                assertSafeFormulaExpression(expr);
+                return Function(`"use strict";return (${expr})`)(); // eslint-disable-line no-new-func
             }
 
             function excelToJS(expr) {
-                let e = expr, prev;
-                do { prev = e; e = e.replace(/IF\s*\(([^()]+),([^,()]+),([^()]+)\)/gi, '($1?$2:$3)'); }
-                while (e !== prev && e.length < 3000);
+                let e = rewriteIfFunctions(expr);
                 e = e.replace(/MAX\s*\(([^)]+)\)/gi, (_, a) => `Math.max(${a})`);
                 e = e.replace(/MIN\s*\(([^)]+)\)/gi, (_, a) => `Math.min(${a})`);
                 e = e.replace(/ROUND\s*\(([^,)]+),([^)]+)\)/gi, (_, n, d) => `(Math.round(${n}*Math.pow(10,${d}))/Math.pow(10,${d}))`);
                 e = e.replace(/ABS\s*\(([^)]+)\)/gi, (_, a) => `Math.abs(${a})`);
                 return e;
+            }
+
+            function expandFormulaRanges(expr, g) {
+                return String(expr || '').replace(/\bA(\d+)\s*:\s*A(\d+)\b/gi, (_, a, b) => {
+                    const start = Math.max(1, Math.min(parseInt(a, 10), parseInt(b, 10)));
+                    const end = Math.min(g.maxA || 14, Math.max(parseInt(a, 10), parseInt(b, 10)));
+                    const cols = [];
+                    for (let i = start; i <= end; i++) cols.push(`A${i}`);
+                    return cols.join(',');
+                });
+            }
+
+            function evalCountIf(expr, vals) {
+                return String(expr || '').replace(/COUNTIF\s*\(([^,]+(?:,[^,]+)*),\s*["']?([<>=!]+)\s*(-?\d+(?:\.\d+)?)["']?\s*\)/gi, (_, list, op, rawNum) => {
+                    const target = parseFloat(rawNum);
+                    const count = list.split(',').map(x => x.trim()).filter(name => {
+                        const val = Number(vals[name]);
+                        if (isNaN(val)) return false;
+                        if (op === '>') return val > target;
+                        if (op === '>=') return val >= target;
+                        if (op === '<') return val < target;
+                        if (op === '<=') return val <= target;
+                        if (op === '!=' || op === '<>') return val !== target;
+                        return val === target;
+                    }).length;
+                    return String(count);
+                });
+            }
+
+            function rewriteIfFunctions(expr) {
+                let e = String(expr || '');
+                for (let guard = 0; guard < 50; guard++) {
+                    const match = findLastFunctionCall(e, 'IF');
+                    if (!match) break;
+                    const args = splitTopLevelArgs(match.body);
+                    if (args.length !== 3) throw new Error('IF requires 3 arguments');
+                    e = e.slice(0, match.start) + `((${args[0]})?(${args[1]}):(${args[2]}))` + e.slice(match.end + 1);
+                }
+                return e;
+            }
+
+            function findLastFunctionCall(expr, name) {
+                const upper = expr.toUpperCase();
+                const needle = name.toUpperCase() + '(';
+                for (let start = upper.lastIndexOf(needle); start >= 0; start = upper.lastIndexOf(needle, start - 1)) {
+                    if (start > 0 && /[A-Z0-9_]/i.test(expr[start - 1])) continue;
+                    let depth = 0, quote = '';
+                    for (let i = start + name.length; i < expr.length; i++) {
+                        const ch = expr[i], prev = expr[i - 1];
+                        if (quote) {
+                            if (ch === quote && prev !== '\\') quote = '';
+                            continue;
+                        }
+                        if (ch === '"' || ch === "'") { quote = ch; continue; }
+                        if (ch === '(') depth++;
+                        else if (ch === ')') {
+                            depth--;
+                            if (depth === 0) return { start, end: i, body: expr.slice(start + name.length + 1, i) };
+                        }
+                    }
+                }
+                return null;
+            }
+
+            function splitTopLevelArgs(body) {
+                const out = [];
+                let cur = '', depth = 0, quote = '';
+                for (let i = 0; i < body.length; i++) {
+                    const ch = body[i], prev = body[i - 1];
+                    if (quote) {
+                        cur += ch;
+                        if (ch === quote && prev !== '\\') quote = '';
+                        continue;
+                    }
+                    if (ch === '"' || ch === "'") { quote = ch; cur += ch; continue; }
+                    if (ch === '(') { depth++; cur += ch; continue; }
+                    if (ch === ')') { depth--; cur += ch; continue; }
+                    if (ch === ',' && depth === 0) { out.push(cur.trim()); cur = ''; continue; }
+                    cur += ch;
+                }
+                out.push(cur.trim());
+                return out;
+            }
+
+            function assertSafeFormulaExpression(expr) {
+                if (String(expr).length > 3000) throw new Error('Formula is too long');
+                const withoutStrings = String(expr).replace(/"(?:\\.|[^"\\])*"|'(?:\\.|[^'\\])*'/g, '""');
+                if (/[;{}[\]`\\]/.test(withoutStrings) || /=>/.test(withoutStrings)) throw new Error('Unsupported formula syntax');
+                const identifiers = withoutStrings.match(/[A-Za-z_$][\w$]*/g) || [];
+                const allowed = new Set(['Math', 'max', 'min', 'round', 'pow', 'abs', 'true', 'false']);
+                const bad = identifiers.find(id => !allowed.has(id));
+                if (bad) throw new Error('Unsupported token in formula: ' + bad);
             }
 
             function addFormulaRow(colName = 'Custom_Col', formula = '') {
@@ -430,13 +525,14 @@
                 courseOverrides.forEach((co, cid) => {
                     const g = groups.find(gr => gr.summary.some(s => s.cid === cid));
                     const maxA = g ? g.maxA : 14;
+                    const cidArg = jsArg(cid);
                     html += `<div class="co-row">
       <span class="co-cid"><i class="bi bi-bookmark-fill" style="font-size:9px;margin-right:3px"></i>${escHtml(cid)}</span>
       <input class="co-inp" type="number" value="${co.bestN || ''}" min="1" max="${maxA}" placeholder="Best N"
-        onchange="updateCO('${cid}','bestN',parseInt(this.value)||0)">
+        onchange="updateCO(${cidArg},'bestN',parseInt(this.value)||0)">
       <input class="co-finp" value="${escHtml(co.formula || '')}" placeholder="Optional formula (leave blank = use group logic)"
-        onchange="updateCO('${cid}','formula',this.value)">
-      <button class="fb-del" onclick="removeCO('${cid}')"><i class="bi bi-x"></i></button>
+        onchange="updateCO(${cidArg},'formula',this.value)">
+      <button class="fb-del" onclick="removeCO(${cidArg})"><i class="bi bi-x"></i></button>
     </div>`;
                 });
                 list.innerHTML = html;
@@ -453,7 +549,7 @@
                 dd.innerHTML = matches.map(c => {
                     const g = groups.find(gr => gr.summary.some(s => s.cid === c));
                     const cnt = g ? g.summary.find(s => s.cid === c)?.count || 0 : 0;
-                    return `<div class="co-dd-item" onclick="addCO('${c}')">
+                    return `<div class="co-dd-item" onclick="addCO(${jsArg(c)})">
       <b style="font-family:var(--mono);color:var(--warn)">${escHtml(c)}</b>
       <span style="color:var(--txt3);font-size:10px;margin-left:8px">${g ? g.shortLabel : ''} · ${cnt.toLocaleString()} rows</span>
     </div>`;
@@ -494,8 +590,8 @@
                 const colorMap = { base: 'var(--primary)', asgn: 'var(--success)', score: '#7c3aed', custom: 'var(--warn)' };
                 grid.innerHTML = outputColsAll.map(c => {
                     const checked = outputColsSelected.has(c.name);
-                    return `<label class="oc-item ${checked ? 'checked' : ''}" onclick="toggleOC('${c.name}',this)">
-      <input type="checkbox" ${checked ? 'checked' : ''} onclick="event.stopPropagation();toggleOC('${c.name}',this.closest('.oc-item'))">
+                    return `<label class="oc-item ${checked ? 'checked' : ''}" onclick="toggleOC(${jsArg(c.name)},this)">
+      <input type="checkbox" ${checked ? 'checked' : ''} onclick="event.stopPropagation();toggleOC(${jsArg(c.name)},this.closest('.oc-item'))">
       <div>
         <div class="oc-lbl" style="color:${colorMap[c.type] || 'var(--txt)'}">${escHtml(c.name)}</div>
         <div class="oc-type">${c.label}</div>

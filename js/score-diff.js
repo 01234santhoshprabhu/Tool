@@ -253,7 +253,7 @@
                 toast(`Downloaded ${filename} (${(aoa.length - 1).toLocaleString()} rows)`, 's');
             }
 
-            function escHtml2(s) { return String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
+            function escHtml2(s) { return String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;'); }
 
             function dlBlob(blob, fn) {
                 const url = URL.createObjectURL(blob);
