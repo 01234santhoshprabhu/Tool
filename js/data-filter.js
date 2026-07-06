@@ -2,7 +2,7 @@
             // DATA FILTER — optimised for 80L+ rows
             // Dictionary-encoded column storage + Web Worker filtering
             // ══════════════════════════════════════════════════════════════
-            const DF = (() => {
+            var DF = window.DF = (() => {
                 'use strict';
                 const dfEl = id => document.getElementById(id);
                 const dfEsc = s => String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
@@ -592,7 +592,6 @@ function sortView(sortColName,sortDir){
                     else if (type === 'STORE_META') {
                         /* Worker finished building store; main thread gets light meta (dicts, no idx) */
                         store = msg.meta; /* {cols, n, colData:{col:{uniqueCount, dict?}}} */
-                        defaultCandidatesLoading = false;
                         filteredCount = store.n;
                         fmap = {};
                         store.cols.forEach(c => {
@@ -1022,7 +1021,6 @@ function sortView(sortColName,sortDir){
                 function clear() {
                     store = null; filteredCount = 0; fmap = {}; sortCol = null; sortDir = 1; pg = 1;
                     loadedSource = '';
-                    defaultCandidatesLoading = false;
                     latestFilterSeq = 0;
                     lastAppliedFilterState = null;
                     pendingFilterStates.clear();
