@@ -15,9 +15,10 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
     <link rel="stylesheet" href="css/main.css">
+    <link rel="stylesheet" href="css/auth.css">
 </head>
 
-<body>
+<body class="auth-pending">
 
     <!-- OVERLAY -->
     <div class="ov" id="ov">
@@ -34,6 +35,21 @@
         </div>
     </div>
     <div class="toast-c" id="toasts"></div>
+
+    <div id="auth-screen" class="auth-screen" aria-live="polite">
+        <div class="auth-card">
+            <div class="auth-mark">N</div>
+            <div class="auth-kicker">NPTEL Portal Team</div>
+            <h1>NPTEL Scoring Internal Tool</h1>
+            <p id="auth-message">Sign in with your Google account to continue.</p>
+            <button id="auth-google-btn" class="auth-google-btn" type="button">
+                <span class="auth-google-icon">G</span>
+                <span>Sign in with Google</span>
+            </button>
+            <button id="auth-retry-btn" class="auth-link-btn" type="button" style="display:none">Try again</button>
+            <div id="auth-error" class="auth-error" role="alert"></div>
+        </div>
+    </div>
 
     <div id="wrapper">
 
@@ -98,6 +114,10 @@
                 </div>
                 <div class="tb-spacer"></div>
                 <div class="mem-badge" id="mem-badge" style="display:none">RAM: —</div>
+                <div class="auth-user-pill" id="auth-user-pill" style="display:none">
+                    <span id="auth-user-email"></span>
+                    <button id="auth-signout-btn" type="button" title="Sign out"><i class="bi bi-box-arrow-right"></i></button>
+                </div>
                 <button class="btn-reset" onclick="location.reload()"><i class="bi bi-arrow-counterclockwise"></i>
                     Reset</button>
             </nav>
@@ -1645,14 +1665,17 @@
             </div><!-- /main-wrapper -->
         </div><!-- /wrapper -->
 
-        <script src="js/navigation-core.js?v=20260706-hardening"></script>
-        <script src="js/core-data.js?v=20260706-hardening"></script>
-        <script src="js/assignment-logic.js?v=20260706-hardening"></script>
+        <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-app-compat.js"></script>
+        <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-auth-compat.js"></script>
+        <script src="js/auth.js?v=20260730-google-auth"></script>
+        <script src="js/navigation-core.js?v=20260730-google-auth"></script>
+        <script src="js/core-data.js?v=20260730-google-auth"></script>
+        <script src="js/assignment-logic.js?v=20260730-google-auth"></script>
         <script src="js/registration-check.js"></script>
-        <script src="js/score-diff.js?v=20260706-hardening"></script>
+        <script src="js/score-diff.js?v=20260730-google-auth"></script>
         <script src="js/attendance.js"></script>
         <script src="js/pso-tools.js"></script>
-        <script src="js/data-filter.js?v=20260706-hardening"></script>
+        <script src="js/data-filter.js?v=20260730-google-auth"></script>
         <script src="js/score-cross-check.js"></script>
 
     <!-- ═══════════════════════════════════════════════════════════════
