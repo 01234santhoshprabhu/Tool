@@ -155,3 +155,45 @@ body.light .auth-user-pill {
     color: #1f2937;
     background: rgba(255, 255, 255, .72);
 }
+
+.auth-count-link {
+    min-height: 36px;
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    border: 1px solid rgba(148, 163, 184, .28);
+    border-radius: 999px;
+    padding: 0 14px;
+    background: rgba(255, 255, 255, .12);
+    color: var(--top-text, #f8fafc);
+    font-size: 12px;
+    font-weight: 800;
+    text-decoration: none;
+    white-space: nowrap;
+}
+
+.auth-count-link:hover {
+    background: rgba(255, 255, 255, .2);
+    color: var(--top-text, #fff);
+}
+
+.nb-link {
+    text-decoration: none;
+}
+
+body.light .auth-count-link {
+    color: #1f2937;
+    background: rgba(255, 255, 255, .72);
+}
+
+@media (max-width: 720px) {
+    .auth-count-link span {
+        display: none;
+    }
+
+    .auth-count-link {
+        width: 36px;
+        justify-content: center;
+        padding: 0;
+    }
+}
