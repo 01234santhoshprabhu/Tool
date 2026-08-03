@@ -197,3 +197,12 @@ body.light .auth-count-link {
         padding: 0;
     }
 }
+
+.auth-watermark-link {
+    background: rgba(15, 118, 110, .9);
+}
+
+.auth-watermark-link:hover {
+    background: rgba(13, 102, 95, .95);
+}
+
