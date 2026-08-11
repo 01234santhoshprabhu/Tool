@@ -7,8 +7,20 @@
         ════════════════════════════════════════════════════════════ */
         const CTRL_BLOCKED = new Set(['u','c','p','v','i','s','a','j','k']);
 
+        function isFormField(target) {
+            if (!target) return false;
+            const tag = target.tagName;
+            return tag === 'INPUT' || tag === 'TEXTAREA' || target.isContentEditable;
+        }
+
         document.addEventListener('keydown', function (e) {
             const ctrl = e.ctrlKey || e.metaKey;
+
+            // Always allow paste into search/filter/upload fields — the
+            // page itself needs it (course ID search, email search, etc.)
+            if (ctrl && !e.shiftKey && !e.altKey && e.key.toLowerCase() === 'v' && isFormField(e.target)) {
+                return;
+            }
 
             // Ctrl+<key>
             if (ctrl && !e.shiftKey && !e.altKey && CTRL_BLOCKED.has(e.key.toLowerCase())) {
@@ -41,6 +53,7 @@
         ════════════════════════════════════════════════════════════ */
         ['copy', 'cut', 'paste'].forEach(function (type) {
             document.addEventListener(type, function (e) {
+                if (type === 'paste' && isFormField(e.target)) return;
                 e.preventDefault(); e.stopImmediatePropagation(); return false;
             }, true);
         });
@@ -66,9 +79,15 @@
 
         /* ════════════════════════════════════════════════════════════
            6. CONSOLE WIPE — clear console every 2 seconds
-              Makes it harder to inspect via console pasting
+              Makes it harder to inspect via console pasting.
+              Admin/Super Admin get an escape hatch below (#13) so they
+              can actually debug a broken run when something goes wrong.
         ════════════════════════════════════════════════════════════ */
-        setInterval(function () {
+        var _origConsole = {};
+        ['log','warn','info','debug','table','dir','dirxml','group','groupCollapsed','groupEnd','time','timeEnd','count','assert','profile','profileEnd'].forEach(function (m) {
+            _origConsole[m] = console[m];
+        });
+        var _consoleClearTimer = setInterval(function () {
             try { console.clear(); } catch (_) {}
         }, 2000);
 
@@ -84,9 +103,25 @@
            7. DEBUGGER TRAP — continuous debugger statement
               Freezes execution in DevTools "Sources" panel
         ════════════════════════════════════════════════════════════ */
-        setInterval(function () {
+        var _debuggerTimer = setInterval(function () {
             (function () { /* jshint ignore:start */ debugger; /* jshint ignore:end */ })();
         }, 100);
+
+        /* ════════════════════════════════════════════════════════════
+           13. ADMIN ESCAPE HATCH
+               Once the signed-in user's role is known (Admin/Super Admin),
+               stop the console wipe + debugger trap so real errors are
+               visible when something needs debugging. Viewers keep the
+               full lockdown.
+        ════════════════════════════════════════════════════════════ */
+        window.addEventListener('tool-auth-ready', function (ev) {
+            const role = ev.detail && ev.detail.role;
+            if (role !== 'admin' && role !== 'super_admin') return;
+            clearInterval(_consoleClearTimer);
+            clearInterval(_debuggerTimer);
+            Object.keys(_origConsole).forEach(function (m) { console[m] = _origConsole[m]; });
+            console.info('[security] Console + debugger lockdown lifted for ' + role + '.');
+        });
 
         /* ════════════════════════════════════════════════════════════
            8. DEVTOOLS DETECTION — window size differential
