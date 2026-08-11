@@ -23,6 +23,7 @@
             let _scLastFileNames = { dump: '', sheet: '' };
             window.addEventListener('tool-auth-ready', ev => {
                 _scUserRole = (ev.detail && ev.detail.role) || 'viewer';
+                scUpdateSaveBtn();
             });
 
             async function scSupabaseFetch(path, options = {}) {
@@ -291,12 +292,12 @@
                     scRenderSummary();
                     scRenderTable();
                     $('sc-results').style.display = 'block';
+                    scUpdateSaveBtn();
 
                     pOv(100, 'Done!');
                     await delay(250); hideOv();
                     const cnt = results.reduce((a, r) => { a[r._status] = (a[r._status] || 0) + 1; return a; }, {});
                     toast(`Done: ${cnt.match || 0} match · ${cnt.diff || 0} diff · ${cnt.miss_sheet || 0} miss-sheet · ${cnt.miss_dump || 0} miss-dump`, 's', 6000);
-                    scSaveRun(cnt).catch(err => console.error('Save run failed', err));
                 } catch (e) {
                     hideOv(); toast('Error: ' + e.message, 'e', 8000); console.error(e);
                 } finally {
@@ -477,63 +478,82 @@
 
             // ═══════════════════════════════════════════════════════════════
             // SCORE CROSS CHECK — BACKEND (saved runs)
-            // Viewers get full local functionality above but results aren't
-            // persisted; Admin/Super Admin runs are saved so anyone signed
-            // in can browse them later without re-uploading both files.
+            // Nothing changes about the normal flow above — run stays fully
+            // local/client-side as before. This only adds an explicit
+            // "Save to Backend" button (Admin/Super Admin only) so a run can
+            // be persisted on demand, and a Saved Runs panel to reload past
+            // ones without re-uploading both files.
             // ═══════════════════════════════════════════════════════════════
-            async function scSaveRun(cnt) {
+            function scUpdateSaveBtn() {
+                const btn = $('sc-save-btn');
+                if (!btn) return;
+                const canSave = _scUserRole === 'admin' || _scUserRole === 'super_admin';
+                btn.style.display = canSave ? '' : 'none';
+                btn.disabled = !_scAllResults.length;
+            }
+
+            async function scSaveRun() {
                 if (_scUserRole !== 'admin' && _scUserRole !== 'super_admin') return;
-                const auth = (window.firebase && firebase.auth && firebase.auth().currentUser) || null;
-                const runRow = {
-                    run_by_email: auth ? auth.email : null,
-                    dump_file_name: ($('sc-dump-sub') || {}).textContent || 'Assignment dump',
-                    sheet_file_name: ($('sc-sheet-t') || {}).textContent || 'Score sheet',
-                    courses: Array.from(_scCourseSelected),
-                    common_cols: _scCommonACols,
-                    has_out25: _scHasOut25,
-                    total_count: _scAllResults.length,
-                    match_count: cnt.match || 0,
-                    diff_count: cnt.diff || 0,
-                    miss_sheet_count: cnt.miss_sheet || 0,
-                    miss_dump_count: cnt.miss_dump || 0
-                };
-                let inserted;
+                if (!_scAllResults.length) { toast('Run a cross-check first', 'w'); return; }
+                const btn = $('sc-save-btn');
+                if (btn) { btn.disabled = true; btn.innerHTML = '<i class="bi bi-hourglass-split"></i> Saving…'; }
                 try {
-                    inserted = await scSupabaseFetch('/rest/v1/score_check_runs', {
-                        method: 'POST',
-                        headers: { Prefer: 'return=representation' },
-                        body: JSON.stringify([runRow])
-                    });
-                } catch (err) {
-                    toast('Could not save run to backend: ' + err.message, 'w', 5000);
-                    return;
-                }
-                const runId = inserted && inserted[0] && inserted[0].id;
-                if (!runId) return;
-                if (_scAllResults.length > SC_SAVE_ROW_LIMIT) {
-                    toast(`Run summary saved. Row detail skipped (${_scAllResults.length.toLocaleString()} rows > ${SC_SAVE_ROW_LIMIT.toLocaleString()} limit).`, 'w', 6000);
-                    return;
-                }
-                const CHUNK = 500;
-                try {
-                    for (let start = 0; start < _scAllResults.length; start += CHUNK) {
-                        const chunk = _scAllResults.slice(start, start + CHUNK).map(r => ({
-                            run_id: runId,
-                            status: r._status,
-                            email: r._email,
-                            course: r._course,
-                            d_vals: r._dVals,
-                            s_vals: r._sVals
-                        }));
-                        await scSupabaseFetch('/rest/v1/score_check_results', {
+                    const cnt = _scAllResults.reduce((a, r) => { a[r._status] = (a[r._status] || 0) + 1; return a; }, {});
+                    const auth = (window.firebase && firebase.auth && firebase.auth().currentUser) || null;
+                    const runRow = {
+                        run_by_email: auth ? auth.email : null,
+                        dump_file_name: ($('sc-dump-sub') || {}).textContent || 'Assignment dump',
+                        sheet_file_name: ($('sc-sheet-t') || {}).textContent || 'Score sheet',
+                        courses: Array.from(_scCourseSelected),
+                        common_cols: _scCommonACols,
+                        has_out25: _scHasOut25,
+                        total_count: _scAllResults.length,
+                        match_count: cnt.match || 0,
+                        diff_count: cnt.diff || 0,
+                        miss_sheet_count: cnt.miss_sheet || 0,
+                        miss_dump_count: cnt.miss_dump || 0
+                    };
+                    let inserted;
+                    try {
+                        inserted = await scSupabaseFetch('/rest/v1/score_check_runs', {
                             method: 'POST',
-                            headers: { Prefer: 'return=minimal' },
-                            body: JSON.stringify(chunk)
+                            headers: { Prefer: 'return=representation' },
+                            body: JSON.stringify([runRow])
                         });
+                    } catch (err) {
+                        toast('Could not save run to backend: ' + err.message, 'w', 5000);
+                        return;
                     }
-                    toast('Run saved to backend.', 's', 3000);
-                } catch (err) {
-                    toast('Run summary saved, but row detail failed: ' + err.message, 'w', 6000);
+                    const runId = inserted && inserted[0] && inserted[0].id;
+                    if (!runId) return;
+                    if (_scAllResults.length > SC_SAVE_ROW_LIMIT) {
+                        toast(`Run summary saved. Row detail skipped (${_scAllResults.length.toLocaleString()} rows > ${SC_SAVE_ROW_LIMIT.toLocaleString()} limit).`, 'w', 6000);
+                        return;
+                    }
+                    const CHUNK = 500;
+                    try {
+                        for (let start = 0; start < _scAllResults.length; start += CHUNK) {
+                            const chunk = _scAllResults.slice(start, start + CHUNK).map(r => ({
+                                run_id: runId,
+                                status: r._status,
+                                email: r._email,
+                                course: r._course,
+                                d_vals: r._dVals,
+                                s_vals: r._sVals
+                            }));
+                            await scSupabaseFetch('/rest/v1/score_check_results', {
+                                method: 'POST',
+                                headers: { Prefer: 'return=minimal' },
+                                body: JSON.stringify(chunk)
+                            });
+                        }
+                        toast('Run saved to backend.', 's', 3000);
+                        _scSavedRunsLoaded = false;
+                    } catch (err) {
+                        toast('Run summary saved, but row detail failed: ' + err.message, 'w', 6000);
+                    }
+                } finally {
+                    if (btn) { btn.disabled = false; btn.innerHTML = '<i class="bi bi-cloud-arrow-up-fill"></i> Save to Backend'; }
                 }
             }
 
@@ -596,6 +616,7 @@
                     scRenderSummary();
                     scRenderTable();
                     $('sc-results').style.display = 'block';
+                    if ($('sc-save-btn')) $('sc-save-btn').style.display = 'none'; // already saved
                     $('sc-results').scrollIntoView({ behavior: 'smooth', block: 'start' });
                     toast(`Loaded saved run from ${new Date(run.run_at).toLocaleString()}`, 's');
                 } catch (err) {
