@@ -156,6 +156,20 @@ body.light .auth-user-pill {
     background: rgba(255, 255, 255, .72);
 }
 
+.role-badge {
+    font-size: 10px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: .04em;
+    padding: 2px 7px;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, .18);
+    white-space: nowrap;
+}
+
+.role-badge.role-admin { background: #fff3cd; color: #7a5b00; }
+.role-badge.role-super_admin { background: #fbdada; color: #8a1f14; }
+
 .auth-count-link {
     min-height: 36px;
     display: inline-flex;

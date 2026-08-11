@@ -15,8 +15,36 @@
         // 'santhoshofficial70@gmail.com'
     ];
 
+    const ROLE_SUPABASE_URL = 'https://oiebamupeucekvcfscpj.supabase.co';
+    const ROLE_SUPABASE_KEY = 'sb_publishable_w_l-WFz9E-IrPoQwGqodZw_Zsx929gv';
+
     const $ = id => document.getElementById(id);
     let auth;
+    let currentRole = 'viewer';
+
+    async function fetchRole(email) {
+        try {
+            const response = await fetch(
+                `${ROLE_SUPABASE_URL}/rest/v1/dashboard_users?select=role&email=eq.${encodeURIComponent(email.toLowerCase())}`,
+                { headers: { apikey: ROLE_SUPABASE_KEY, Authorization: `Bearer ${ROLE_SUPABASE_KEY}` } }
+            );
+            if (!response.ok) return 'viewer';
+            const rows = await response.json();
+            const role = rows && rows[0] && rows[0].role;
+            return ['viewer', 'admin', 'super_admin'].includes(role) ? role : 'viewer';
+        } catch (err) {
+            return 'viewer';
+        }
+    }
+
+    function applyRoleBadge(role) {
+        const badge = $('auth-user-role');
+        if (!badge) return;
+        const labels = { super_admin: 'Super Admin', admin: 'Admin', viewer: 'Viewer' };
+        badge.textContent = labels[role] || 'Viewer';
+        badge.classList.remove('role-super_admin', 'role-admin', 'role-viewer');
+        badge.classList.add(`role-${role}`);
+    }
 
     function setMessage(text) {
         const el = $('auth-message');
@@ -49,7 +77,7 @@
         if (pill) pill.style.display = 'none';
     }
 
-    function showReady(user) {
+    async function showReady(user) {
         document.body.classList.remove('auth-pending', 'auth-locked');
         document.body.classList.add('auth-ready');
         setError('');
@@ -57,6 +85,11 @@
         if (email) email.textContent = user.email || user.displayName || 'Signed in';
         const pill = $('auth-user-pill');
         if (pill) pill.style.display = 'inline-flex';
+        currentRole = user.email ? await fetchRole(user.email) : 'viewer';
+        document.body.classList.remove('role-viewer', 'role-admin', 'role-super_admin');
+        document.body.classList.add(`role-${currentRole}`);
+        applyRoleBadge(currentRole);
+        window.dispatchEvent(new CustomEvent('tool-auth-ready', { detail: { user, role: currentRole } }));
     }
 
     function googleProvider() {

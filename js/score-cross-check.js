@@ -15,6 +15,30 @@
             const SC_PAGE = 100;
             let _scPage = 1;
 
+            // --- Backend (Supabase, shared with Count dashboard) ---
+            const SC_SUPABASE_URL = 'https://oiebamupeucekvcfscpj.supabase.co';
+            const SC_SUPABASE_KEY = 'sb_publishable_w_l-WFz9E-IrPoQwGqodZw_Zsx929gv';
+            const SC_SAVE_ROW_LIMIT = 20000; // above this, only the run summary is saved, not row detail
+            let _scUserRole = 'viewer';
+            let _scLastFileNames = { dump: '', sheet: '' };
+            window.addEventListener('tool-auth-ready', ev => {
+                _scUserRole = (ev.detail && ev.detail.role) || 'viewer';
+            });
+
+            async function scSupabaseFetch(path, options = {}) {
+                const response = await fetch(`${SC_SUPABASE_URL}${path}`, {
+                    ...options,
+                    headers: {
+                        apikey: SC_SUPABASE_KEY,
+                        Authorization: `Bearer ${SC_SUPABASE_KEY}`,
+                        'Content-Type': 'application/json',
+                        ...(options.headers || {})
+                    }
+                });
+                if (!response.ok) throw new Error((await response.text()) || response.statusText);
+                return response.status === 204 ? null : response.json();
+            }
+
             function scOnShow() {
                 scUpdateDumpBox();
                 if (store) scBuildCourses();
@@ -272,6 +296,7 @@
                     await delay(250); hideOv();
                     const cnt = results.reduce((a, r) => { a[r._status] = (a[r._status] || 0) + 1; return a; }, {});
                     toast(`Done: ${cnt.match || 0} match · ${cnt.diff || 0} diff · ${cnt.miss_sheet || 0} miss-sheet · ${cnt.miss_dump || 0} miss-dump`, 's', 6000);
+                    scSaveRun(cnt).catch(err => console.error('Save run failed', err));
                 } catch (e) {
                     hideOv(); toast('Error: ' + e.message, 'e', 8000); console.error(e);
                 } finally {
@@ -447,6 +472,135 @@
                     const wb = XLSX.utils.book_new();
                     XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(data), 'Cross Check');
                     XLSX.writeFile(wb, 'sc_crosscheck.xlsx');
+                }
+            }
+
+            // ═══════════════════════════════════════════════════════════════
+            // SCORE CROSS CHECK — BACKEND (saved runs)
+            // Viewers get full local functionality above but results aren't
+            // persisted; Admin/Super Admin runs are saved so anyone signed
+            // in can browse them later without re-uploading both files.
+            // ═══════════════════════════════════════════════════════════════
+            async function scSaveRun(cnt) {
+                if (_scUserRole !== 'admin' && _scUserRole !== 'super_admin') return;
+                const auth = (window.firebase && firebase.auth && firebase.auth().currentUser) || null;
+                const runRow = {
+                    run_by_email: auth ? auth.email : null,
+                    dump_file_name: ($('sc-dump-sub') || {}).textContent || 'Assignment dump',
+                    sheet_file_name: ($('sc-sheet-t') || {}).textContent || 'Score sheet',
+                    courses: Array.from(_scCourseSelected),
+                    common_cols: _scCommonACols,
+                    has_out25: _scHasOut25,
+                    total_count: _scAllResults.length,
+                    match_count: cnt.match || 0,
+                    diff_count: cnt.diff || 0,
+                    miss_sheet_count: cnt.miss_sheet || 0,
+                    miss_dump_count: cnt.miss_dump || 0
+                };
+                let inserted;
+                try {
+                    inserted = await scSupabaseFetch('/rest/v1/score_check_runs', {
+                        method: 'POST',
+                        headers: { Prefer: 'return=representation' },
+                        body: JSON.stringify([runRow])
+                    });
+                } catch (err) {
+                    toast('Could not save run to backend: ' + err.message, 'w', 5000);
+                    return;
+                }
+                const runId = inserted && inserted[0] && inserted[0].id;
+                if (!runId) return;
+                if (_scAllResults.length > SC_SAVE_ROW_LIMIT) {
+                    toast(`Run summary saved. Row detail skipped (${_scAllResults.length.toLocaleString()} rows > ${SC_SAVE_ROW_LIMIT.toLocaleString()} limit).`, 'w', 6000);
+                    return;
+                }
+                const CHUNK = 500;
+                try {
+                    for (let start = 0; start < _scAllResults.length; start += CHUNK) {
+                        const chunk = _scAllResults.slice(start, start + CHUNK).map(r => ({
+                            run_id: runId,
+                            status: r._status,
+                            email: r._email,
+                            course: r._course,
+                            d_vals: r._dVals,
+                            s_vals: r._sVals
+                        }));
+                        await scSupabaseFetch('/rest/v1/score_check_results', {
+                            method: 'POST',
+                            headers: { Prefer: 'return=minimal' },
+                            body: JSON.stringify(chunk)
+                        });
+                    }
+                    toast('Run saved to backend.', 's', 3000);
+                } catch (err) {
+                    toast('Run summary saved, but row detail failed: ' + err.message, 'w', 6000);
+                }
+            }
+
+            let _scSavedRunsLoaded = false;
+            function scToggleSavedRuns() {
+                const panel = $('sc-saved-panel');
+                if (!panel) return;
+                const opening = panel.style.display === 'none';
+                panel.style.display = opening ? 'block' : 'none';
+                if (opening && !_scSavedRunsLoaded) scLoadSavedRuns();
+            }
+
+            async function scLoadSavedRuns() {
+                const list = $('sc-saved-list');
+                if (!list) return;
+                list.textContent = 'Loading…';
+                try {
+                    const runs = await scSupabaseFetch('/rest/v1/score_check_runs?select=id,run_at,run_by_email,dump_file_name,sheet_file_name,total_count,match_count,diff_count,miss_sheet_count,miss_dump_count&order=run_at.desc&limit=50');
+                    _scSavedRunsLoaded = true;
+                    if (!runs.length) { list.innerHTML = '<div style="color:var(--text3);padding:8px 0">No saved runs yet.</div>'; return; }
+                    list.innerHTML = `<div style="max-height:260px;overflow-y:auto"><table style="width:100%;font-size:11px">
+            <thead><tr><th style="text-align:left">When</th><th style="text-align:left">By</th><th class="num">Total</th><th class="num">Match</th><th class="num">Diff</th><th class="num">Miss</th><th></th></tr></thead>
+            <tbody>${runs.map(r => `
+              <tr>
+                <td>${new Date(r.run_at).toLocaleString()}</td>
+                <td>${escHtml2(r.run_by_email || '-')}</td>
+                <td class="num">${(r.total_count || 0).toLocaleString()}</td>
+                <td class="num">${(r.match_count || 0).toLocaleString()}</td>
+                <td class="num">${(r.diff_count || 0).toLocaleString()}</td>
+                <td class="num">${((r.miss_sheet_count || 0) + (r.miss_dump_count || 0)).toLocaleString()}</td>
+                <td><button class="btn btn-xs btn-default" style="font-size:11px;padding:2px 8px" onclick="scLoadRunDetail('${r.id}')">Load</button></td>
+              </tr>`).join('')}</tbody>
+          </table></div>`;
+                } catch (err) {
+                    list.innerHTML = `<div style="color:var(--text3);padding:8px 0">Could not load saved runs: ${escHtml2(err.message || String(err))}</div>`;
+                }
+            }
+
+            async function scLoadRunDetail(runId) {
+                try {
+                    showOv('Loading saved run…');
+                    await delay(10);
+                    const [[run], rows] = await Promise.all([
+                        scSupabaseFetch(`/rest/v1/score_check_runs?select=*&id=eq.${encodeURIComponent(runId)}`),
+                        scSupabaseFetch(`/rest/v1/score_check_results?select=status,email,course,d_vals,s_vals&run_id=eq.${encodeURIComponent(runId)}&limit=100000`)
+                    ]);
+                    hideOv();
+                    if (!run) { toast('Saved run not found', 'w'); return; }
+                    _scCommonACols = run.common_cols || [];
+                    _scHasOut25 = !!run.has_out25;
+                    _scAllResults = rows.map(r => ({ _status: r.status, _email: r.email, _course: r.course, _dVals: r.d_vals || {}, _sVals: r.s_vals || {} }));
+                    _scFiltered = _scAllResults;
+                    _scStatusFilter = 'all';
+                    _scGlobalSearch = '';
+                    _scColFilters = {};
+                    _scPage = 1;
+                    if (!_scAllResults.length) {
+                        toast('This run only has a summary saved (row detail was skipped for size).', 'w', 6000);
+                    }
+                    scRenderSummary();
+                    scRenderTable();
+                    $('sc-results').style.display = 'block';
+                    $('sc-results').scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    toast(`Loaded saved run from ${new Date(run.run_at).toLocaleString()}`, 's');
+                } catch (err) {
+                    hideOv();
+                    toast('Could not load run: ' + (err.message || String(err)), 'e', 6000);
                 }
             }
 

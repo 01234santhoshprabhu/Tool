@@ -121,6 +121,7 @@
                 <a class="auth-count-link" href="https://01234santhoshprabhu.github.io/count/" title="Open Count Dashboard"><i class="bi bi-speedometer2"></i><span>Count</span></a>
                 <a class="auth-count-link auth-watermark-link" href="https://01234santhoshprabhu.github.io/NPTEL-Watermark/" title="Open Watermark"><i class="bi bi-droplet-half"></i><span>Watermark</span></a>
                 <div class="auth-user-pill" id="auth-user-pill" style="display:none">
+                    <span id="auth-user-role" class="role-badge"></span>
                     <span id="auth-user-email"></span>
                     <button id="auth-signout-btn" type="button" title="Sign out"><i class="bi bi-box-arrow-right"></i></button>
                 </div>
@@ -1185,6 +1186,16 @@
                             <strong>Score Sheet</strong> here.
                             Checks <code>EmailId</code>, <code>A1–AN</code>, and <code>out_of_25</code>
                             column-by-column. Results show Match / Diff / Missing.
+                        </div>
+                        <!-- Saved runs -->
+                        <div style="margin-bottom:14px;background:var(--card-head);border:1px solid var(--border);border-radius:var(--rad);padding:10px 14px">
+                            <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+                                <button class="btn btn-default btn-sm" onclick="scToggleSavedRuns()"><i class="bi bi-clock-history"></i> Saved Runs</button>
+                                <span style="font-size:11px;color:var(--text3)" id="sc-saved-hint">Past cross-checks saved to the shared backend appear here.</span>
+                            </div>
+                            <div id="sc-saved-panel" style="display:none;margin-top:10px">
+                                <div id="sc-saved-list" style="font-size:12px;color:var(--text3)">Loading…</div>
+                            </div>
                         </div>
                         <!-- Upload grid -->
                         <div class="tool-upload-grid">
