@@ -5,7 +5,7 @@
            1. KEYBOARD SHORTCUT BLOCKING
            Ctrl/Cmd + U C P V I S A  |  F12  |  Ctrl+Shift+I/J/C/K
         ════════════════════════════════════════════════════════════ */
-        const CTRL_BLOCKED = new Set(['u','c','p','v','i','s','a','j','k']);
+        const CTRL_BLOCKED = new Set(['u','p','i','s','j','k']);
 
         function isFormField(target) {
             if (!target) return false;
@@ -16,9 +16,8 @@
         document.addEventListener('keydown', function (e) {
             const ctrl = e.ctrlKey || e.metaKey;
 
-            // Always allow paste into search/filter/upload fields — the
-            // page itself needs it (course ID search, email search, etc.)
-            if (ctrl && !e.shiftKey && !e.altKey && e.key.toLowerCase() === 'v' && isFormField(e.target)) {
+            // Always allow normal editing shortcuts inside fields.
+            if (ctrl && !e.shiftKey && !e.altKey && isFormField(e.target) && ['a','c','v','x'].includes(e.key.toLowerCase())) {
                 return;
             }
 
@@ -53,7 +52,7 @@
         ════════════════════════════════════════════════════════════ */
         ['copy', 'cut', 'paste'].forEach(function (type) {
             document.addEventListener(type, function (e) {
-                if (type === 'paste' && isFormField(e.target)) return;
+                if (isFormField(e.target)) return;
                 e.preventDefault(); e.stopImmediatePropagation(); return false;
             }, true);
         });
@@ -78,106 +77,18 @@
         });
 
         /* ════════════════════════════════════════════════════════════
-           6. CONSOLE WIPE — clear console every 2 seconds
-              Makes it harder to inspect via console pasting.
-              Admin/Super Admin get an escape hatch below (#13) so they
-              can actually debug a broken run when something goes wrong.
-        ════════════════════════════════════════════════════════════ */
-        var _origConsole = {};
-        ['log','warn','info','debug','table','dir','dirxml','group','groupCollapsed','groupEnd','time','timeEnd','count','assert','profile','profileEnd'].forEach(function (m) {
-            _origConsole[m] = console[m];
-        });
-        var _consoleClearTimer = setInterval(function () {
-            try { console.clear(); } catch (_) {}
-        }, 2000);
-
-        // Override console methods to suppress output
-        (function () {
-            const noop = function () {};
-            ['log','warn','info','debug','table','dir','dirxml','group','groupCollapsed','groupEnd','time','timeEnd','count','assert','profile','profileEnd'].forEach(function (m) {
-                try { console[m] = noop; } catch (_) {}
-            });
-        })();
-
-        /* ════════════════════════════════════════════════════════════
-           7. DEBUGGER TRAP — continuous debugger statement
-              Freezes execution in DevTools "Sources" panel
-        ════════════════════════════════════════════════════════════ */
-        var _debuggerTimer = setInterval(function () {
-            (function () { /* jshint ignore:start */ debugger; /* jshint ignore:end */ })();
-        }, 100);
-
-        /* ════════════════════════════════════════════════════════════
-           13. ADMIN ESCAPE HATCH
-               Once the signed-in user's role is known (Admin/Super Admin),
-               stop the console wipe + debugger trap so real errors are
-               visible when something needs debugging. Viewers keep the
-               full lockdown.
+           6. DEVTOOLS NOTE
+              Do not suppress console output or run debugger traps. Those
+              patterns break legitimate support and are trivial to bypass.
+              Access control belongs in Firebase/Supabase policy, while this
+              file keeps only low-friction UI deterrents.
         ════════════════════════════════════════════════════════════ */
         window.addEventListener('tool-auth-ready', function (ev) {
             const role = ev.detail && ev.detail.role;
-            if (role !== 'admin' && role !== 'super_admin') return;
-            clearInterval(_consoleClearTimer);
-            clearInterval(_debuggerTimer);
-            Object.keys(_origConsole).forEach(function (m) { console[m] = _origConsole[m]; });
-            console.info('[security] Console + debugger lockdown lifted for ' + role + '.');
-        });
-
-        /* ════════════════════════════════════════════════════════════
-           8. DEVTOOLS DETECTION — window size differential
-              Shows overlay + blurs body when DevTools is open
-        ════════════════════════════════════════════════════════════ */
-        var _devOpen = false;
-        var _overlay = document.getElementById('__sec-overlay');
-        var THRESHOLD = 160;
-
-        function checkDevTools() {
-            var wDiff = window.outerWidth  - window.innerWidth;
-            var hDiff = window.outerHeight - window.innerHeight;
-            var open  = wDiff > THRESHOLD || hDiff > THRESHOLD;
-
-            if (open && !_devOpen) {
-                _devOpen = true;
-                document.body.style.filter = 'blur(10px)';
-                document.body.style.pointerEvents = 'none';
-                if (_overlay) _overlay.classList.add('active');
-            } else if (!open && _devOpen) {
-                _devOpen = false;
-                document.body.style.filter = '';
-                document.body.style.pointerEvents = '';
-                if (_overlay) _overlay.classList.remove('active');
+            if (role === 'admin' || role === 'super_admin') {
+                console.info('[security] Admin diagnostics enabled.');
             }
-        }
-        setInterval(checkDevTools, 800);
-
-        /* ════════════════════════════════════════════════════════════
-           9. DEVTOOLS DETECTION — toString timing trick
-              Object with custom toString fires continuously in console;
-              if DevTools formats it, timing spikes → detected
-        ════════════════════════════════════════════════════════════ */
-        (function () {
-            var element = new Image();
-            var _fired = false;
-            Object.defineProperty(element, 'id', {
-                get: function () {
-                    if (!_fired) {
-                        _fired = true;
-                        // DevTools is open — trigger same overlay
-                        _devOpen = true;
-                        document.body.style.filter = 'blur(10px)';
-                        document.body.style.pointerEvents = 'none';
-                        if (_overlay) _overlay.classList.add('active');
-                        setTimeout(function () { _fired = false; }, 3000);
-                    }
-                }
-            });
-            // Runs silently; only fires id getter when DevTools formats the object
-            setInterval(function () {
-                _fired = false;
-                console.log('%c', element);  // triggers toString in DevTools
-            }, 1500);
-        })();
-
+        });
         /* ════════════════════════════════════════════════════════════
            10. WATERMARK — tiled with page URL + timestamp
                Deters/identifies screenshots

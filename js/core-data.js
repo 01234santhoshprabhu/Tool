@@ -91,6 +91,11 @@
 
             function normCell(v) { return String(v == null ? '' : v).trim(); }
             function normKey(v) { return normCell(v).toLowerCase(); }
+            function csvCell(v) {
+                const s = String(v == null ? '' : v);
+                return /[",\r\n]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s;
+            }
+            function tsvCell(v) { return String(v == null ? '' : v).replace(/[\t\r\n]+/g, ' '); }
             function sanitizeCols(cols) {
                 const out = (cols || []).map(c => String(c == null ? '' : c));
                 if (out.length) out[0] = out[0].replace(/^\uFEFF/, '');
@@ -800,9 +805,12 @@
                         }
                         else if (NUMERIC_COLS.has(h)) { const fv = getNum(h, si); v = isNaN(fv) ? '' : fv; cls = 't-num'; }
                         else v = getStr(h, si);
-                        if (qL && String(v).toLowerCase().includes(qL))
-                            v = `<mark style="background:#fef08a;color:#0f172a;border-radius:2px;padding:0 1px">${v}</mark>`;
-                        html += `<td class="${cls}">${v}</td>`;
+                        const raw = String(v == null ? '' : v);
+                        const safe = escHtml(raw);
+                        const shown = qL && raw.toLowerCase().includes(qL)
+                            ? `<mark style="background:#fef08a;color:#0f172a;border-radius:2px;padding:0 1px">${safe}</mark>`
+                            : safe;
+                        html += `<td class="${cls}">${shown}</td>`;
                     });
                     if (vsOpts.avg) html += `<td class="t-avg">${bestAvg}</td>`;
                     if (vsOpts.s25) html += `<td class="t-s25">${score25}</td>`;
@@ -898,9 +906,9 @@
                 g.summary.forEach((c, i) => {
                     html += `<tr>
       <td class="s-i">${i + 1}</td>
-      <td class="s-cid">${c.cid}</td>
-      <td><span class="dur-badge ${g.isExt ? 'dur-ext' : 'dur-std'}">${c.Duration || g.label}</span></td>
-      <td><span class="sem-badge">${c.sem || '—'}</span></td>
+      <td class="s-cid">${escHtml(c.cid)}</td>
+      <td><span class="dur-badge ${g.isExt ? 'dur-ext' : 'dur-std'}">${escHtml(c.Duration || g.label)}</span></td>
+      <td><span class="sem-badge">${escHtml(c.sem || '—')}</span></td>
       <td class="s-num">${c.ta || g.maxA}</td>
       <td class="s-best">Best ${c.bn || g.bestN}</td>
       <td class="s-num">${c.count.toLocaleString()}</td>
@@ -923,13 +931,13 @@
                 $('ins-summary-text').textContent = `${groups.length} groups · ${allC.size} courses · ${store.rowCount.toLocaleString()} rows`;
                 $('ins-body').innerHTML = `
     <div class="ins-row"><i class="bi bi-layers-fill" style="color:var(--primary)"></i>
-      <span><b>${groups.length} groups:</b> ${groups.map(g => `<span style="font-family:var(--mono);background:rgba(47,128,237,.1);padding:1px 6px;border-radius:3px;font-size:10px;color:var(--primary)">${g.label}</span>`).join(' ')}</span></div>
+      <span><b>${groups.length} groups:</b> ${groups.map(g => `<span style="font-family:var(--mono);background:rgba(47,128,237,.1);padding:1px 6px;border-radius:3px;font-size:10px;color:var(--primary)">${escHtml(g.label)}</span>`).join(' ')}</span></div>
     <div class="ins-row"><i class="bi bi-calendar-check-fill" style="color:var(--accent)"></i>
-      <span><b>Sem:</b> ${[...sems].map(s => `<span style="font-family:var(--mono);background:rgba(0,212,170,.08);color:var(--accent);padding:1px 6px;border-radius:3px;font-size:10px">${s}</span>`).join(' · ')} — timezone-safe, all formats</span></div>
+      <span><b>Sem:</b> ${[...sems].map(s => `<span style="font-family:var(--mono);background:rgba(0,212,170,.08);color:var(--accent);padding:1px 6px;border-radius:3px;font-size:10px">${escHtml(s)}</span>`).join(' · ')} — timezone-safe, all formats</span></div>
     <div class="ins-row"><i class="bi bi-calculator-fill" style="color:var(--primary)"></i>
       <span><b>Score cache primed</b> — Float64 Best_Avg/Score_25 pre-computed, zero recompute on scroll. 12W→Best 8 built-in.</span></div>
     ${ext.length ? `<div class="ins-row"><i class="bi bi-exclamation-triangle-fill" style="color:var(--warn)"></i>
-      <span><b>${ext.length} extended groups:</b> ${ext.map(g => `<span style="font-size:10px;color:var(--warn)">${g.label} (${g.rows.length.toLocaleString()} rows)</span>`).join(', ')}</span></div>` : ''}
+      <span><b>${ext.length} extended groups:</b> ${ext.map(g => `<span style="font-size:10px;color:var(--warn)">${escHtml(g.label)} (${g.rows.length.toLocaleString()} rows)</span>`).join(', ')}</span></div>` : ''}
     <div class="ins-row"><i class="bi bi-lightning-charge-fill" style="color:var(--accent)"></i>
       <span><b>v14 fixes:</b> Duration 0-week bug fixed · sem blank in Excel fixed · Float64 precision (no more 21.8999996) · Best_Avg/Score_25/Match always in output</span></div>`;
             }
@@ -963,14 +971,14 @@
                 Object.entries(durMap).sort((a, b) => parseInt(a[0]) - parseInt(b[0])).forEach(([dur, d]) => {
                     html += `<div class="dur-card c-std">
       <div class="dur-card-val" style="color:var(--accent)">${d.courses.size}</div>
-      <div class="dur-card-lbl">${dur}</div>
+      <div class="dur-card-lbl">${escHtml(dur)}</div>
       <div class="dur-card-sub">${d.std.toLocaleString()} std${d.ext ? ` · ${d.ext.toLocaleString()} ext` : ''}</div>
     </div>`;
                 });
                 groups.filter(g => g.isExt).forEach(g => {
                     html += `<div class="dur-card c-ext">
       <div class="dur-card-val" style="color:var(--warn)">${g.summary.length}</div>
-      <div class="dur-card-lbl" style="color:var(--warn)">⚠ ${g.label}</div>
+      <div class="dur-card-lbl" style="color:var(--warn)">⚠ ${escHtml(g.label)}</div>
       <div class="dur-card-sub">${g.rows.length.toLocaleString()} rows · Best-${g.bestN}</div>
     </div>`;
                 });
@@ -985,7 +993,7 @@
                 showOv('Preparing Original CSV', `${N.toLocaleString()} rows…`, 10);
                 await delay(30);
                 const CHUNK = 30000;
-                const lines = [origCols.join(',')];
+                const lines = [origCols.map(csvCell).join(',')];
                 for (let start = 0; start < N; start += CHUNK) {
                     const end = Math.min(start + CHUNK, N);
                     for (let i = start; i < end; i++) {
@@ -994,7 +1002,7 @@
                             if (h === 'sem') v = getSemExcel(i);
                             else if (NUMERIC_COLS.has(h)) { const fv = getNum(h, i); v = isNaN(fv) ? '' : Math.round(fv * 100) / 100; }
                             else v = getStr(h, i);
-                            return typeof v === 'string' && (v.includes(',') || v.includes('"')) ? `"${String(v).replace(/"/g, '""')}"` : v;
+                            return csvCell(v);
                         });
                         lines.push(cells.join(','));
                     }
@@ -1044,7 +1052,7 @@
                 const rowsToUse = vsFilteredIdx || Array.from({ length: g.rows.length }, (_, i) => i);
                 toast(`Preparing ${rowsToUse.length.toLocaleString()} rows…`, 'i');
                 await delay(10);
-                const lines = [hdrs.join('\t')];
+                const lines = [hdrs.map(tsvCell).join('\t')];
                 for (let ri = 0; ri < rowsToUse.length; ri++) {
                     const idx = vsFilteredIdx ? rowsToUse[ri] : ri;
                     const si = g.rows[idx];
@@ -1060,7 +1068,7 @@
                     if (o.avg) cells.push(bestAvg);
                     if (o.s25) cells.push(score25);
                     if (o.match) cells.push(!isNaN(out25) && Math.abs(score25 - out25) < 0.015 ? '✓ Match' : '✗ Diff');
-                    lines.push(cells.join('\t'));
+                    lines.push(cells.map(tsvCell).join('\t'));
                 }
                 navigator.clipboard.writeText(lines.join('\n'))
                     .then(() => toast(`Copied ${rowsToUse.length.toLocaleString()} rows!`, 's'))
@@ -1070,7 +1078,7 @@
             function copySummary() {
                 const g = curGroup(); if (!g) return;
                 let txt = '#\tCourse ID\tDuration\tSem\tTotal\tBest Of\tRows\tAvg /25\n';
-                g.summary.forEach((c, i) => { txt += `${i + 1}\t${c.cid}\t${c.Duration}\t${c.semExcel}\t${c.ta}\t${c.bn}\t${c.count}\t${c.avg}\n`; });
+                g.summary.forEach((c, i) => { txt += [i + 1, c.cid, c.Duration, c.semExcel, c.ta, c.bn, c.count, c.avg].map(tsvCell).join('\t') + '\n'; });
                 navigator.clipboard.writeText(txt).then(() => toast('Copied!', 's')).catch(() => toast('Failed', 'e'));
             }
 
@@ -1088,7 +1096,7 @@
                     const isFiltered = rowsToUse.length < g.rows.length;
                     showOv('Preparing CSV', `${rowsToUse.length.toLocaleString()} rows…`, 10); await delay(20);
                     const hdrs = [...g.hdrs, ...(o.avg ? ['Best_Avg'] : []), ...(o.s25 ? ['Score_25'] : []), ...(o.match ? ['Match'] : [])];
-                    const rows = [hdrs.join(',')];
+                    const rows = [hdrs.map(csvCell).join(',')];
                     const CHUNK = 30000;
                     for (let i = 0; i < rowsToUse.length; i += CHUNK) {
                         const end = Math.min(i + CHUNK, rowsToUse.length);
@@ -1104,11 +1112,11 @@
                                 else if (/^A\d+$/.test(h)) { const fv = getNum(h, si); v = isNaN(fv) ? (o.blank ? 0 : '') : fv; }
                                 else if (NUMERIC_COLS.has(h)) { const fv = getNum(h, si); v = isNaN(fv) ? '' : Math.round(fv * 100) / 100; }
                                 else v = getStr(h, si);
-                                return typeof v === 'string' && v.includes(',') ? `"${v}"` : v;
+                                return csvCell(v);
                             });
-                            if (o.avg) cells.push(bestAvg);
-                            if (o.s25) cells.push(score25);
-                            if (o.match) cells.push(!isNaN(out25) && Math.abs(score25 - out25) < 0.015 ? '✓ Match' : '✗ Diff');
+                            if (o.avg) cells.push(csvCell(bestAvg));
+                            if (o.s25) cells.push(csvCell(score25));
+                            if (o.match) cells.push(csvCell(!isNaN(out25) && Math.abs(score25 - out25) < 0.015 ? '✓ Match' : '✗ Diff'));
                             rows.push(cells.join(','));
                         }
                         pOv(10 + Math.round((end / rowsToUse.length) * 80), `${end.toLocaleString()} / ${rowsToUse.length.toLocaleString()} rows`);
@@ -1149,13 +1157,14 @@
                 const nBase = baseCols.length;
                 const a1L = colLetter(nBase + 1);
                 const aNL = colLetter(nBase + g.maxA);
-                const avgPos = nBase + g.maxA + 1;
-                const s25Pos = avgPos + (o.avg ? 1 : 0);
-                const avgL = colLetter(avgPos);
-                const s25L = colLetter(s25Pos);
-                const out25L = colLetter(baseCols.indexOf('out_of_25') >= 0 ? baseCols.indexOf('out_of_25') + 1 : 6);
                 const arr = Array.from({ length: g.bestN }, (_, i) => i + 1).join(',');
                 const rn = excelRowNum;
+                const avgFormula = `ROUND(SUM(LARGE(${a1L}${rn}:${aNL}${rn},{${arr}}))/${g.bestN},2)`;
+                const avgPos = o.avg ? nBase + g.maxA + 1 : null;
+                const s25Pos = o.s25 ? nBase + g.maxA + (o.avg ? 2 : 1) : null;
+                const avgL = avgPos ? colLetter(avgPos) : '';
+                const s25L = s25Pos ? colLetter(s25Pos) : '';
+                const out25L = colLetter(baseCols.indexOf('out_of_25') >= 0 ? baseCols.indexOf('out_of_25') + 1 : 6);
 
                 // Base + assignment columns
                 g.hdrs.forEach(h => {
@@ -1172,9 +1181,9 @@
                 const out25 = getNum('out_of_25', si);
                 const isMatch = !isNaN(out25) && Math.abs(score25 - out25) < 0.015;
 
-                if (o.avg) dr.push({ t: 'n', f: `ROUND(SUM(LARGE(${a1L}${rn}:${aNL}${rn},{${arr}}))/${g.bestN},2)`, v: bestAvg });
-                if (o.s25) dr.push({ t: 'n', f: `ROUND(${avgL}${rn}*0.25,2)`, v: score25 });
-                if (o.match) dr.push({ t: 's', f: `IF(${s25L}${rn}=${out25L}${rn},"✓ Match","✗ Diff")`, v: isMatch ? '✓ Match' : '✗ Diff' });
+                if (o.avg) dr.push({ t: 'n', f: avgFormula, v: bestAvg });
+                if (o.s25) dr.push({ t: 'n', f: `ROUND(${o.avg ? avgL + rn : '(' + avgFormula + ')'}*0.25,2)`, v: score25 });
+                if (o.match) dr.push({ t: 's', f: `IF(${o.s25 ? s25L + rn : 'ROUND((' + avgFormula + ')*0.25,2)'}=${out25L}${rn},"✓ Match","✗ Diff")`, v: isMatch ? '✓ Match' : '✗ Diff' });
                 return dr;
             }
 

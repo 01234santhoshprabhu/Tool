@@ -10,10 +10,11 @@
         appId: '1:574729426785:web:12c57aa54179167eeb1720'
     };
 
-    // Empty means any Google account can sign in. Add lowercase emails to restrict access.
+    // Internal tool: keep this list explicit. Use lowercase emails only.
     const ALLOWED_EMAILS = [
-        // 'santhoshofficial70@gmail.com'
+        'santhoshofficial70@gmail.com'
     ];
+    const REQUIRE_VERIFIED_EMAIL = true;
 
     const ROLE_SUPABASE_URL = 'https://oiebamupeucekvcfscpj.supabase.co';
     const ROLE_SUPABASE_KEY = 'sb_publishable_w_l-WFz9E-IrPoQwGqodZw_Zsx929gv';
@@ -63,7 +64,7 @@
 
     function isAllowed(user) {
         if (!user || !user.email) return false;
-        if (!ALLOWED_EMAILS.length) return true;
+        if (REQUIRE_VERIFIED_EMAIL && user.emailVerified === false) return false;
         return ALLOWED_EMAILS.includes(user.email.toLowerCase());
     }
 
@@ -151,7 +152,7 @@
             }
             if (!isAllowed(user)) {
                 showLocked('This Google account is not approved for this tool.');
-                setError(user.email + ' is not in the allowed list.');
+                setError((user.email || 'This account') + ' is not approved or is not verified.');
                 auth.signOut();
                 return;
             }
