@@ -1467,7 +1467,7 @@
                     <div class="box-body">
                         <div class="callout callout-info" style="margin-bottom:14px">
                             <i class="bi bi-info-circle-fill" style="margin-right:6px;color:var(--teal)"></i>
-                            Upload CSV with columns: <code>action</code>, <code>category</code>, <code>courseid</code>,
+                            Upload CSV with columns: <code>action</code>, <code>Cohort</code> / <code>category</code>, <code>courseid</code>,
                             <code>emailid</code> (and optionally <code>exam_date</code>).
                             Filters: <strong>Action</strong> + <strong>Category</strong> multi-select. Optimized for 1
                             Crore+ rows via
@@ -1480,7 +1480,7 @@
                             <input type="file" accept=".csv,.xlsx,.xls" onchange="attLoadFile(this.files[0])">
                             <div class="tool-uz-ico"><i class="bi bi-file-earmark-bar-graph-fill"></i></div>
                             <div class="tool-uz-title" id="att-uz-t">Drop Attendance file here (.csv / .xlsx)</div>
-                            <div class="tool-uz-sub">action · category · courseid · emailid · exam_date (optional) —
+                            <div class="tool-uz-sub">action · Cohort/category · courseid · emailid · exam_date (optional) —
                                 supports 1 Crore
                                 rows</div>
                             <div class="tool-uz-fn" id="att-uz-fn"></div>
@@ -1693,7 +1693,7 @@
         <script src="js/assignment-logic.js?v=20260730-google-auth"></script>
         <script src="js/registration-check.js"></script>
         <script src="js/score-diff.js?v=20260730-google-auth"></script>
-        <script src="js/attendance.js"></script>
+        <script src="js/attendance.js?v=20260915-cohort"></script>
         <script src="js/pso-tools.js"></script>
         <script src="js/data-filter.js?v=20260730-google-auth"></script>
         <script src="js/score-cross-check.js"></script>
