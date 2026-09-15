@@ -10,8 +10,14 @@
             let attPivotData = null, attFilterToken = 0, attMeta = null;
 
             function buildAttendanceMeta(rows, cols) {
-                const fc = n => cols.find(c => c.toLowerCase().replace(/[_\s]/g, '') === n) || cols.find(c => c.toLowerCase().includes(n.replace(/[_\s]/g, ''))) || '';
-                const colMeta = { action: fc('action'), cat: fc('category'), course: fc('courseid') || fc('course'), email: fc('emailid') || fc('email'), date: fc('examdate') || fc('date') };
+                const normCol = v => String(v || '').toLowerCase().replace(/[_\s]/g, '');
+                const fc = names => {
+                    const keys = (Array.isArray(names) ? names : [names]).map(normCol);
+                    return keys.map(k => cols.find(c => normCol(c) === k)).find(Boolean)
+                        || keys.map(k => cols.find(c => normCol(c).includes(k))).find(Boolean)
+                        || '';
+                };
+                const colMeta = { action: fc(['action', 'examtype']), cat: fc(['cohort', 'category']), course: fc(['courseid', 'course']), email: fc(['emailid', 'email']), date: fc(['examdate', 'date']) };
                 const byAction = new Map(), byCat = new Map();
                 for (let i = 0; i < rows.length; i++) {
                     const row = rows[i];
