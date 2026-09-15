@@ -3,7 +3,7 @@
             // ═══════════════════════════════════════════════════════════════
             // ═══════════════════════════════════════════════════════════════
             // ATTENDANCE DASHBOARD — Optimized for 1 Crore+ rows
-            // NO charts. Action + Category pill filters. Summary tables only.
+            // NO charts. Action + Cohort pill filters. Summary tables only.
             // ═══════════════════════════════════════════════════════════════
             let attRawRows = [], attRawCols = [], attFilteredRows = [];
             let attSelActions = new Set(), attSelCats = new Set();
@@ -164,7 +164,7 @@
                 // Action
                 const actMap = new Map(); rows.forEach(r => { const a = String(r[ac] || ''); if (a) actMap.set(a, (actMap.get(a) || 0) + 1); });
                 document.getElementById('att-action-body').innerHTML = [...actMap.entries()].sort((a, b) => b[1] - a[1]).map(([a, n], i) => '<tr><td class="si">' + (i + 1) + '</td><td>' + escHtml(a) + '</td><td class="snum">' + n.toLocaleString() + '</td><td class="sbest">' + (n / total * 100).toFixed(1) + '%</td></tr>').join('') || '<tr><td colspan="4" style="text-align:center;color:var(--text3);padding:12px">No data</td></tr>';
-                // Category
+                // Cohort
                 const catMap = new Map(); rows.forEach(r => { const c = String(r[cc] || ''); if (c) catMap.set(c, (catMap.get(c) || 0) + 1); });
                 document.getElementById('att-cat-body').innerHTML = [...catMap.entries()].sort((a, b) => b[1] - a[1]).map(([c, n], i) => '<tr><td class="si">' + (i + 1) + '</td><td>' + escHtml(c) + '</td><td class="snum">' + n.toLocaleString() + '</td><td class="sbest">' + (n / total * 100).toFixed(1) + '%</td></tr>').join('') || '<tr><td colspan="4" style="text-align:center;color:var(--text3);padding:12px">No data</td></tr>';
                 // Course
@@ -240,7 +240,7 @@
                 const actMap = new Map(); attFilteredRows.forEach(r => { const a = String(r[ac] || ''); if (a) actMap.set(a, (actMap.get(a) || 0) + 1); });
                 XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet([['action', 'count'], ...[...actMap.entries()].sort((a, b) => b[1] - a[1])]), 'Action_Count');
                 const catMap = new Map(); attFilteredRows.forEach(r => { const c = String(r[cc] || ''); if (c) catMap.set(c, (catMap.get(c) || 0) + 1); });
-                XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet([['category', 'count'], ...[...catMap.entries()].sort((a, b) => b[1] - a[1])]), 'Category_Count');
+                XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet([['cohort', 'count'], ...[...catMap.entries()].sort((a, b) => b[1] - a[1])]), 'Cohort_Count');
                 if (attPivotData) { const { courses, dates, courseMap, colTotals, grandTotal } = attPivotData; const pa = [['Course ID', ...dates, 'Grand Total']]; courses.forEach(cid => { const cm = courseMap.get(cid) || {}; let rt = 0; const cells = dates.map(d => { const v = cm[d] || 0; rt += v; return v; }); pa.push([cid, ...cells, rt]); }); pa.push(['Grand Total', ...dates.map(d => colTotals[d] || 0), grandTotal]); XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(pa), 'Pivot'); }
                 pOv(90, 'Writing\u2026'); await delay(20);
                 XLSX.writeFile(wb, 'Attendance_Report.xlsx'); hideOv(); toast('Excel downloaded', 's');

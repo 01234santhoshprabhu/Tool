@@ -1460,7 +1460,7 @@
                     <div class="box-header">
                         <h3 class="box-title"><i class="bi bi-calendar-check-fill"></i> Attendance Dashboard
                             <span style="font-size:11px;font-weight:400;color:var(--text3);margin-left:8px">Action +
-                                Category filters
+                                Cohort filters
                                 · Summary tables · 1 Crore rows optimized</span>
                         </h3>
                     </div>
@@ -1469,7 +1469,7 @@
                             <i class="bi bi-info-circle-fill" style="margin-right:6px;color:var(--teal)"></i>
                             Upload CSV with columns: <code>action</code>, <code>Cohort</code> / <code>category</code>, <code>courseid</code>,
                             <code>emailid</code> (and optionally <code>exam_date</code>).
-                            Filters: <strong>Action</strong> + <strong>Category</strong> multi-select. Optimized for 1
+                            Filters: <strong>Action</strong> + <strong>Cohort</strong> multi-select. Optimized for 1
                             Crore+ rows via
                             chunked streaming.
                         </div>
@@ -1489,7 +1489,7 @@
                         <!-- Content shown after load -->
                         <div id="att-filters" style="display:none">
 
-                            <!-- Filter Bar: Action + Category only -->
+                            <!-- Filter Bar: Action + Cohort only -->
                             <div class="att-filter-bar" style="align-items:flex-start;gap:16px">
                                 <div style="flex:1;min-width:160px">
                                     <div
@@ -1502,7 +1502,7 @@
                                 <div style="flex:1;min-width:160px">
                                     <div
                                         style="font-size:10px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px">
-                                        <i class="bi bi-tag-fill" style="color:var(--blue)"></i> Category <span
+                                        <i class="bi bi-tag-fill" style="color:var(--blue)"></i> Cohort <span
                                             style="color:var(--text3);font-weight:400" id="att-f-cat-count"></span>
                                     </div>
                                     <div style="display:flex;flex-wrap:wrap;gap:5px" id="att-cat-pills"></div>
@@ -1538,7 +1538,7 @@
                                     <div class="att-kpi-val" id="att-k-courses">—</div>
                                 </div>
                                 <div class="att-kpi">
-                                    <div class="att-kpi-title">Categories</div>
+                                    <div class="att-kpi-title">Cohorts</div>
                                     <div class="att-kpi-val" id="att-k-cats">—</div>
                                 </div>
                                 <div class="att-kpi">
@@ -1584,17 +1584,17 @@
                                         </table>
                                     </div>
                                 </div>
-                                <!-- Category Summary -->
+                                <!-- Cohort Summary -->
                                 <div class="box box-info" style="margin-bottom:0">
                                     <div class="box-header" style="padding:8px 14px">
                                         <h3 class="box-title" style="font-size:13px"><i class="bi bi-tag-fill"></i>
-                                            Category-wise Count</h3>
+                                            Cohort-wise Count</h3>
                                         <div class="box-tools">
                                             <button class="btn btn-default btn-sm"
                                                 onclick="attCopyTable('att-cat-tbl')"><i
                                                     class="bi bi-clipboard"></i></button>
                                             <button class="btn btn-info btn-sm"
-                                                onclick="attDownloadTableCSV('att-cat-tbl','Category_Count')"><i
+                                                onclick="attDownloadTableCSV('att-cat-tbl','Cohort_Count')"><i
                                                     class="bi bi-download"></i>
                                                 CSV</button>
                                         </div>
@@ -1604,7 +1604,7 @@
                                             <thead>
                                                 <tr>
                                                     <th>#</th>
-                                                    <th>Category</th>
+                                                    <th>Cohort</th>
                                                     <th>Count</th>
                                                     <th>%</th>
                                                 </tr>
