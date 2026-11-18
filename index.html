@@ -18,7 +18,7 @@
     <link rel="stylesheet" href="css/auth.css?v=20260803-login-animation">
 </head>
 
-<body class="auth-pending">
+<body>
 
     <!-- OVERLAY -->
     <div class="ov" id="ov">
@@ -35,21 +35,6 @@
         </div>
     </div>
     <div class="toast-c" id="toasts"></div>
-
-    <div id="auth-screen" class="auth-screen" aria-live="polite">
-        <div class="auth-card">
-            <div class="auth-mark">N</div>
-            <div class="auth-kicker">NPTEL Portal Team</div>
-            <h1>NPTEL Scoring Internal Tool</h1>
-            <p id="auth-message">Sign in with your Google account to continue.</p>
-            <button id="auth-google-btn" class="auth-google-btn" type="button">
-                <span class="auth-google-icon">G</span>
-                <span>Sign in with Google</span>
-            </button>
-            <button id="auth-retry-btn" class="auth-link-btn" type="button" style="display:none">Try again</button>
-            <div id="auth-error" class="auth-error" role="alert"></div>
-        </div>
-    </div>
 
     <div id="wrapper">
 
@@ -120,11 +105,6 @@
                 <div class="mem-badge" id="mem-badge" style="display:none">RAM: —</div>
                 <a class="auth-count-link" href="https://01234santhoshprabhu.github.io/count/" title="Open Count Dashboard"><i class="bi bi-speedometer2"></i><span>Count</span></a>
                 <a class="auth-count-link auth-watermark-link" href="https://01234santhoshprabhu.github.io/NPTEL-Watermark/" title="Open Watermark"><i class="bi bi-droplet-half"></i><span>Watermark</span></a>
-                <div class="auth-user-pill" id="auth-user-pill" style="display:none">
-                    <span id="auth-user-role" class="role-badge"></span>
-                    <span id="auth-user-email"></span>
-                    <button id="auth-signout-btn" type="button" title="Sign out"><i class="bi bi-box-arrow-right"></i></button>
-                </div>
                 <button class="btn-reset" onclick="location.reload()"><i class="bi bi-arrow-counterclockwise"></i>
                     Reset</button>
             </nav>
@@ -1685,9 +1665,6 @@
             </div><!-- /main-wrapper -->
         </div><!-- /wrapper -->
 
-        <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-app-compat.js"></script>
-        <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-auth-compat.js"></script>
-        <script src="js/auth.js?v=20260803-redirect-login"></script>
         <script src="js/navigation-core.js?v=20260730-google-auth"></script>
         <script src="js/core-data.js?v=20260730-google-auth"></script>
         <script src="js/assignment-logic.js?v=20260730-google-auth"></script>
